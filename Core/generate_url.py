@@ -1,5 +1,5 @@
 """
-Des 生成初始api接口地址
+Des 生成初始api接口地址 通用URL鉴权
 @Author thetheOrange
 Time 2024/5/5
 """
