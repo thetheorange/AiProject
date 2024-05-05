@@ -76,4 +76,4 @@ class Config:
                 raise ValueError("Unknown format specifier")
 
     def __str__(self) -> str:
-        return f"{self.init_config}"
+        return f"{self.read()}"
