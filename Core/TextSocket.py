@@ -20,7 +20,7 @@ class TextModel:
     文生文对话模型封装Socket类
     """
 
-    def __init__(self, *, APPID, APIKey, APISecret, GptUrl, Domain):
+    def __init__(self, *, APPID, APIKey, APISecret, GptUrl, Domain, tour):
         self.APPID: str = APPID
         self.APIKey: str = APIKey
         self.APISecret: str = APISecret
@@ -29,8 +29,10 @@ class TextModel:
         self.GptUrl: str = GptUrl
         self.Domain: str = Domain
 
-        # 存储消息的容器
-        self.msg_container: list[str] = []
+        # 可支持的最大消息轮次
+        self.tour: int = tour
+        # 存储历史消息的容器
+        self.history: list[dict] = []
         # 单次消息的存储
         self.temp_msg: str = ""
 
@@ -45,13 +47,16 @@ class TextModel:
         message: dict = json.loads(message)
         code: int = jsonpath.jsonpath(message, "$.header.code")[0]
         status: int = jsonpath.jsonpath(message, "$.header.status")[0]
+        # 如果对话次数大于规定的最大轮次 则清除历史消息
+        if len(self.history) > self.tour * 2:
+            self.history.clear()
         if code != 0:
             print("## error ##")
             app_logger.error("socket connect error")
         else:
             self.temp_msg += jsonpath.jsonpath(message, "$.payload..text..content")[0]
             if status == 2:
-                self.msg_container.append(self.temp_msg)
+                self.history.append({"role": "assistant", "content": fr"{self.temp_msg[:]}"})
                 print(self.temp_msg)
                 self.temp_msg = ""
                 ws.close()
@@ -88,9 +93,9 @@ class TextModel:
         :param args:
         :return:
         """
-        ws.send(json.dumps(self.generate_params(ws.query)))
+        ws.send(json.dumps(self.generate_params()))
 
-    def generate_params(self, query) -> dict:
+    def generate_params(self) -> dict:
         """
         生成请求参数
         :return:
@@ -109,7 +114,7 @@ class TextModel:
             },
             "payload": {
                 "message": {
-                    "text": [{"role": "user", "content": query}]
+                    "text": self.history[:]
                 }
             }
         }
@@ -131,5 +136,5 @@ class TextModel:
                                     on_error=self.on_error,
                                     on_close=self.on_close,
                                     on_open=self.on_open)
-        ws.query = query
+        self.history.append({"role": "user", "content": fr"{query}"})
         ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
