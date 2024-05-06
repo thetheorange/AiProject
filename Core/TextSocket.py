@@ -6,6 +6,7 @@ Time 2024/5/5
 import _thread as thread
 import json
 import ssl
+from typing import Callable
 from urllib.parse import urlparse
 
 import jsonpath
@@ -21,6 +22,14 @@ class TextModel:
     """
 
     def __init__(self, *, APPID, APIKey, APISecret, GptUrl, Domain, tour):
+        """
+        :param APPID: 应用ID
+        :param APIKey: 应用Key
+        :param APISecret: 应用秘钥
+        :param GptUrl: 文生文聊天模型接口地址
+        :param Domain: 所使用的大模型领域
+        :param tour: 可支持的最大消息轮次
+        """
         self.APPID: str = APPID
         self.APIKey: str = APIKey
         self.APISecret: str = APISecret
@@ -36,6 +45,42 @@ class TextModel:
         # 单次消息的存储
         self.temp_msg: str = ""
 
+        # 注册的插件基本信息 (function call的基本信息)
+        self.extension_book: dict = {}
+        # 插件执行的对应方法
+        self._extension_func: dict = {}
+
+    def __format__(self, format_spec: str) -> str:
+        match format_spec:
+            # 打印当前实例所绑定的插件函数和对应的插件文档
+            case "extension_func":
+                temp: dict = {k: (v, v.__doc__) for k, v in self._extension_func.items()}
+                return f"{temp}"
+            # 打印当前实例所绑定的所有插件信息
+            case "extension_book":
+                return f"{self.extension_book}"
+            case _:
+                raise ValueError("Unknown format specifier")
+
+    @staticmethod
+    def generate_extension_params(*, properties: list[tuple], _type: str = "object",
+                                  required: list[str] = None) -> dict:
+        """
+        快速生成插件参数
+        :param _type: 参数类型
+        :param properties: 参数变量 (name, type, description)
+        :param required: 需要返回的参数 逻辑函数所需的参数
+        :return:
+        """
+        if not required:
+            required = []
+        data: dict = {"type": _type, "required": required}
+        temp: dict = {}
+        for i in properties:
+            temp[i[0]] = {"type": i[1], "description": i[2]}
+        data["properties"] = temp
+        return data
+
     def on_message(self, ws: any, message: str) -> None:
         """
         websocket 对收到消息的处理
@@ -45,6 +90,13 @@ class TextModel:
         """
         print(message)
         message: dict = json.loads(message)
+        # 如果触发插件 则调用对应的函数
+        if extension_info := jsonpath.jsonpath(message, "$.payload.choices.text..function_call"):
+            # 函数参数
+            params: dict = extension_info[0].get("arguments")
+            # 调用函数
+            self._extension_func.get(extension_info[0].get("name"))(params)
+
         code: int = jsonpath.jsonpath(message, "$.header.code")[0]
         status: int = jsonpath.jsonpath(message, "$.header.status")[0]
         # 如果对话次数大于规定的最大轮次 则清除历史消息
@@ -72,7 +124,7 @@ class TextModel:
 
     def on_close(self, ws: any) -> None:
         """
-        关闭websocket套接字
+        关闭websocket套接字时的处理 记录日志 清除资源
         :param ws:
         :return:
         """
@@ -93,14 +145,14 @@ class TextModel:
         :param args:
         :return:
         """
-        ws.send(json.dumps(self.generate_params()))
+        ws.send(json.dumps(self.generate_base_params()))
 
-    def generate_params(self) -> dict:
+    def generate_base_params(self) -> dict:
         """
-        生成请求参数
+        生成基本对话请求参数
         :return:
         """
-        return {
+        data: dict = {
             "header": {
                 "app_id": self.APPID,
             },
@@ -118,8 +170,13 @@ class TextModel:
                 }
             }
         }
+        # 检测是否存在已注册的插件 如存在则加入插件
+        if len(self.extension_book.keys()) > 0:
+            data["payload"]["functions"] = {"text": [i for i in self.extension_book.values()]}
 
-    def chat(self, query) -> None:
+        return data
+
+    def chat(self, question: str) -> None:
         """
         连接文生文模型api接口，进行对话
         :return:
@@ -136,5 +193,24 @@ class TextModel:
                                     on_error=self.on_error,
                                     on_close=self.on_close,
                                     on_open=self.on_open)
-        self.history.append({"role": "user", "content": fr"{query}"})
+        self.history.append({"role": "user", "content": fr"{question}"})
         ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
+
+    def register_extension(self, name: str, description: str, parameters: dict, func: Callable) -> None:
+        """
+        注册插件
+        :param name: 插件名称
+        :param description: 插件描述
+        :param parameters: 插件参数 字典对象
+        :param func: 插件触发后执行的逻辑代码
+        :return:
+        """
+        try:
+            if name in self.extension_book:
+                app_logger.info("The antique extension has been supplanted.")
+            self.extension_book[name] = {"name": name,
+                                         "description": description,
+                                         "parameters": parameters}
+            self._extension_func[name] = func
+        except Exception as e:
+            app_logger.error(f"Erroneous registration of the extension. {e}")
