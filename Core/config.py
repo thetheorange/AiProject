@@ -22,6 +22,20 @@ class Config:
         # 配置文件的位置
         self.config_path: str = "./config.json"
 
+    def __format__(self, format_spec: str) -> str:
+        match format_spec:
+            case "init":
+                return f"'{self.config_path}' -> {self.init_config}"
+            case "path":
+                return f"{self.config_path}"
+            case "config":
+                return f"{self.init_config}"
+            case _:
+                raise ValueError("Unknown format specifier")
+
+    def __str__(self) -> str:
+        return f"{self.read()}"
+
     def read(self) -> dict:
         """
         读取配置文件 返回字典对象
@@ -63,17 +77,3 @@ class Config:
                 return True
         except Exception as e:
             app_logger.error(f"[MODIFY CONFIG] ERROR: {e}")
-
-    def __format__(self, format_spec: str) -> str:
-        match format_spec:
-            case "init":
-                return f"'{self.config_path}' -> {self.init_config}"
-            case "path":
-                return f"{self.config_path}"
-            case "config":
-                return f"{self.init_config}"
-            case _:
-                raise ValueError("Unknown format specifier")
-
-    def __str__(self) -> str:
-        return f"{self.read()}"
