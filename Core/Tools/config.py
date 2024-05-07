@@ -39,7 +39,7 @@ class Config:
     def read(self) -> dict:
         """
         读取配置文件 返回字典对象
-        :return dict:
+        :return:
         """
         try:
             if not os.path.exists(self.config_path):
@@ -56,7 +56,7 @@ class Config:
     def modify(self, *, key: any, value: any) -> bool:
         """
         修改配置文件 返回是否修改成功的bool值
-        :return bool:
+        :return:
         """
         try:
             if not os.path.exists(self.config_path):

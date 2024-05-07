@@ -1,5 +1,8 @@
 """
 Des 文生文对话模型封装Socket类
+    聊天接口 instance.chat()
+    插件开发步骤: 1. instance.generate_extension_params 生成对应的插件参数
+                2. instance.register_extension 注册插件
 @Author thetheOrange
 Time 2024/5/5
 """
@@ -12,7 +15,7 @@ from urllib.parse import urlparse
 import jsonpath
 import websocket
 
-from Core.generate_url import OriginAPI
+from Core.Tools.generate_url import OriginAPI
 from Logging import app_logger
 
 
@@ -90,7 +93,7 @@ class TextModel:
         """
         print(message)
         message: dict = json.loads(message)
-        # 如果触发插件 则调用对应的函数
+        # 如果存在插件 则调用对应的函数
         if extension_info := jsonpath.jsonpath(message, "$.payload.choices.text..function_call"):
             # 函数参数
             params: dict = extension_info[0].get("arguments")
@@ -214,3 +217,42 @@ class TextModel:
             self._extension_func[name] = func
         except Exception as e:
             app_logger.error(f"Erroneous registration of the extension. {e}")
+
+    def unregister_extension(self, name: str) -> None:
+        """
+        解绑插件
+        :param name: 插件名
+        :return:
+        """
+        if name in self.extension_book:
+            del self.extension_book[name]
+            del self._extension_func[name]
+        else:
+            app_logger.info(f"Not found extension to unregister {name}")
+
+
+# test
+if __name__ == "__main__":
+    m = TextModel(APPID="60361ac3",
+                  APISecret="NTM1ZGY3MjM0ODQxMDBhY2NjMDIyM2E5",
+                  APIKey="7f8ff2dba8d566abb46791589ba9fed7",
+                  GptUrl="wss://spark-api.xf-yun.com/v3.5/chat",
+                  Domain="generalv3.5",
+                  tour=5)
+    ctn: int = 0
+    extension_p: dict = m.generate_extension_params(properties=[("location", "string", "地点，默认北京"),
+                                                                ("date", "string", "日期")],
+                                                    required=["location", "date"])
+
+    m.register_extension(name="天气状况",
+                         description="天气插件可以提供天气相关信息。你可以提供指定的地点信息、指定的时间点或者时间段信息，来精准检索到天气信息。",
+                         parameters=extension_p,
+                         func=lambda x: print(f"传入的参数为 >>>{x} 天气状况插件执行"))
+    print(m.extension_book)
+    print(f"{m:extension_book}")
+    print(f"{m:extension_func}")
+
+    # while ctn < 10:
+    #     ctn += 1
+    #     query: str = input()
+    #     m.chat(query)

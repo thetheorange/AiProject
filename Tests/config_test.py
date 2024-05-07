@@ -1,4 +1,4 @@
-from Core.config import Config
+from Core.Tools.config import Config
 
 config = Config()
 #
