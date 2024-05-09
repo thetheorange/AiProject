@@ -1,14 +1,16 @@
 """
 Des 文生文对话模型封装Socket类
     聊天接口 instance.chat()
-    插件开发步骤: 1. instance.generate_extension_params 生成对应的插件参数
-                2. instance.register_extension 注册插件
+    插件开发步骤: 1. TextModel.generate_extension_params 生成对应的插件参数
+                2. TextModel.register_extension 注册插件
 @Author thetheOrange
 Time 2024/5/5
 """
 import _thread as thread
 import json
+import os
 import ssl
+import importlib.util
 from typing import Callable
 from urllib.parse import urlparse
 
@@ -23,6 +25,11 @@ class TextModel:
     """
     文生文对话模型封装Socket类
     """
+
+    # 注册的插件基本信息 (function call的基本信息)
+    extension_book: dict = {}
+    # 插件执行的对应方法
+    _extension_func: dict = {}
 
     def __init__(self, *, APPID, APIKey, APISecret, GptUrl, Domain, tour):
         """
@@ -41,32 +48,63 @@ class TextModel:
         self.GptUrl: str = GptUrl
         self.Domain: str = Domain
 
-        # 可支持的最大消息轮次
+        # 可支持的最大记忆消息轮次
         self.tour: int = tour
         # 存储历史消息的容器
         self.history: list[dict] = []
         # 单次消息的存储
         self.temp_msg: str = ""
 
-        # 注册的插件基本信息 (function call的基本信息)
-        self.extension_book: dict = {}
-        # 插件执行的对应方法
-        self._extension_func: dict = {}
+        # 加载插件 从配置文件中读取插件目录
+        TextModel.load_extension("../../Extensions")
 
     def __format__(self, format_spec: str) -> str:
         match format_spec:
             # 打印当前实例所绑定的插件函数和对应的插件文档
             case "extension_func":
-                temp: dict = {k: (v, v.__doc__) for k, v in self._extension_func.items()}
+                temp: dict = {k: (v, v.__doc__) for k, v in TextModel._extension_func.items()}
                 return f"{temp}"
             # 打印当前实例所绑定的所有插件信息
             case "extension_book":
-                return f"{self.extension_book}"
+                return f"{TextModel.extension_book}"
             case _:
                 raise ValueError("Unknown format specifier")
 
-    @staticmethod
-    def generate_extension_params(*, properties: list[tuple], _type: str = "object",
+    @classmethod
+    def register_extension(cls, name: str, description: str, parameters: dict, func: Callable) -> None:
+        """
+        注册插件
+        :param name: 插件名称
+        :param description: 插件描述
+        :param parameters: 插件参数 字典对象
+        :param func: 插件触发后执行的逻辑代码
+        :return:
+        """
+        try:
+            if name in TextModel.extension_book:
+                app_logger.info("The antique extension has been supplanted.")
+            TextModel.extension_book[name] = {"name": name,
+                                              "description": description,
+                                              "parameters": parameters}
+            TextModel._extension_func[name] = func
+        except Exception as e:
+            app_logger.error(f"Erroneous registration of the extension. {e}")
+
+    @classmethod
+    def unregister_extension(cls, name: str) -> None:
+        """
+        解绑插件
+        :param name: 插件名
+        :return:
+        """
+        if name in TextModel.extension_book:
+            del TextModel.extension_book[name]
+            del TextModel._extension_func[name]
+        else:
+            app_logger.info(f"Not found extension to unregister {name}")
+
+    @classmethod
+    def generate_extension_params(cls, *, properties: list[tuple], _type: str = "object",
                                   required: list[str] = None) -> dict:
         """
         快速生成插件参数
@@ -83,6 +121,30 @@ class TextModel:
             temp[i[0]] = {"type": i[1], "description": i[2]}
         data["properties"] = temp
         return data
+
+    @classmethod
+    def load_extension(cls, path: str) -> None:
+        """
+        初始化或加载插件 每次新开一个对话或对插件做出修改时，都会调用一次该方法
+        :return:
+        """
+        # 判断插件文件夹是否存在
+        if not os.path.exists(path):
+            app_logger.error(f"Extension dir not found {FileNotFoundError}")
+            raise FileNotFoundError
+        for file_name in os.listdir(path):
+            if file_name.endswith(".py"):
+                extension_name: str = file_name[:-3]
+                extension_spec = importlib.util.spec_from_file_location(extension_name, os.path.join(path, file_name))
+                extension = importlib.util.module_from_spec(extension_spec)
+                extension_spec.loader.exec_module(extension)
+                # 注册插件
+                if extension.model == "TextModel":
+                    TextModel.register_extension(name=extension.name,
+                                                 description=extension.func.__doc__,
+                                                 parameters=extension.parameters,
+                                                 func=extension.func)
+                    app_logger.info(f"Extension {extension_name} loaded")
 
     def on_message(self, ws: any, message: str) -> None:
         """
@@ -199,60 +261,3 @@ class TextModel:
         self.history.append({"role": "user", "content": fr"{question}"})
         ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
 
-    def register_extension(self, name: str, description: str, parameters: dict, func: Callable) -> None:
-        """
-        注册插件
-        :param name: 插件名称
-        :param description: 插件描述
-        :param parameters: 插件参数 字典对象
-        :param func: 插件触发后执行的逻辑代码
-        :return:
-        """
-        try:
-            if name in self.extension_book:
-                app_logger.info("The antique extension has been supplanted.")
-            self.extension_book[name] = {"name": name,
-                                         "description": description,
-                                         "parameters": parameters}
-            self._extension_func[name] = func
-        except Exception as e:
-            app_logger.error(f"Erroneous registration of the extension. {e}")
-
-    def unregister_extension(self, name: str) -> None:
-        """
-        解绑插件
-        :param name: 插件名
-        :return:
-        """
-        if name in self.extension_book:
-            del self.extension_book[name]
-            del self._extension_func[name]
-        else:
-            app_logger.info(f"Not found extension to unregister {name}")
-
-
-# test
-if __name__ == "__main__":
-    m = TextModel(APPID="60361ac3",
-                  APISecret="NTM1ZGY3MjM0ODQxMDBhY2NjMDIyM2E5",
-                  APIKey="7f8ff2dba8d566abb46791589ba9fed7",
-                  GptUrl="wss://spark-api.xf-yun.com/v3.5/chat",
-                  Domain="generalv3.5",
-                  tour=5)
-    ctn: int = 0
-    extension_p: dict = m.generate_extension_params(properties=[("location", "string", "地点，默认北京"),
-                                                                ("date", "string", "日期")],
-                                                    required=["location", "date"])
-
-    m.register_extension(name="天气状况",
-                         description="天气插件可以提供天气相关信息。你可以提供指定的地点信息、指定的时间点或者时间段信息，来精准检索到天气信息。",
-                         parameters=extension_p,
-                         func=lambda x: print(f"传入的参数为 >>>{x} 天气状况插件执行"))
-    print(m.extension_book)
-    print(f"{m:extension_book}")
-    print(f"{m:extension_func}")
-
-    # while ctn < 10:
-    #     ctn += 1
-    #     query: str = input()
-    #     m.chat(query)
