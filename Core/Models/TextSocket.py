@@ -1,4 +1,5 @@
 """
+语音听写（流式版）
 Des 文生文对话模型封装Socket类
     聊天接口 instance.chat()
     插件开发步骤: 1. TextModel.generate_extension_params 生成对应的插件参数
