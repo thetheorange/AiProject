@@ -10,7 +10,7 @@
   <component name="TemplatesService">
     <option name="TEMPLATE_FOLDERS">
       <list>
-        <option value="$MODULE_DIR$/Templates" />
+        <option value="$MODULE_DIR$/pythonProject2/Views" />
       </list>
     </option>
   </component>
