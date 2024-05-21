@@ -1,16 +1,17 @@
-import urllib.parse
+import urllib
 
 import sqlalchemy
 from sqlalchemy import Column, String, BigInteger
 from sqlalchemy.ext.declarative import declarative_base
 
 server: str = "192.168.188.128"
-port: str = "3306"
-database: str = "ProjectData"
+port: int = 3306
+database: str = "User"
 username: str = "rust"
-password: str = "rust%admin123"
+password: str = urllib.parse.quote("...")
 
-engine = sqlalchemy.create_engine(f"mysql+mysqlconnector://{username}:{password}@{server}:{port}/{database}",
+
+engine = sqlalchemy.create_engine(f"mysql+pymysql://{username}:{password}@{server}:{port}/{database}?charset=utf8mb4",
                                   echo=True)
 print(engine)
 Base = declarative_base()
