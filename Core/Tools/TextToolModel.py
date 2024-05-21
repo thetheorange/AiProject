@@ -3,39 +3,59 @@ Des 基于文生文对话模型的工具模型，负责对话的压缩概括，�
 @Author thetheOrange
 Time 2024/5/11
 """
+import json
+import ssl
 from urllib.parse import urlparse
 
+import websocket
+
 from Core.Models.TextSocket import TextModel
+from Core.Tools.generate_url import OriginAPI
 from Logging import app_logger
 
 
 class TextToolModel(TextModel):
-    # 注册的插件基本信息 (function call的基本信息)
-    extension_book: dict = {}
-    # 插件执行的对应方法
-    _extension_func: dict = {}
 
-    def __init__(self, *, APPID, APIKey, APISecret, GptUrl, Domain, tour):
+    def __init__(self, *, APPID, APIKey, APISecret, GptUrl, Domain):
+        super().__init__(APPID=APPID, APIKey=APIKey, APISecret=APISecret, GptUrl=GptUrl, Domain=Domain)
+        self.message_to_compress: str = ""
 
-        super().__init__(APPID=APPID, APIKey=APIKey, APISecret=APISecret, GptUrl=GptUrl, Domain=Domain, tour=tour)
+    def chat(self, query_message: list[dict]) -> str:
+        """
+        连接文生文模型api接口，进行对话
+        :return:
+        """
+        self.response_text = ""
+        self.query_message = query_message
 
-    # 重写重载插件方法的驱动 保证工具大模型类无任何插件
-    def handle_load_extension(self, target_class, path: str) -> None:
-        return
+        websocket.enableTrace(False)  # 关闭调试模式
+        ws_param = OriginAPI(APPID=self.APPID,
+                             APISecret=self.APISecret,
+                             APIKey=self.APIKey,
+                             GptUrl=self.GptUrl)
+        ws_url: str = ws_param.generate_url()
+
+        ws = websocket.WebSocketApp(url=ws_url,
+                                    on_message=self.on_message,
+                                    on_error=self.on_error,
+                                    on_close=self.on_close,
+                                    on_open=self.on_open)
+        ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
+        print(self.response_text)
+        return self.response_text
+
+    def compress_msg(self, query_message: list[dict]) -> list[dict]:
+        """
+        :param query_message: 要压缩的消息
+        :return 压缩后的消息
+        """
+        self.message_to_compress = query_message[:]
+        self.message_to_compress.insert(0, {"role": "system", "content": "我需要你为我概括我向你提供的内容，最好不超过100字，越简短越好"})
+        self.message_to_compress[-1] = {"role": "user", "content": "概括以上所有的对话内容"}
+        return [{"role": "assistant", "content": f"{self.chat(self.message_to_compress)}"}]
 
 
+# test
 if __name__ == "__main__":
-    test_session = TextToolModel(APPID="60361ac3",
-                                 APIKey="7f8ff2dba8d566abb46791589ba9fed7",
-                                 APISecret="NTM1ZGY3MjM0ODQxMDBhY2NjMDIyM2E5",
-                                 GptUrl="wss://spark-Api.xf-yun.com/v3.5/chat",
-                                 Domain="generalv3.5",
-                                 tour=10)
+    ...
 
-    ctn: int = 10
-    # test_session.on_mask()
-    print(f"{test_session:extension_book}")
-    while ctn > 0:
-        print(test_session.history)
-        test_session.chat(input(""))
-        ctn -= 1

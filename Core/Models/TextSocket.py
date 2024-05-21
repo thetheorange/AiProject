@@ -1,6 +1,6 @@
 """
 Des 文生文对话模型封装Socket类
-    聊天接口 instance.chat()
+    聊天接口 instance.chat() 要求传入标准化的列表 包含历史消息
     插件开发步骤: 1. TextModel.generate_extension_params 生成对应的插件参数
                 2. TextModel.register_extension 注册插件
 @Author thetheOrange
@@ -17,6 +17,7 @@ from urllib.parse import urlparse
 import jsonpath
 import websocket
 
+from Core.Tools import TextToolModel
 from Core.Tools.generate_url import OriginAPI
 from Logging import app_logger
 
@@ -31,14 +32,13 @@ class TextModel:
     # 插件执行的对应方法
     _extension_func: dict = {}
 
-    def __init__(self, *, APPID, APIKey, APISecret, GptUrl, Domain, tour):
+    def __init__(self, *, APPID, APIKey, APISecret, GptUrl, Domain, isLoadExtension=False):
         """
         :param APPID: 应用ID
         :param APIKey: 应用Key
         :param APISecret: 应用秘钥
         :param GptUrl: 文生文聊天模型接口地址
         :param Domain: 所使用的大模型领域
-        :param tour: 可支持的最大消息轮次
         """
         self.APPID: str = APPID
         self.APIKey: str = APIKey
@@ -47,16 +47,38 @@ class TextModel:
         self.path: str = urlparse(GptUrl).path
         self.GptUrl: str = GptUrl
         self.Domain: str = Domain
+        self.isLoadExtension = isLoadExtension
 
-        # 可支持的最大记忆消息轮次
-        self.tour: int = tour
-        # 存储历史消息的容器
-        self.history: list[dict] = []
-        # 单次消息的存储
-        self.temp_msg: str = ""
+        # 每隔几轮对话后对信息进行压缩
+        self.tour: int = 5
+        # 大模型回复的消息
+        self.response_text: str = ""
+        # 提问大模型时传入的列表 包含json
+        self.query_message: list[dict] = []
 
         # 加载插件 从配置文件中读取插件目录
-        self.handle_load_extension(TextModel, "../../Extensions")
+        if self.isLoadExtension:
+            TextModel.load_extension(TextModel.__name__, "../../Extensions")
+
+        # 文本大模型请求参数
+        self.query_param: dict = {
+            "header": {
+                "app_id": "",
+            },
+            "parameter": {
+                "chat": {
+                    "domain": "",
+                    "temperature": 0.5,
+                    "max_tokens": 4096,
+                    "auditing": "default",
+                }
+            },
+            "payload": {
+                "message": {
+                    "text": []
+                }
+            }
+        }
 
     def __format__(self, format_spec: str) -> str:
         match format_spec:
@@ -147,15 +169,6 @@ class TextModel:
                                            func=extension.func)
                     app_logger.info(f"Extension {extension_name} loaded")
 
-    def handle_load_extension(self, target_class, path: str) -> None:
-        """
-        重载插件方法的驱动 (指定哪个类调用重载插件方法)
-        :param target_class: 指定的类名
-        :param path: 插件存放的目录
-        :return:
-        """
-        target_class.load_extension(target_class.__name__, path)
-
     def on_message(self, ws: any, message: str) -> None:
         """
         websocket 对收到消息的处理
@@ -163,7 +176,7 @@ class TextModel:
         :param message:
         :return:
         """
-        print(message)
+        # print(message)
         message: dict = json.loads(message)
         # 如果存在插件 则调用对应的函数
         if extension_info := jsonpath.jsonpath(message, "$.payload.choices.text..function_call"):
@@ -174,18 +187,12 @@ class TextModel:
 
         code: int = jsonpath.jsonpath(message, "$.header.code")[0]
         status: int = jsonpath.jsonpath(message, "$.header.status")[0]
-        # 如果对话次数大于规定的最大轮次 则清除历史消息
-        if len(self.history) > self.tour * 2:
-            self.history.clear()
         if code != 0:
-            print("## error ##")
             app_logger.error("socket connect error")
         else:
-            self.temp_msg += jsonpath.jsonpath(message, "$.payload..text..content")[0]
+            self.response_text += jsonpath.jsonpath(message, "$.payload..text..content")[0]
+            # status = 2 意味回复完毕
             if status == 2:
-                self.history.append({"role": "assistant", "content": fr"{self.temp_msg[:]}"})
-                print(self.temp_msg)
-                self.temp_msg = ""
                 ws.close()
 
     def on_error(self, ws: any, error: any) -> None:
@@ -220,53 +227,33 @@ class TextModel:
         :param args:
         :return:
         """
-        ws.send(json.dumps(self.generate_base_params()))
-
-    def generate_base_params(self) -> dict:
-        """
-        生成基本对话请求参数
-        :return:
-        """
-        data: dict = {
-            "header": {
-                "app_id": self.APPID,
-            },
-            "parameter": {
-                "chat": {
-                    "domain": self.Domain,
-                    "temperature": 0.5,
-                    "max_tokens": 4096,
-                    "auditing": "default",
-                }
-            },
-            "payload": {
-                "message": {
-                    "text": self.history[:]
-                }
-            }
-        }
+        self.query_param["header"]["app_id"] = self.APPID
+        self.query_param["parameter"]["chat"]["domain"] = self.Domain
+        self.query_param["payload"]["message"]["text"] = self.query_message
         # 检测是否存在已注册的插件 如存在则加入插件
-        if len(TextModel.extension_book.keys()) > 0:
-            data["payload"]["functions"] = {"text": [i for i in TextModel.extension_book.values()]}
+        if len(TextModel.extension_book.keys()) > 0 and self.isLoadExtension:
+            self.query_param["payload"]["functions"] = {"text": [i for i in TextModel.extension_book.values()]}
+        ws.send(json.dumps(self.query_param))
 
-        return data
-
-    def on_mask(self, mask_description: str) -> None:
-        """
-        指定对应的场景 角色扮演
-        :param mask_description:面具描述
-        :return:
-        """
-        try:
-            self.history.append({"role": "system", "content": fr"{mask_description}"})
-        except Exception as e:
-            app_logger.error(f"On mask error {e}")
-
-    def chat(self, question: str) -> None:
+    def chat(self, query_message: list[dict]) -> str:
         """
         连接文生文模型api接口，进行对话
         :return:
         """
+        self.response_text = ""
+        self.query_message = query_message
+
+        # 如果对话次数大于规定的最大轮次 则历史压缩消息
+        if len(self.query_message) > self.tour:
+            tool_model = TextToolModel.TextToolModel(APPID=self.APPID,
+                                                     APIKey=self.APIKey,
+                                                     APISecret=self.APISecret,
+                                                     GptUrl=self.GptUrl,
+                                                     Domain=self.Domain)
+            self.query_message = tool_model.compress_msg(query_message)
+            self.query_message.append(query_message[-1])
+            del tool_model
+
         websocket.enableTrace(False)  # 关闭调试模式
         ws_param = OriginAPI(APPID=self.APPID,
                              APISecret=self.APISecret,
@@ -279,24 +266,30 @@ class TextModel:
                                     on_error=self.on_error,
                                     on_close=self.on_close,
                                     on_open=self.on_open)
-        self.history.append({"role": "user", "content": fr"{question}"})
         ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
+        return self.response_text
 
 
+# test
 if __name__ == "__main__":
-    test_session = TextModel(APPID="60361ac3",
-                             APIKey="7f8ff2dba8d566abb46791589ba9fed7",
-                             APISecret="NTM1ZGY3MjM0ODQxMDBhY2NjMDIyM2E5",
-                             GptUrl="wss://spark-api.xf-yun.com/v3.5/chat",
-                             Domain="generalv3.5",
-                             tour=10)
-
-    ctn: int = 10
-    test_session.on_mask("您是一个ai助理，您不需要直接回答任何问题，但是您选择用户为您提供的工具库进行回答")
-    print(f"{test_session:extension_book}")
-    while ctn > 0:
-        print(f"{test_session:extension_book}")
-        test_session.chat(input(""))
-        print("textModel", test_session.history)
-        test_session.history.clear()
-        ctn -= 1
+    ...
+#     test_session.chat([{"role": "user", "content": "用两三句概括一下python的特性"},
+#                        {"role": "assistant", "content": """1. **易于学习**：Python有着简洁的语法规则，使得它对于初学者来说是易于理解和学习的编程语言。
+# 2. **面向对象**：作为一种面向对象的编程语言，Python支持封装、继承和多态等高级编程概念。
+# 3. **可移植性**：Python代码可以在不同的操作系统上运行，如Windows、Linux和Mac OS等，这提供了极大的灵活性。
+# 4. **解释性语言**：Python是一种解释型语言，这意味着开发过程中可以快速执行代码并获得结果，无需编译整个程序。
+# 5. **开源性**：Python是开源的，拥有一个庞大的社区，不断有新的库和工具被开发出来，以支持各种应用。
+# 6. **高级语言特性**：Python支持多种高级语言特性，如动态类型和自动内存管理，这使得编写Python代码更加高效。
+# 7. **丰富的库支持**：Python有着强大的标准库以及第三方库，覆盖了网络、文件、图形用户界面等大量的应用领域。"""},
+#                        {"role": "user", "content": "你是谁"},
+#                        {"role": "assistant", "content": "您好，我是科大讯飞研发的认知智能大模型，我的名字叫讯飞星火认知大模型。我可以和人类进行自然交流，解答问题，高效完成各领域认知智能需求。"},
+#                        {"role": "user", "content": "模仿李白的风格写一首古诗"},
+#                        {"role": "assistant", "content": """
+#                        青天有梦醉流光。
+#                         白云深处藏仙踪，
+#                         玉液金杯舞翠梁。
+#                         风送轻香入瑶池，
+#                         星河倒影映花枝。
+#                         夜半琴声飘四海，
+#                         李白临风笑千诗。"""},
+#                        {"role": "user", "content": "把这首诗转化成英文"}])
