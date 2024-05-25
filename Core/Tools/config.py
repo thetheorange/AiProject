@@ -39,7 +39,8 @@ class Config:
     def read(self) -> dict:
         """
         读取配置文件 返回字典对象
-        :return:
+
+        :return: 返回由配置文件转换而成的字典对象
         """
         try:
             if not os.path.exists(self.config_path):
@@ -56,6 +57,7 @@ class Config:
     def modify(self, *, key: any, value: any) -> bool:
         """
         修改配置文件 返回是否修改成功的bool值
+
         :return:
         """
         try:
