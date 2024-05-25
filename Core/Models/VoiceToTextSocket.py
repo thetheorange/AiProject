@@ -6,19 +6,12 @@ Time 2024/5/18
 """
 import os
 import websocket
-import datetime
-import hashlib
 import base64
-import hmac
 import json
-from urllib.parse import urlencode
+from Core.Tools.generate_url import OriginAPI
 import time
 import ssl
-from wsgiref.handlers import format_date_time
-from datetime import datetime
-from time import mktime
 import _thread as thread
-from functools import partial
 
 STATUS_FIRST_FRAME = 0  # 第一帧的标识
 STATUS_CONTINUE_FRAME = 1  # 中间帧标识
@@ -26,28 +19,30 @@ STATUS_LAST_FRAME = 2  # 最后一帧的标识
 
 
 class VideoToTextModel(object):
-    # 初始化
-    def __init__(self, APPID, APIKey, APISecret):
+    def __init__(self, APPID: str, APIKey: str, APISecret: str):
         """
+        语音转文字模型封装Socket类
         :param APPID: 应用ID
         :param APIKey: 应用Key
         :param APISecret: 应用秘钥
         """
-        self.APPID = APPID
-        self.APIKey = APIKey
-        self.APISecret = APISecret
-        self.AudioFile = ""
-        self.translate_text = ""
+        self.APPID: str = APPID
+        self.APIKey: str = APIKey
+        self.APISecret: str = APISecret
+        self.AudioFile: str = ""
+        self.translate_text: str = ""
         # 公共参数(common)
-        self.CommonArgs = {"app_id": self.APPID}
+        self.CommonArgs: dict = {"app_id": self.APPID}
         # 业务参数(business)，更多个性化参数可在官网查看
-        self.BusinessArgs = {"domain": "iat", "language": "zh_cn", "accent": "mandarin", "vinfo": 1, "vad_eos": 10000}
+        self.BusinessArgs: dict = {"domain": "iat", "language": "zh_cn", "accent": "mandarin", "vinfo": 1,
+                                   "vad_eos": 10000}
+        self.GptUrl: str = 'wss://ws-Api.xfyun.cn/v2/iat'
         websocket.enableTrace(False)
 
     def transform_voice(self, audio_path: str = "") -> None:
         """
         语音转文字
-        :param audio_path:音频路径
+        :param audio_path:音频路径。最好是pcm文件
         :return:
         """
         try:
@@ -57,7 +52,11 @@ class VideoToTextModel(object):
             if not os.path.exists(self.AudioFile):
                 print("The audio file does not exist")
                 return
-            ws_url = self.create_url()
+            ws_param = OriginAPI(APPID=self.APPID,
+                                 APISecret=self.APISecret,
+                                 APIKey=self.APIKey,
+                                 GptUrl=self.GptUrl)
+            ws_url: str = ws_param.generate_url()
             ws = websocket.WebSocketApp(ws_url,
                                         on_message=self.on_message,
                                         on_error=self.on_error,
@@ -66,42 +65,6 @@ class VideoToTextModel(object):
             ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
         except Exception as e:
             print(str(e))
-
-    def create_url(self):
-        """
-        # 生成url
-        :return:
-        """
-        url = 'wss://ws-Api.xfyun.cn/v2/iat'
-        # 生成RFC1123格式的时间戳
-        now = datetime.now()
-        date = format_date_time(mktime(now.timetuple()))
-
-        # 拼接字符串
-        signature_origin = "host: " + "ws-Api.xfyun.cn" + "\n"
-        signature_origin += "date: " + date + "\n"
-        signature_origin += "GET " + "/v2/iat " + "HTTP/1.1"
-        # 进行hmac-sha256进行加密
-        signature_sha = hmac.new(self.APISecret.encode('utf-8'), signature_origin.encode('utf-8'),
-                                 digestmod=hashlib.sha256).digest()
-        signature_sha = base64.b64encode(signature_sha).decode(encoding='utf-8')
-
-        authorization_origin = "api_key=\"%s\", algorithm=\"%s\", headers=\"%s\", signature=\"%s\"" % (
-            self.APIKey, "hmac-sha256", "host date request-line", signature_sha)
-        authorization = base64.b64encode(authorization_origin.encode('utf-8')).decode(encoding='utf-8')
-        # 将请求的鉴权参数组合为字典
-        v = {
-            "authorization": authorization,
-            "date": date,
-            "host": "ws-Api.xfyun.cn"
-        }
-        # 拼接鉴权参数，生成url
-        url = url + '?' + urlencode(v)
-        # print("date: ",date)
-        # print("v: ",v)
-        # 此处打印出建立连接时候的url,参考本demo的时候可取消上方打印的注释，比对相同参数时生成的url与自己代码生成的url是否一致
-        # print('websocket url :', url)
-        return url
 
     def on_message(self, ws, message):
         """
@@ -201,18 +164,13 @@ class VideoToTextModel(object):
         thread.start_new_thread(run, ())
 
 
-# path = r"D:\录音\录音 (3).wav"
-# wsParam = Ws_Param(APPID='c2102d12', APISecret='M2FjNGEzMzI3ZDhmOTliNjc2NzVlNWY2',
-#                    APIKey='a1dbd44505bae49287c7f7421f9be66e')
-# wsParam.transform_voice(audio_path=path)
+# # debug:
+# wsParam = VideoToTextModel(APPID='c2102d12', APISecret='M2FjNGEzMzI3ZDhmOTliNjc2NzVlNWY2',
+#                            APIKey='a1dbd44505bae49287c7f7421f9be66e')
+# wsParam.transform_voice(r"D:\录音\录音 (2).wav")
 # print(wsParam.translate_text)
-
-# if __name__ == "__main__":
-#     # 测试时候在此处正确填写相关信息即可运行
-#     wsParam = Ws_Param(APPID='c2102d12', APISecret='M2FjNGEzMzI3ZDhmOTliNjc2NzVlNWY2',
-#                        APIKey='a1dbd44505bae49287c7f7421f9be66e', )
-
 """
+返回类型：
 [{"bg": 24, "cw": [{"sc": 0, "w": "那么"}]}, {"bg": 80, "cw": [{"sc": 0, "w": "耳机"}]}, {"bg": 136, "cw": [{"sc": 0, "w": "是否"}]}, {"bg": 196, "cw": [{"sc": 0, "w": "能"}]}, {"bg": 220, "cw": [{"sc": 0, "w": "入"}]}, {"bg": 248, "cw": [{"sc": 0, "w": "的"}]}, {"cw": [{"sc": 0, "w": "了"}], "bg": 276}]
 sid:iat000d4bba@dx18f8ba713aaa12b802 call success!,data is:[{"bg": 307, "cw": [{"sc": 0, "w": "？"}]}]
 """
