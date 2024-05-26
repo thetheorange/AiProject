@@ -8,9 +8,10 @@ from PyQt5.QtGui import QFont
 from PIL import Image
 from PyQt5 import QtGui
 from PyQt5.QtCore import QSize, pyqtSignal, Qt, QThread
-from PyQt5.QtGui import QPainter, QFont, QColor, QPixmap, QPolygon, QFontMetrics,QIcon
+from PyQt5.QtGui import QPainter, QFont, QColor, QPixmap, QPolygon, QFontMetrics, QIcon
 from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QSizePolicy, QVBoxLayout, QSpacerItem, \
     QScrollArea, QScrollBar, QLabel, QWidget, QVBoxLayout, QApplication
+from ChoseStyle import ChoseWindow
 
 
 class Signals(QObject):
@@ -303,9 +304,9 @@ class BubbleMessage(QWidget):
         self.setLayout(layout)
 
 
-class Test(QWidget):
+class Test(ChoseWindow):
     def __init__(self):
-        super().__init__()
+        super().__init__(transparent=False)
         layout = QVBoxLayout()
         self.resize(500, 600)
         self.w1 = ChatWidget()
@@ -372,7 +373,7 @@ class Test(QWidget):
         receive_avatar = 'icons/fish.png'
         TEXT = MessageType.Text
         IMAGE = MessageType.Image
-        send_text=self.w1.message.text()
+        send_text = self.w1.message.text()
         self.w1.message.setText("")
         print(send_text)
         bubble_message = BubbleMessage(send_text, send_avatar, Type=TEXT, is_send=True)
@@ -384,6 +385,9 @@ class Test(QWidget):
 
 
 if __name__ == '__main__':
+    QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
     app = QApplication([])
     widget = Test()
     widget.w1.update()

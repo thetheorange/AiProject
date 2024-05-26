@@ -22,14 +22,16 @@ class ChoseWindow(MyWindow):
     亚克力window
     """
 
-    def __init__(self, no_frame=True):
+    def __init__(self, transparent:bool=True):
         """
         亚克力window
-        :param no_frame:是否为无边框界面。逻辑还不对但是先这样
+        :param transparent:是否为无边框界面。逻辑还不对但是先这样
         """
         super().__init__()
-        if is_win11 and no_frame:
+        if is_win11 and transparent:
             self.setAcrylicEffectEnabled(True)
+        elif is_win11:
+            self.setAcrylicEffectEnabled(False)
 
     def setAcrylicEffectEnabled(self, enable: bool):
         """ 设置亚克力效果 """
