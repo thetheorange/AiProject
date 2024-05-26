@@ -24,7 +24,6 @@ class TextCorrectionSocket:
         self.APPID = APPID
         self.APISecret = APISecret
         self.APIKey = APIKey
-        self.text = Text
         self.GptUrl = 'https://api.xf-yun.com/v1/private/s9a87e3ec'
         self.res: str = ""
 
