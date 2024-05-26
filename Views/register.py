@@ -1,31 +1,32 @@
 """
+登录界面
 Des 生成四位数的随机验证码图片
 @Author dty thetheOrange
-Time 2024/5/25
+Time 2024/5/26
 """
 
 import os
 import random
 import string
 import sys
-
+import time
 from PyQt5.QtGui import QIcon
 from PyQt5.QtGui import QPixmap
 from PyQt5.uic import loadUi
-from PyQt5.QtWidgets import QApplication, QWidget
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox
+from PyQt5.QtCore import Qt, QOperatingSystemVersion
 
 from Core.Tools.generate_captcha import Captcha
+from ChoseStyle import ChoseWindow
 
 
-class LoginWindow(QWidget):
+class LoginWindow(ChoseWindow):
     """
     登录窗口
     """
 
     def __init__(self):
         super().__init__()
-
         loadUi("../Templates/register.ui", self)
 
         Window_icon: str = r"../Assets/icons/add.png"
@@ -35,7 +36,7 @@ class LoginWindow(QWidget):
         self.setWindowIcon(QIcon(Window_icon))
         pixmap = QPixmap(user_img_path).scaled(20, 30, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         self.icon_photo.setPixmap(pixmap)
-
+        self.last_click_time: time = time.time()  # 上次点击时间，防止点击过频繁
         # 验证码图片设置
         self.captcha_img_path: str = r"../Temp"
         captcha: Captcha = Captcha(char_4=self.get_random_char(),
@@ -63,7 +64,6 @@ class LoginWindow(QWidget):
     def __bind_sign(self) -> None:
         """
         绑定信号与槽
-
         :return:
         """
         self.confirm_button.clicked.connect(self.sayHi)
@@ -76,14 +76,26 @@ class LoginWindow(QWidget):
 
         :return:
         """
-        # 生成验证码图片
-        captcha: Captcha = Captcha(char_4=self.get_random_char(),
-                                   captcha_path=self.captcha_img_path)
-        self.captcha_current: str = captcha.char_4
+        try:
+            # 生成验证码图片
+            now = time.time()
+            if now - self.last_click_time < 1:
+                # 如果距离上次点击的时间小于设定的时间阈值，则显示警告
+                msgbox = QMessageBox(QMessageBox.Warning, '警告', '点击过于频繁')
+                msgbox.exec_()
+            else:
+                # 否则，执行正常的点击操作
+                self.last_click_time = now  # 更新上次点击时间
 
-        pixmap = QPixmap(captcha.captcha_position).scaled(70, 80, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        self.veri_code.setPixmap(pixmap)
-        self.clear_captcha()
+                captcha: Captcha = Captcha(char_4=self.get_random_char(),
+                                           captcha_path=self.captcha_img_path)
+                self.captcha_current: str = captcha.char_4
+
+                pixmap = QPixmap(captcha.captcha_position).scaled(70, 80, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                self.veri_code.setPixmap(pixmap)
+                self.clear_captcha()
+        except Exception as e:
+            print(str(e))
 
     def clear_captcha(self) -> None:
         """
