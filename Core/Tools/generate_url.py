@@ -26,11 +26,10 @@ class OriginAPI:
         self.path: str = urlparse(GptUrl).path
         self.GptUrl: str = GptUrl
 
-    def generate_url(self, method="GET", reverse_order=False) -> str:
+    def generate_url(self, method="GET") -> str:
         """
         生成api接口
         :param method:方法，默认为GET,有可能是POST
-        :param reverse_order:是否调换顺序，默认为不用
         :return str:
         """
         # 生成RFC1123格式的时间戳
@@ -38,7 +37,7 @@ class OriginAPI:
         # 拼接字符串
         signature_origin: str = "host: " + self.host + "\n"
         signature_origin += "date: " + date + "\n"
-        signature_origin += method + self.path + " HTTP/1.1"
+        signature_origin += method + " " + self.path + " HTTP/1.1"
         # 进行hmac-sha256进行加密
         signature_sha = hmac.new(self.APISecret.encode('utf-8'), signature_origin.encode('utf-8'),
                                  digestmod=hashlib.sha256).digest()
@@ -46,16 +45,9 @@ class OriginAPI:
         authorization_origin: str = f'api_key="{self.APIKey}", algorithm="hmac-sha256", headers="host date request-line", signature="{signature_sha_base64}"'
         authorization: str = base64.b64encode(authorization_origin.encode('utf-8')).decode(encoding='utf-8')
         # 鉴权参数
-        if reverse_order:
-            params: dict = {
-                "host": self.host,
-                "date": date,
-                "authorization": authorization,
-            }
-        else:
-            params: dict = {
-                "authorization": authorization,
-                "date": date,
-                "host": self.host
-            }
+        params: dict = {
+            "host": self.host,
+            "date": date,
+            "authorization": authorization,
+        }
         return self.GptUrl + '?' + urlencode(params)

@@ -77,7 +77,7 @@ class TextCorrectionSocket:
                              APISecret=self.APISecret,
                              APIKey=self.APIKey,
                              GptUrl=self.GptUrl)
-        request_url = ws_param.generate_url(method="POST ")
+        request_url = ws_param.generate_url(method="POST")
         headers = {'content-type': "application/json", 'host': 'api.xf-yun.com', 'app_id': self.APPID}
         body = self.get_body()
         response = requests.post(request_url, data=json.dumps(body), headers=headers)
