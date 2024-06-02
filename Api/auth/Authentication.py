@@ -55,9 +55,9 @@ def register() -> Response:
 
     DBSession = sessionmaker(bind=engine)
     with DBSession() as session:
-        same_name: User = session.query(User).filter(User.UserName == user_name).first()
+        is_same_name: User = session.query(User).filter(User.UserName == user_name).first()
         # 查询注册的用户名是否重名
-        if same_name:
+        if is_same_name:
             return jsonify({"code": StatusCode.RegisterError, "msg": "用户名已存在"})
         else:
             # 加密用户密码
