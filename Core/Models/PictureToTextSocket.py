@@ -1,5 +1,5 @@
 """
-Des 图片转文字模型封装Socket类
+Des 文字识别模型封装Socket类
     转换接口 instance.translate_picture()
 @Author Misaka-xxw
 Time 2024/6/3
@@ -81,6 +81,8 @@ class PictureToTextSocket:
             res = base64.b64decode(renew_text)
             self.res = json.loads(res)["whole_text"]
             print(self.res)
+            return self.res
+        return ""
 
 
 if __name__ == "__main__":
