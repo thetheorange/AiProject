@@ -58,7 +58,14 @@ class OpenImageThread(QThread):
 
 
 class ImageMessage(QLabel):
+    """
+    图片类信息
+    """
+
     def __init__(self, avatar, parent=None):
+        """
+        :param avatar:
+        """
         super().__init__(parent)
         self.image = QLabel(self)
         if isinstance(avatar, str):
@@ -77,6 +84,10 @@ class ImageMessage(QLabel):
 
 
 class Triangle(QLabel):
+    """
+    气泡的三角
+    """
+
     def __init__(self, Type, is_send=False, parent=None):
         super().__init__(parent)
         self.Type = Type
@@ -106,6 +117,10 @@ class ScrollAreaContent(QWidget):
 
 
 class ScrollArea(QScrollArea):
+    """
+    滑动区域
+    """
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWidgetResizable(True)
@@ -118,6 +133,10 @@ class ScrollArea(QScrollArea):
 
 
 class ScrollBar(QScrollBar):
+    """
+    滑动条
+    """
+
     def __init__(self):
         super().__init__()
         self.setStyleSheet(
@@ -164,10 +183,10 @@ class ScrollBar(QScrollBar):
         )
 
 
-class ChatWidget(QWidget):
-    def sayHi(self):  # click对应的槽函数
-        print("hi")
-
+class ChatChildWidget(QWidget):
+    """
+    子聊天框
+    """
     def __init__(self):
 
         super().__init__()
@@ -175,16 +194,15 @@ class ChatWidget(QWidget):
         # 载入ui文件
         loadUi("../Templates/chat.ui", self)
         # 信号与槽
-        # self.send_message_button.clicked.connect(self.sayHi)
-        self.mask_button.clicked.connect(self.sayHi)
-        self.my_button.clicked.connect(self.sayHi)
-        self.insert_button.clicked.connect(self.sayHi)
+        self.send_message_button.clicked.connect(self.send_message)
+        # self.mask_button.clicked.connect(self.sayHi)
+        # self.my_button.clicked.connect(self.sayHi)
+        # self.insert_button.clicked.connect(self.sayHi)
 
         # 添加照片的按钮
         add_photo_button_icon: str = r'../Asserts/icons/add.png'
         self.add_photo_button.setIcon(QIcon(add_photo_button_icon))
-        self.add_photo_button.clicked.connect(self.sayHi)
-
+        # self.add_photo_button.clicked.connect(self.sayHi)
         layout = QVBoxLayout()
         self.groupBox_5.setLayout(layout)
         layout.setSpacing(0)
@@ -193,6 +211,7 @@ class ChatWidget(QWidget):
         self.scrollArea = ScrollArea(self)
         scrollBar = ScrollBar()
         self.scrollArea.setVerticalScrollBar(scrollBar)
+        self.verticalScrollBar().setValue(200)
         # self.scrollArea.setGeometry(QRect(9, 9, 261, 211))
         # 生成滚动区域的内容部署层部件
         self.scrollAreaWidgetContents = ScrollAreaContent(self.scrollArea)
@@ -229,6 +248,18 @@ class ChatWidget(QWidget):
         self.scrollArea.update()
         # self.scrollArea.repaint()
         # self.verticalScrollBar().setMaximum(self.scrollAreaWidgetContents.height())
+
+    def send_message(self):
+        send_avatar = 'icons/user.png'
+        receive_avatar = 'icons/fish.png'
+        TEXT = MessageType.Text
+        IMAGE = MessageType.Image
+        send_text = self.message.text()
+        print(send_text)
+        self.message.setText("")
+        print(send_text)
+        bubble_message = BubbleMessage(send_text, send_avatar, Type=TEXT, is_send=True)
+        self.add_message_item(bubble_message)
 
 
 class TextMessage(QLabel):
@@ -267,6 +298,10 @@ class TextMessage(QLabel):
 
 
 class BubbleMessage(QWidget):
+    """
+    气泡信息
+    """
+
     def __init__(self, str_content, avatar, Type, is_send=False, parent=None):
         super().__init__(parent)
         self.isSend = is_send
@@ -304,13 +339,17 @@ class BubbleMessage(QWidget):
         self.setLayout(layout)
 
 
-class Test(ChoseWindow):
+class ChatWidget(QWidget):
+    """
+    放了layout的聊天框
+    """
+
     def __init__(self):
-        super().__init__(transparent=False)
+        super().__init__()
+        self.setObjectName("ChatWidget")
         layout = QVBoxLayout()
         self.resize(500, 600)
-        self.w1 = ChatWidget()
-        self.w1.send_message_button.clicked.connect(self.send_message)
+        self.w1 = ChatChildWidget()
         send_avatar = '../Asserts/icons/user.png'
         receive_avatar = '../Asserts/icons/fish.png'
         TEXT = MessageType.Text
@@ -321,67 +360,8 @@ class Test(ChoseWindow):
         print(f"输入的文本是: {text_message}")
         bubble_message = BubbleMessage(text_message, receive_avatar, Type=TEXT, is_send=False)
         self.w1.add_message_item(bubble_message)
-
-        # bubble_message = BubbleMessage('你好啊💖', send_avatar, Type=TEXT, is_send=True)
-        # self.w1.add_message_item(bubble_message)
-
-        # bubble_message = BubbleMessage('./data/fg1.png', send_avatar, Type=IMAGE, is_send=True)
-        # self.w1.add_message_item(bubble_message)
-
-        # bubble_message = BubbleMessage('咱们来对个诗吧！', send_avatar, Type=TEXT, is_send=True)
-        # self.w1.add_message_item(bubble_message)
-        #
-        # bubble_message = BubbleMessage('落霞与孤鹜齐飞', send_avatar, Type=TEXT, is_send=True)
-        # self.w1.add_message_item(bubble_message)
-        #
-        # bubble_message = BubbleMessage('秋水共成天一色', receive_avatar, Type=TEXT, is_send=False)
-        # self.w1.add_message_item(bubble_message)
-        #
-        # bubble_message = BubbleMessage('风急天高猿啸哀', send_avatar, Type=TEXT, is_send=True)
-        # self.w1.add_message_item(bubble_message)
-        #
-        # bubble_message = BubbleMessage('渚清沙白鸟飞回', receive_avatar, Type=TEXT, is_send=False)
-        # self.w1.add_message_item(bubble_message)
-        #
-        # bubble_message = BubbleMessage('无边落木萧萧下', send_avatar, Type=TEXT, is_send=True)
-        # self.w1.add_message_item(bubble_message)
-        #
-        # bubble_message = BubbleMessage('不尽长江滚滚来', receive_avatar, Type=TEXT, is_send=False)
-        # self.w1.add_message_item(bubble_message)
-        #
-        # bubble_message = BubbleMessage('万里悲秋常作客', send_avatar, Type=TEXT, is_send=True)
-        # self.w1.add_message_item(bubble_message)
-        #
-        # bubble_message = BubbleMessage('百年多病独登台', receive_avatar, Type=TEXT, is_send=False)
-        # self.w1.add_message_item(bubble_message)
-        #
-        # bubble_message = BubbleMessage('艰难苦恨繁霜鬓', send_avatar, Type=TEXT, is_send=True)
-        # self.w1.add_message_item(bubble_message)
-        #
-        # bubble_message = BubbleMessage('潦倒新停浊酒杯', receive_avatar, Type=TEXT, is_send=False)
-        # self.w1.add_message_item(bubble_message)
-        #
-        # bubble_message = BubbleMessage('这是一串很长的文字\n好长好长好长好长好长好长好长好长好长好长好长好长好长好长好长好长好长好长好长好长', receive_avatar, Type=TEXT, is_send=False)
-        # self.w1.add_message_item(bubble_message)
-        # w2 = QLabel("nihao")
         layout.addWidget(self.w1)
-        # layout.addWidget(w2)
         self.setLayout(layout)
-
-    def send_message(self):
-        send_avatar = 'icons/user.png'
-        receive_avatar = 'icons/fish.png'
-        TEXT = MessageType.Text
-        IMAGE = MessageType.Image
-        send_text = self.w1.message.text()
-        self.w1.message.setText("")
-        print(send_text)
-        bubble_message = BubbleMessage(send_text, send_avatar, Type=TEXT, is_send=True)
-        self.w1.add_message_item(bubble_message)
-
-    def value(self, val):
-        print('pos:', val)
-        print('滚动条最大值', self.w1.verticalScrollBar().maximum())
 
 
 if __name__ == '__main__':
@@ -389,15 +369,7 @@ if __name__ == '__main__':
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
     app = QApplication([])
-    widget = Test()
-    widget.w1.update()
-    # widget = MyWidget()
-    widget.w1.verticalScrollBar().setValue(200)
-    print('滚动条最大值002', widget.w1.verticalScrollBar().maximum())
+    widget = ChatWidget()
+    widget.update()
     widget.show()
-    # QThread.sleep(2)
-    widget.w1.verticalScrollBar().setValue(200)
-    # widget.w1.verticalScrollBar().setValue(200)
-    # widget.w1.verticalScrollBar().setValue(200)
-
     app.exec_()
