@@ -1,3 +1,8 @@
+"""
+Des User orm对象关系映射
+@Author thetheOrange
+Time 2024/5/21
+"""
 import urllib
 
 import sqlalchemy
@@ -12,7 +17,7 @@ password: str = urllib.parse.quote("...")
 
 
 engine = sqlalchemy.create_engine(f"mysql+pymysql://{username}:{password}@{server}:{port}/{database}?charset=utf8mb4",
-                                  echo=True)
+                                  echo=False)
 print(engine)
 Base = declarative_base()
 
@@ -28,4 +33,4 @@ class User(Base):
     PassWord = Column(String(50), nullable=False)
     Tokens = Column(BigInteger)  # 用户剩余的token数
     Email = Column(String(10), nullable=False)
-
+    PicTimes = Column(BigInteger)
