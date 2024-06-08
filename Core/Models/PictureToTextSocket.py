@@ -8,7 +8,6 @@ import base64
 import json
 import requests
 
-from Core.Models.TextCorrectionSocket import TextCorrectionSocket
 from Core.Tools.generate_url import OriginAPI
 
 
@@ -58,7 +57,7 @@ class PictureToTextSocket:
         }
         return body
 
-    def translate_picture(self, picture_path: str = ""):
+    def translate_picture(self, picture_path: str = "") -> str:
         """
         图片转文字
         :param picture_path:图片路径
