@@ -18,7 +18,7 @@ STATUS_CONTINUE_FRAME = 1  # 中间帧标识
 STATUS_LAST_FRAME = 2  # 最后一帧的标识
 
 
-class VideoToTextModel(object):
+class AudioToTextModel(object):
     def __init__(self, APPID: str, APIKey: str, APISecret: str):
         """
         语音转文字模型封装Socket类
@@ -39,7 +39,7 @@ class VideoToTextModel(object):
         self.GptUrl: str = 'wss://ws-Api.xfyun.cn/v2/iat'
         websocket.enableTrace(False)
 
-    def transform_voice(self, audio_path: str = "") -> None:
+    def transform_voice(self, audio_path: str = "") -> str | None:
         """
         语音转文字
         :param audio_path:音频路径。最好是pcm文件
@@ -57,12 +57,13 @@ class VideoToTextModel(object):
                                  APIKey=self.APIKey,
                                  GptUrl=self.GptUrl)
             ws_url: str = ws_param.generate_url()
-            ws = websocket.WebSocketApp(ws_url,
+            ws = websocket.WebSocketApp(url=ws_url,
                                         on_message=self.on_message,
                                         on_error=self.on_error,
                                         on_close=self.on_close)
             ws.on_open = self.on_open
             ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
+            return self.translate_text
         except Exception as e:
             print(str(e))
 
@@ -79,15 +80,15 @@ class VideoToTextModel(object):
             sid = json.loads(message)["sid"]
             if code != 0:
                 errMsg = json.loads(message)["message"]
-                print("sid:%s call error:%s code is:%s" % (sid, errMsg, code))
+                # print("sid:%s call error:%s code is:%s" % (sid, errMsg, code))
             else:
                 data = json.loads(message)["data"]["result"]["ws"]
                 # print(json.loads(message))
                 for i in data:
                     for w in i["cw"]:
                         result += w["w"]
-                        print(result)
-                print("sid:%s call success!,data is:%s" % (sid, json.dumps(data, ensure_ascii=False)))
+                        # print(result)
+                # print("sid:%s call success!,data is:%s" % (sid, json.dumps(data, ensure_ascii=False)))
                 self.translate_text += result
         except Exception as e:
             print("receive msg,but parse exception:", e)
