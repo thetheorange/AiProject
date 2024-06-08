@@ -7,6 +7,8 @@ Time 2024/6/3
 import base64
 import json
 import requests
+
+from Core.Models.TextCorrectionSocket import TextCorrectionSocket
 from Core.Tools.generate_url import OriginAPI
 
 
@@ -22,7 +24,7 @@ class PictureToTextSocket:
         self.APPID = APPID
         self.APISecret = APISecret
         self.APIKey = APIKey
-        self.GptUrl = 'http://api.xf-yun.com/v1/private/hh_ocr_recognize_doc'
+        self.GptUrl = "http://api.xf-yun.com/v1/private/hh_ocr_recognize_doc"
         self.picture_path: str = ""
         self.res: str = ""
 
@@ -68,19 +70,19 @@ class PictureToTextSocket:
                              APIKey=self.APIKey,
                              GptUrl=self.GptUrl)
         request_url = ws_param.generate_url(method="POST")
-        print(request_url)
-        headers = {'content-type': "application/json", 'host': 'api.xf-yun.com', 'appid': 'APPID'}
+        # print(request_url)
+        headers = {'Content-Type': "application/json"}
         body = self.get_body(file_path=picture_path)
         response = requests.post(request_url, data=json.dumps(body), headers=headers)
-        print(response)
+        # print(response)
         re = response.content.decode('utf8')
         str_result = json.loads(re)
-        print("\nresponse-content:", re)
+        # print("\nresponse-content:", re)
         if str_result.__contains__('header') and str_result['header']['code'] == 0:
             renew_text = str_result['payload']['recognizeDocumentRes']['text']
             res = base64.b64decode(renew_text)
             self.res = json.loads(res)["whole_text"]
-            print(self.res)
+            # print(type(self.res), self.res)
             return self.res
         return ""
 
