@@ -8,6 +8,7 @@ import time
 import uuid
 
 from flask import request, jsonify, Response
+from sqlalchemy import and_
 from sqlalchemy.orm import sessionmaker
 
 from Core.StatusCode import StatusCode
@@ -41,7 +42,7 @@ def create_uuid(user_name: str) -> str:
     return str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{time_stamp}{user_name}").hex)
 
 
-@auth_blu.route("/register", methods=["POST"])
+@auth_blu.route("/auth/register", methods=["POST"])
 def register() -> Response:
     """
     注册接口
@@ -76,7 +77,7 @@ def register() -> Response:
             return jsonify({"code": 0, "msg": "用户注册成功"})
 
 
-@auth_blu.route("/login", methods=["POST"])
+@auth_blu.route("/auth/login", methods=["POST"])
 def login() -> Response:
     """
     登录接口
@@ -90,6 +91,6 @@ def login() -> Response:
     DBSession = sessionmaker(bind=engine)
     with DBSession() as session:
         is_login: User = session.query(User).filter(User.UserName == user_name,
-                                                    User.PassWord == get_md5(pass_word))
+                                                    User.PassWord == get_md5(pass_word)).first()
         return jsonify({"code": 0, "msg": "用户登录成功"}) if is_login \
             else jsonify({"code": StatusCode.LoginError, "msg": "用户登录失败"})
