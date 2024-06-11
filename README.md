@@ -11,28 +11,36 @@
 
 ```text
 
-d Api  # api接口
+.
+├── Api
+│   ├── auth
+│   │   ├── Authentication.py
+│   │   └── __init__.py
+│   ├── __init__.py
+│   └── model
+│       ├── __init__.py
+│       └── ModelAPI.py
+├── app.py
+├── Core
+│   ├── __init__.py
+│   ├── Models
+│   │   ├── __init__.py
+│   │   ├── PictureToTextSocket.py
+│   │   ├── TextSocket.py
+│   │   └── VoiceToTextSocket.py
+│   ├── StatusCode.py
+│   └── Tools
+│       ├── extension_base_params.py
+│       ├── generate_url.py
+│       └── __init__.py
+├── Logging.py
+├── Model
+│   ├── __init__.py
+│   └── model.py
+├── README.md
+└── requirements.txt
 
-    d auth  # 用户鉴权接口
-    d model  # 大模型调用接口
-    
-d Core  # 核心目录
 
-    d Models  # 各大模型封装接口 (基于讯飞平台)
-    d Tools  # 工具类
-
-d Model  # 数据库orm映射类
-
-d Temp  # 临时文件目录
-
-    d Audio  # 用户上传的音频 .pcm
-    d Picture  # 用户上传的图片 .jpg | .jpeg
-
-- app.py  # 程序启动入口
-
-- Logging.py  # 日志文件记录器
-
-# 注解：`d` 目录， `-` 文件， `#` 注释
 ```
 
 ## 接口说明 :mag_right:
