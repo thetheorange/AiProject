@@ -9,16 +9,17 @@ import sqlalchemy
 from sqlalchemy import Column, String, BigInteger
 from sqlalchemy.ext.declarative import declarative_base
 
-server: str = "192.168.188.128"
-port: int = 3306
-database: str = "User"
-username: str = "rust"
-password: str = urllib.parse.quote("...")
+from config import config_json
+
+server: str = config_json["mysql"]["server"]
+port: int = config_json["mysql"]["port"]
+database: str = config_json["mysql"]["database"]
+username: str = config_json["mysql"]["username"]
+password: str = urllib.parse.quote(config_json["mysql"]["password"])
 
 
 engine = sqlalchemy.create_engine(f"mysql+pymysql://{username}:{password}@{server}:{port}/{database}?charset=utf8mb4",
                                   echo=False)
-print(engine)
 Base = declarative_base()
 
 

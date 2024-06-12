@@ -2,6 +2,7 @@ from flask import Flask
 
 from Api.auth import auth_blu
 from Api.model import model_blu
+from config import config_json
 
 app = Flask(__name__)
 # 限制上传文件的最大大小为16k
@@ -11,4 +12,6 @@ app.register_blueprint(auth_blu)
 app.register_blueprint(model_blu)
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5120)
+    app.run(debug=True,
+            host=config_json["flask"]["server"],
+            port=config_json["flask"]["port"])
