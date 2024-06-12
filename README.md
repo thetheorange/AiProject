@@ -43,6 +43,92 @@
 
 ```
 
+## 部署方式 :writing_hand:
+
+### docker部署
+
+1.将下列文本写入到requirements.txt文件中，同时放在代码主目录下
+
+```text
+blinker==1.8.2
+certifi==2024.2.2
+cffi==1.16.0
+charset-normalizer==3.3.2
+click==8.1.7
+colorama==0.4.6
+Flask==3.0.3
+gevent==24.2.1
+greenlet==3.0.3
+idna==3.7
+itsdangerous==2.2.0
+Jinja2==3.1.4
+jsonpath==0.82.2
+MarkupSafe==2.1.5
+mysql-connector-python==8.4.0
+mysqlclient==2.2.4
+pycparser==2.22
+PyMySQL==1.1.0
+requests==2.32.2
+SQLAlchemy==2.0.30
+typing_extensions==4.11.0
+urllib3==2.2.1
+websocket-client==1.8.0
+Werkzeug==3.0.3
+zope.event==5.0
+zope.interface==6.4.post2
+```
+
+2.构建镜像，**请确保Dockerfile**在当前目录下，然后执行如下命令
+
+```shell
+docker build -t ai_project_flask:0.0.1 -f Dockerfile .
+```
+
+注意，请确保容器中的端口同DockerFile中暴露的端口一致，同时，**尤其检查Dockerfile中的`CMD`，查看其中的端口是否一致**
+
+3.运行容器
+
+可以使用`docker images`检查镜像是否成功构建。接着，执行如下命令，运行容器。
+
+```shell
+docker run -p 8080:8080 --name=ai_project_flask -d ai_project_flask:0.0.1
+```
+
+这里的`-p`为端口映射，参数左边宿主机端口，右边容器端口，容器端口**和用户构建镜像时设置的暴露端口一致**
+
+4.运行数据库依赖
+
+首先拉取mysql的镜像 版本latest即可
+
+```shell
+docker pull mysql
+```
+
+接着运行mysql容器
+
+```shell
+docker run -p 8081:3306 \
+-e MYSQL_ROOT_PASSWORD=123456 \
+--name=db \
+--restart=always \
+-d mysql:latest
+```
+
+5.配置数据库表
+
+推荐使用`dbeaver`远程连接数据库，或者在交互模式中，创建数据库`User`，按照下面的`sql`语句在其中新建一个user表
+
+```sql
+CREATE TABLE user (
+    Id VARCHAR(50) PRIMARY KEY NOT NULL ,
+    UserName VARCHAR(50) NOT NULL ,
+    PassWord VARCHAR(50) NOT NULL ,
+    Tokens INTEGER ,
+    Email VARCHAR(50) NOT NULL ,
+    PicTimes INTEGER DEFAULT 0
+);
+```
+
 ## 接口说明 :mag_right:
 
 ### 用户鉴权相关
