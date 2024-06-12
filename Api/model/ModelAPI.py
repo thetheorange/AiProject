@@ -15,14 +15,15 @@ from Core.Models.TextSocket import TextModel
 from Core.Models.VoiceToTextSocket import AudioToTextModel
 from Core.StatusCode import StatusCode
 from Model.model import engine, User
+from config import config_json
 
 from . import model_blu
 
-APPID = "60361ac3"
-APIKEY = "7f8ff2dba8d566abb46791589ba9fed7"
-API_SECRET = "NTM1ZGY3MjM0ODQxMDBhY2NjMDIyM2E5"
-GPT_URL = "wss://spark-api.xf-yun.com/v3.5/chat"
-DOMAIN = "generalv3.5"
+APPID = config_json["api"]["APPID"]
+APIKEY = config_json["api"]["APIKEY"]
+API_SECRET = config_json["api"]["API_SECRET"]
+GPT_URL = config_json["api"]["GPT_URL"]
+DOMAIN = config_json["api"]["DOMAIN"]
 
 # 允许上传的文件拓展名
 ALLOWED_EXTENSIONS: set = {"pcm", "jpg", "jpeg"}

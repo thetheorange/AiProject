@@ -17,5 +17,13 @@ config_json: dict = {
     "flask": {
         "server": "0.0.0.0",
         "port": 5120
+    },
+    # 讯飞平台api相关秘钥和必须参数
+    "api": {
+        "APPID": "60361ac3",
+        "APIKEY": "7f8ff2dba8d566abb46791589ba9fed7",
+        "API_SECRET": "NTM1ZGY3MjM0ODQxMDBhY2NjMDIyM2E5",
+        "GPT_URL": "wss://spark-api.xf-yun.com/v3.5/chat",
+        "DOMAIN": "generalv3.5"
     }
 }
