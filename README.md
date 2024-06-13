@@ -35,9 +35,9 @@
 │       └── __init__.py
 ├── Logging.py
 ├── Model
-├── config.py
 │   ├── __init__.py
 │   └── model.py
+├── config.py
 ├── README.md
 └── requirements.txt
 
