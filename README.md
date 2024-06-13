@@ -35,6 +35,7 @@
 │       └── __init__.py
 ├── Logging.py
 ├── Model
+├── config.py
 │   ├── __init__.py
 │   └── model.py
 ├── README.md
@@ -137,15 +138,16 @@ CREATE TABLE user (
 
 参数说明
 
-| 参数名      | 类型          | 描述        |
-|----------|-------------|-----------|
-| username | string      | 用户名       |
-| password | string      | 用户密码      |
-| email    | string      | 用户邮箱      |
-| code     | int, string | 状态码       |
-| msg      | string      | 描述状态的具体信息 |
-| uuid     | string      | 用户唯一id标识  |
-
+| 参数名      | 类型          | 描述                |
+|----------|-------------|-------------------|
+| username | string      | 用户名               |
+| password | string      | 用户密码              |
+| email    | string      | 用户邮箱              |
+| code     | int, string | 状态码               |
+| msg      | string      | 描述状态的具体信息         |
+| uuid     | string      | 用户唯一id标识          |
+| tokens   | int         | 用户可用的token        |
+| picTimes | int         | 用户可调用的图片识别文字模型的次数 |
 ---
 
 #### 注册接口
@@ -205,13 +207,15 @@ CREATE TABLE user (
 
 *响应体* 格式为json
 
-登录成功会返回用户唯一的uuid **登录失败则不返回uuid**
+登录成功会返回用户的所有信息(包括用户id和uuid等信息) **登录失败则不返回**
 
 ```json
 {
   "code": 0,
   "msg": "xxx",
-  "uuid": "xxx"
+  "uuid": "xxx",
+  "tokens": 0,
+  "picTimes": 0
 }
 ```
 
