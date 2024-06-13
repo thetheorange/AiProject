@@ -8,7 +8,6 @@ import time
 import uuid
 
 from flask import request, jsonify, Response
-from sqlalchemy import and_
 from sqlalchemy.orm import sessionmaker
 
 from Core.StatusCode import StatusCode
@@ -90,7 +89,12 @@ def login() -> Response:
 
     DBSession = sessionmaker(bind=engine)
     with DBSession() as session:
-        is_login: User = session.query(User).filter(User.UserName == user_name,
-                                                    User.PassWord == get_md5(pass_word)).first()
-        return jsonify({"code": 0, "msg": "用户登录成功"}) if is_login \
+        user_info: User = session.query(User).filter(User.UserName == user_name,
+                                                     User.PassWord == get_md5(pass_word)).first()
+        return jsonify({"code": 0,
+                        "msg": "用户登录成功",
+                        "uuid": user_info.Id,
+                        "username": user_info.UserName,
+                        "tokens": user_info.Tokens,
+                        "picTimes": user_info.PicTimes}) if user_info \
             else jsonify({"code": StatusCode.LoginError, "msg": "用户登录失败"})
