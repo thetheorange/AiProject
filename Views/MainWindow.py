@@ -15,6 +15,7 @@ from qfluentwidgets import FluentIcon, SplitFluentWindow, \
 from Views.ChatWindow import ChatSearchWindow, ChatSessionWindow
 from Views.GlobalSignal import global_signal
 from Views.MaskWindow import MaskSettingWindow
+from Views.SettingWindow import SettingWindow
 from Views.UserInfoWindwo import UserInfoWindow
 
 
@@ -57,7 +58,10 @@ class MainWindow(SplitFluentWindow):
         self.chat_search_window = ChatSearchWindow()
         self.addSubInterface(self.chat_search_window, FluentIcon.CHAT, "聊天")
 
-        # 聊天窗口
+        # 设置窗口
+        self.setting_window = SettingWindow()
+        self.addSubInterface(self.setting_window, FluentIcon.SETTING, "设置", position=NavigationItemPosition.BOTTOM)
+
         # 向导航栏底部添加用户头像
         self.navigationInterface.addWidget(
             routeKey="avatar",
@@ -79,8 +83,10 @@ class MainWindow(SplitFluentWindow):
             self.chat_session_window.setObjectName(session_name)
             self.addSubInterface(self.chat_session_window, FluentIcon.CHAT, session_name, parent=self.chat_search_window)
 
-            # 修改窗口标题 提示用户目前在哪个会话
-            self.setWindowTitle(session_name)
+            # 切换当前窗口到会话界面
+            self.stackedWidget.setCurrentWidget(self.chat_session_window)
+            # # 修改窗口标题 提示用户目前在哪个会话
+            # self.setWindowTitle(session_name)
 
 
 if __name__ == "__main__":
