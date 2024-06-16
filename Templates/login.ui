@@ -29,7 +29,7 @@
    <string notr="true">#frame.QFrame{
 	background-color: #f0f0f0;
 	border:1px solid black; 
-	border-radius:20px;   
+	border-radius:5px;   
 	padding:2px 4px; 
 
 }</string>
@@ -75,11 +75,7 @@
        </layout>
       </item>
       <item>
-       <widget class="Line" name="line">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
+       <widget class="HorizontalSeparator" name="HorizontalSeparator"/>
       </item>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_8">
@@ -185,6 +181,11 @@
   <customwidget>
    <class>PushButton</class>
    <extends>QPushButton</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>HorizontalSeparator</class>
+   <extends>QWidget</extends>
    <header>qfluentwidgets</header>
   </customwidget>
   <customwidget>

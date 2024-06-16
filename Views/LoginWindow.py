@@ -7,18 +7,19 @@ import json
 import sys
 
 import requests
-from PyQt5.QtCore import Qt, QPoint, QSize, QEventLoop, QTimer
-from PyQt5.QtGui import QPixmap, QIcon, QMouseEvent, QMovie
-from PyQt5.QtWidgets import QApplication, QWidget, QAction
+from PyQt5.QtCore import Qt, QSize, QEventLoop, QTimer
+from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5.QtWidgets import QApplication, QAction
 from PyQt5.uic import loadUi
 from qfluentwidgets import FluentIcon, CommandBar, PushButton, LineEdit, PasswordLineEdit, InfoBar, InfoBarPosition, \
     SplashScreen
 from qfluentwidgets.common.icon import Icon
 
+from Views.BaseWindow import BaseWindow
 from Views.RegisterWindow import RegisterWindow
 
 
-class LoginWindow(QWidget):
+class LoginWindow(BaseWindow):
 
     def __init__(self):
         super().__init__()
@@ -28,21 +29,6 @@ class LoginWindow(QWidget):
 
         self.setWindowTitle("登录")
         self.setWindowIcon(QIcon("../Assets/Icons/sign.png"))
-        self.setCursor(Qt.SizeAllCursor)
-
-        # 设置窗口无边框
-        self.setWindowFlags(Qt.FramelessWindowHint)
-        # 设置窗口透明化
-        self.setAttribute(Qt.WA_TranslucentBackground)
-        # 设置窗口鼠标追踪
-        self.setMouseTracking(True)
-
-        # 鼠标偏移量
-        self.__change_pos = None
-        # 鼠标起始值
-        self.__start_pos = None
-        # 鼠标移动标志
-        self.__move_flag = False
 
         # 设置登录和注册按钮手势
         self.login_button: PushButton
@@ -98,27 +84,6 @@ class LoginWindow(QWidget):
         # =============================================CommandBar设置end=============================================
 
         self.__bind_signal()
-
-    def mouseMoveEvent(self, event: QMouseEvent) -> None:
-        if self.__move_flag:
-            # 计算鼠标偏移量
-            self.__change_pos = event.pos() - self.__start_pos
-            # 移动窗口
-            self.move(self.pos() + self.__change_pos)
-
-    def mousePressEvent(self, event: QMouseEvent) -> None:
-        if Qt.LeftButton:
-            # 获取鼠标当前位置
-            self.__start_pos = QPoint(event.x(), event.y())
-            # 设置鼠标移动状态为True
-            self.__move_flag = True
-
-    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
-        if event.button() == Qt.LeftButton:
-            # 释放鼠标位置信息并将移动状态改为False
-            self.__move_flag = False
-            self.__start_pos = None
-            self.__change_pos = None
 
     def __bind_signal(self) -> None:
         """
