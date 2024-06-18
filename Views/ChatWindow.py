@@ -136,10 +136,17 @@ class ChatSessionWindow(QWidget):
         self.upload_img_btn.setToolTip("上传你的图片🎬")
         self.upload_img_btn.installEventFilter(
             ToolTipFilter(self.upload_img_btn, showDelay=300, position=ToolTipPosition.TOP))
+        # 语音输入按钮
+        self.audio_input_btn: QAction = QAction(triggered=self.upload_audio)
+        self.audio_input_btn.setIcon(Icon(FluentIcon.MICROPHONE))
+        self.audio_input_btn.setToolTip("音频输入🔈")
+        self.audio_input_btn.installEventFilter(
+            ToolTipFilter(self.audio_input_btn, showDelay=300, position=ToolTipPosition.TOP))
 
         self.chat_option_bar.addAction(self.clear_history_btn)
         self.chat_option_bar.addAction(self.change_model_btn)
         self.chat_option_bar.addAction(self.upload_img_btn)
+        self.chat_option_bar.addAction(self.audio_input_btn)
 
         # =============================================聊天选项bar设置end=============================================
 
@@ -179,6 +186,14 @@ class ChatSessionWindow(QWidget):
     def upload_img(self) -> None:
         """
         上传图片
+
+        :return:
+        """
+        ...
+
+    def upload_audio(self) -> None:
+        """
+        语音输入，上传音频到服务器
 
         :return:
         """
