@@ -132,21 +132,6 @@ class AvatarContainer(QFrame):
         # 如果需要，可以设置头像容器的边框和背景
         # self.setStyleSheet("QFrame { border: 1px solid #ccc; background-color: #f0f0f0; }")
 
-
-class MyPlainTextEdit(PlainTextEdit):
-    returnPressed = pyqtSignal()
-
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
-            # 发射自定义的信号
-            self.returnPressed.emit()
-            # 如果您不希望文本编辑框中出现换行符，可以阻止默认行为
-            event.ignore()
-        else:
-            # 调用基类的keyPressEvent方法以确保其他按键的正常行为
-            super().keyPressEvent(event)
-
-
 class MessageBubble(QWidget):
     '''消息气泡'''
     def __init__(self, text, avatar_path, is_sender=True, parent=None):
