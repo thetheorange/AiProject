@@ -5,12 +5,14 @@ Time 2024/6/14
 """
 from PyQt5.QtCore import QTimer, Qt, QObject, pyqtSignal
 from PyQt5.QtWidgets import QWidget, QAction, QLabel, QVBoxLayout, QHBoxLayout, QSpacerItem, QSizePolicy, \
-    QListWidgetItem, QFrame
+    QListWidgetItem, QFrame,QListWidget
 from PyQt5.uic import loadUi
 from qfluentwidgets import ToolTipFilter, PushButton, Icon, FluentIcon, ToolTipPosition, CommandBar, MessageBoxBase, \
     SubtitleLabel, ListWidget, PlainTextEdit
 
 from Views.GlobalSignal import global_signal
+from PyQt5.QtGui import QPixmap
+
 
 
 class ChatSearchWindow(QWidget):
@@ -106,6 +108,124 @@ class ChatChoiceMaskWindow(MessageBoxBase):
         self.cancelButton.setText("取消")
 
 
+from PyQt5.QtCore import Qt, pyqtSlot
+
+class AvatarContainer(QFrame):
+    '''聊天图像样式'''
+    def __init__(self, avatar_path, parent=None):
+        super(AvatarContainer, self).__init__(parent, frameShape=QFrame.NoFrame)  # 无边框
+        self.initUI(avatar_path)
+
+    def initUI(self, avatar_path):
+        self.avatar_label = QLabel(self)
+        # 加载并缩放头像
+        avatar_pixmap = QPixmap(avatar_path).scaled(50, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.avatar_label.setPixmap(avatar_pixmap)
+        # 头像标签背景保持透明
+        self.avatar_label.setStyleSheet("QLabel { background-color: transparent; border: none; }")
+        # 设置头像容器布局
+        self.setLayout(QHBoxLayout())
+        self.layout().addWidget(self.avatar_label)
+        self.layout().setAlignment(Qt.AlignCenter)  # 设置头像在容器中居中
+        self.layout().setContentsMargins(0, 0, 0, 30)  # 移除布局边距
+
+        # 如果需要，可以设置头像容器的边框和背景
+        # self.setStyleSheet("QFrame { border: 1px solid #ccc; background-color: #f0f0f0; }")
+
+
+class MyPlainTextEdit(PlainTextEdit):
+    returnPressed = pyqtSignal()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
+            # 发射自定义的信号
+            self.returnPressed.emit()
+            # 如果您不希望文本编辑框中出现换行符，可以阻止默认行为
+            event.ignore()
+        else:
+            # 调用基类的keyPressEvent方法以确保其他按键的正常行为
+            super().keyPressEvent(event)
+
+
+class MessageBubble(QWidget):
+    '''消息气泡'''
+    def __init__(self, text, avatar_path, is_sender=True, parent=None):
+        super(MessageBubble, self).__init__(parent)
+        self.initUI(text, avatar_path, is_sender)
+
+    def initUI(self, text, avatar_path, is_sender):
+        self.bubble_container = QWidget(self)  # 气泡容器
+        bubble_layout = QHBoxLayout(self.bubble_container)  # 气泡内部水平布局
+        # 文本容器QWidget
+        self.text_container = QWidget(self.bubble_container)
+        text_layout = QVBoxLayout(self.text_container)
+        text_layout.setContentsMargins(0, 0, 0, 0)  # 设置文本容器的边距
+        self.text_label = QLabel(text, self.text_container)
+        self.text_label.setWordWrap(True)
+        text_layout.addWidget(self.text_label)
+        # 为文本容器设置背景色
+        self.text_container.setStyleSheet("""  
+            QWidget {  
+                background-color:#e6e6fa;             /* 背景色 */  
+                border-radius: 10px;                   /* 圆角 */  
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 阴影 */  
+            }  
+            QLabel {                                  /* 假设文本容器中包含QLabel */  
+                font-size: 14px;                       /* 字体大小 */  
+                color: #333;                           /* 字体颜色 */  
+            }  
+            QWidget:hover {                            /* 鼠标悬停效果 */  
+                background-color: #dbc6e0;             /* 悬停时背景色变化 */  
+            }  
+
+            /* 背景色 */  
+            #ffe4e1粉色，#e5f9e7绿色，#e0f2ff蓝色
+            }  
+        """)
+        # 头像QLabel
+        self.avatar_container = AvatarContainer(avatar_path, self)
+
+        # self.avatar_label = QLabel(self.bubble_container)
+        # avatar_pixmap = QPixmap(avatar_path).scaled(50, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        # self.avatar_label.setPixmap(avatar_pixmap)
+        # 设置头像背景（如果需要的话，通常是透明的，因为直接使用QPixmap）
+        # self.avatar_label.setStyleSheet("QLabel { background-color: transparent; border: none; }")
+
+        # 设置气泡容器的样式
+        if is_sender:
+            bubble_layout.addWidget(self.text_container, stretch=1)
+            bubble_layout.addWidget(self.avatar_container)
+
+            bubble_style = """  
+                QWidget {  
+                    background-color:rgba(255, 255, 255, 0);  
+                    border-radius: 10px 10px 10px 0;  
+                    padding: 10px;  
+                }  
+            """
+        else:
+            bubble_layout.addWidget(self.avatar_container)
+            bubble_layout.addWidget(self.text_container, stretch=1)
+            bubble_style = """  
+                QWidget {  
+                    background-color: rgba(255, 255, 255, 0);  
+                    border-radius: 10px 10px 0 10px;  
+                    padding: 10px;  
+                }  
+            """
+        self.bubble_container.setStyleSheet(bubble_style)
+
+        # 主布局（可以是垂直布局，用于堆叠多个气泡）
+        main_layout = QVBoxLayout(self)
+
+        # 根据发送者或接收者设置气泡容器的位置
+        if is_sender:
+            main_layout.addWidget(self.bubble_container, alignment=Qt.AlignRight)
+        else:
+            main_layout.addWidget(self.bubble_container, alignment=Qt.AlignLeft)
+
+
+
 class ChatSessionWindow(QWidget):
     """
     聊天会话界面
@@ -155,6 +275,7 @@ class ChatSessionWindow(QWidget):
         self.chat_frame: QFrame
         self.chat_frame.setFixedHeight(100)
 
+
         self.chat_input: PlainTextEdit
         self.chat_input.setFixedHeight(80)
 
@@ -164,8 +285,33 @@ class ChatSessionWindow(QWidget):
 
         self.send_btn: PushButton
         self.send_btn.setIcon(Icon(FluentIcon.SEND))
+        self.send_btn.clicked.connect(self.send_button_clicked)
+        #self.chat_input.returnPressed.connect(self.send_button_clicked)
 
         # =============================================发送按钮设置start=============================================
+
+
+
+    def send_button_clicked(self):
+        '''
+            获取 PlainTextEdit 控件中的文本并发送聊天气泡
+        '''
+        text = self.chat_input.toPlainText()
+        print(text)
+        is_sender =True  # 假设总是发送者
+        avatar_path = "../Assets/image/logo.png"  # 发送者头像路径
+        bubble = MessageBubble(text, avatar_path, is_sender=is_sender)
+
+        # 创建一个 QListWidgetItem 并设置其大小提示
+        item = QListWidgetItem(self.ListWidget)
+        item.setSizeHint(bubble.sizeHint())
+
+        # 将 MessageBubble 设置为 QListWidgetItem 的 widget
+        self.ListWidget.setItemWidget(item, bubble)
+
+        # 滚动到底部以显示最新消息（可选）
+        self.ListWidget.scrollToBottom()
+
 
     def clear_history(self) -> None:
         """
