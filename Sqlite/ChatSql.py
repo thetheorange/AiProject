@@ -1,3 +1,8 @@
+"""
+Des 对话，聊天记录和面具的本地数据库
+@Author MisakaW
+Time 2024/6/29
+"""
 from sqlalchemy import create_engine, DateTime, Integer, String, Boolean, Enum, ForeignKey
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from sqlalchemy.ext.declarative import declared_attr
@@ -70,7 +75,7 @@ class Message(Base):
 
 # =============================================数据库封装=============================================
 
-class SqlLocal:
+class ChatSql:
     def __init__(self):
         """
         初始化数据库连接和会话
@@ -244,10 +249,10 @@ class SqlLocal:
 
 
 if __name__ == '__main__':
-    sql = SqlLocal()
+    sql = ChatSqlLocal()
     try:
-        # sql.add_mask("Mask1", mask_describe="test mask")
-        # sql.create_dialogue("Dialogue1", "Mask1")
+        sql.add_mask("Mask1", mask_describe="test mask")
+        sql.create_dialogue("Dialogue1", "Mask1")
         for i in range(30):
             sql.add_message("Dialogue1", SenderType.USER, SendType.TEXT, str(i), True)
         # dialogue = sql.get_dialogue("Dialogue1")
