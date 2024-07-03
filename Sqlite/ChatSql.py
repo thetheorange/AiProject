@@ -103,12 +103,15 @@ class ChatSql:
                 mask = session.query(Mask).filter_by(mask_name=mask_name).first()
                 if mask_name == "" or not mask:
                     mask = session.query(Mask).filter_by(mask_name="default").first()
+                if session.query(Dialogue).filter_by(dialogue_name=name): # 已经出现
+                    return
                 dialogue = Dialogue(dialogue_name=name, mask_id=mask.mask_id)
                 session.add(dialogue)
                 session.flush()
                 session.commit()
         except Exception as e:
             app_logger.info(str(e))
+            print(str(e))
 
     def add_message(self, dialogue_name: str, sender: SenderType, send_type: SendType,
                     send_info: str, send_succeed: bool, send_time: DateTime = datetime.now()):
@@ -251,11 +254,11 @@ class ChatSql:
                         [f"面具id: {mask.mask_id}, 面具名: {mask.mask_name}, 面具描述: {mask.mask_describe}" for mask in
                          masks])
                 elif "messages" in format_spec:  # e.g. "messages Dialogue1 5"
-                    a = format_spec.split(' ')
-                    if len(a) < 2:
+                    target_format = format_spec.split(' ')
+                    if len(target_format) < 2:
                         return "Miss parameters"
-                    update_num = int(a[-1]) if len(a) >= 2 else 5
-                    dialogue_name = a[1]
+                    update_num = int(target_format[-1]) if len(target_format) >= 2 else 5
+                    dialogue_name = target_format[1]
                     dialogue = session.query(Dialogue).filter_by(dialogue_name=dialogue_name).first()
                     if dialogue:
                         messages = dialogue.messages
