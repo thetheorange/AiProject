@@ -17,7 +17,6 @@ class Md5Password:
         return md5(password.encode()).hexdigest()
 
     @staticmethod
-    @staticmethod
     def verify(password: str, encrypted_password: str) -> bool:
         """
         验证密码

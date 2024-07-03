@@ -9,6 +9,7 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy import Column
 from enum import Enum as BaseEnum
 from datetime import datetime
+from Logging import app_logger
 
 Base = declarative_base()
 
@@ -38,7 +39,7 @@ class Mask(Base):
     """
     __tablename__ = 'mask'  # 表名修改为'mask'
     mask_id = Column(Integer, primary_key=True, autoincrement=True)
-    mask_name = Column(String(50))
+    mask_name = Column(String(50), unique=True)
     mask_describe = Column(String(500))
 
 
@@ -81,32 +82,33 @@ class ChatSql:
         初始化数据库连接和会话
         """
         # =============================================基础设置start=============================================
-        engine = create_engine('sqlite:///chat.db')
         try:
+            engine = create_engine('sqlite:///chat.db')
             Base.metadata.create_all(engine)
+            self.DB_session = sessionmaker(bind=engine)
+            self.add_mask("default")
         except Exception as e:
-            print(f"Error creating tables: {e}")
-        DB_session = sessionmaker(bind=engine)
-        self.session = DB_session()
+            app_logger.info(str(e))
+
         # =============================================基础设置end=============================================
 
-    def create_dialogue(self, name: str, mask_name: str):
+    def create_dialogue(self, name: str, mask_name: str = ""):
         """
         创建对话
         :param name: 对话名称
-        :param mask_name: 面具名称
+        :param mask_name: 面具名称，可以没有
         """
-        mask = self.session.query(Mask).filter_by(mask_name=mask_name).first()
-        if not mask:
-            print(f"Mask with name {mask_name} not found")
-        dialogue = Dialogue(dialogue_name=name, mask_id=mask.mask_id)
         try:
-            self.session.add(dialogue)
-            self.session.flush()
-            self.session.commit()
+            with self.DB_session() as session:
+                mask = session.query(Mask).filter_by(mask_name=mask_name).first()
+                if mask_name == "" or not mask:
+                    mask = session.query(Mask).filter_by(mask_name="default").first()
+                dialogue = Dialogue(dialogue_name=name, mask_id=mask.mask_id)
+                session.add(dialogue)
+                session.flush()
+                session.commit()
         except Exception as e:
-            self.session.rollback()
-            raise e
+            app_logger.info(str(e))
 
     def add_message(self, dialogue_name: str, sender: SenderType, send_type: SendType,
                     send_info: str, send_succeed: bool, send_time: DateTime = datetime.now()):
@@ -119,17 +121,17 @@ class ChatSql:
         :param send_info: 发送信息
         :param send_succeed: 发送是否成功
         """
-        dialogue = self.session.query(Dialogue).filter_by(dialogue_name=dialogue_name).first()
-        if not dialogue:
-            print(f"Dialogue with name {dialogue_name} not found")
-        message = Message(dialogue=dialogue, sender=sender, send_time=send_time, send_type=send_type,
-                          send_info=send_info, send_succeed=send_succeed)
         try:
-            self.session.add(message)
-            self.session.commit()
+            with self.DB_session() as session:
+                dialogue = session.query(Dialogue).filter_by(dialogue_name=dialogue_name).first()
+                if not dialogue:
+                    print(f"Dialogue with name {dialogue_name} not found")
+                message = Message(dialogue=dialogue, sender=sender, send_time=send_time, send_type=send_type,
+                                  send_info=send_info, send_succeed=send_succeed)
+                session.add(message)
+                session.commit()
         except Exception as e:
-            self.session.rollback()
-            raise e
+            app_logger.info(str(e))
 
     def update_message(self, message_id: int, new_send_info: str):
         """
@@ -137,52 +139,59 @@ class ChatSql:
         :param message_id: 消息ID
         :param new_send_info: 新的发送信息
         """
-        message = self.session.query(Message).get(message_id)
-        if message:
-            try:
-                message.send_info = new_send_info
-                self.session.commit()
-            except Exception as e:
-                self.session.rollback()
-                raise e
-        else:
-            print(f"Message with id {message_id} not found")
+        try:
+            with self.DB_session() as session:
+                message = session.query(Message).get(message_id)
+                if message:
+                    message.send_info = new_send_info
+                    session.commit()
+                else:
+                    print(f"Message with id {message_id} not found")
+        except Exception as e:
+            app_logger.info(str(e))
 
     def delete_message(self, message_id: int):
         """
         删除消息
         :param message_id: 消息ID
         """
-        message = self.session.query(Message).get(message_id)
-        if message:
-            try:
-                self.session.delete(message)
-                self.session.commit()
-            except Exception as e:
-                self.session.rollback()
-                raise e
-        else:
-            print(f"Message with id {message_id} not found")
+        try:
+            with self.DB_session() as session:
+                message = session.query(Message).get(message_id)
+                if message:
+                    session.delete(message)
+                    session.commit()
+                else:
+                    print(f"Message with id {message_id} not found")
+        except Exception as e:
+            app_logger.info(str(e))
 
-    def get_dialogue(self, dialogue_name: str):
+    def get_dialogue(self, dialogue_name: str) -> None:
         """
         根据名称获取对话
         :param dialogue_name: 对话名称
-        :return: 对话对象，如果未找到则返回 None
         """
-        return self.session.query(Dialogue).filter_by(dialogue_name=dialogue_name).first()
+        try:
+            with self.DB_session() as session:
+                return session.query(Dialogue).filter_by(dialogue_name=dialogue_name).first()
+        except Exception as e:
+            app_logger.info(str(e))
 
-    def get_messages(self, dialogue_name: str):
+    def get_messages(self, dialogue_name: str) -> list:
         """
         根据对话名称获取消息
         :param dialogue_name: 对话名称
         :return: 消息列表，如果未找到相关对话则返回空列表
         """
-        dialogue = self.session.query(Dialogue).filter_by(dialogue_name=dialogue_name).first()
-        if dialogue:
-            return dialogue.messages
-        else:
-            return []
+        try:
+            with self.DB_session() as session:
+                dialogue = session.query(Dialogue).filter_by(dialogue_name=dialogue_name).first()
+                if dialogue:
+                    return dialogue.messages
+                else:
+                    return []
+        except Exception as e:
+            app_logger.info(str(e))
 
     def add_mask(self, mask_name: str, mask_describe: str = ""):
         """
@@ -190,9 +199,13 @@ class ChatSql:
         :param mask_name: 面具名称
         :param mask_describe: 面具描述
         """
-        new_mask = Mask(mask_name=mask_name, mask_describe=mask_describe)
-        self.session.add(new_mask)
-        self.session.commit()
+        try:
+            with self.DB_session() as session:
+                new_mask = Mask(mask_name=mask_name, mask_describe=mask_describe)
+                session.add(new_mask)
+                session.commit()
+        except Exception as e:
+            app_logger.info(str(e))
 
     def get_mask(self, mask_name: str):
         """
@@ -200,65 +213,74 @@ class ChatSql:
         :param mask_name: 面具名称
         :return: 面具对象，如果未找到则返回 None
         """
-        return self.session.query(Mask).filter_by(mask_name=mask_name).first()
+        try:
+            with self.DB_session() as session:
+                return session.query(Mask).filter_by(mask_name=mask_name).first()
+        except Exception as e:
+            app_logger.info(str(e))
 
     def delete_mask(self, mask_name: str):
         """
         根据名称删除面具
         :param mask_name: 面具名称
         """
-        mask = self.get_mask(mask_name)
-        if mask:
-            self.session.delete(mask)
-            self.session.commit()
-        else:
-            print(f"Mask with name {mask_name} not found")
+        try:
+            with self.DB_session() as session:
+                mask = self.get_mask(mask_name)
+                if mask:
+                    session.delete(mask)
+                    session.commit()
+                else:
+                    print(f"Mask with name {mask_name} not found")
+        except Exception as e:
+            app_logger.info(str(e))
 
-    def print_messages(self, dialogue_name: str, update_num: int = 5):
+    def __format__(self, format_spec: str) -> str:
         """
-        打印指定对话的最新 update_num 条消息
-        :param dialogue_name: 对话名称
-        :param update_num: 要打印的消息数量
+        格式化输出
         """
-        dialogue = self.session.query(Dialogue).filter_by(dialogue_name=dialogue_name).first()
-        if dialogue:
-            messages = dialogue.messages
-            sorted_messages = sorted(messages, key=lambda x: x.id, reverse=True)
-            print_messages = sorted_messages[:update_num]
-            for message in print_messages:
-                print(
-                    f"信息id: {message.id}, 发送者: {message.sender.name}, 发送时间: {message.send_time}, 发送类型: {message.send_type.name}, 发送内容: {message.send_info}, 发送是否成功: {message.send_succeed}")
-        else:
-            print(f"未找到 {dialogue_name} 这个对话")
-
-    def print_masks(self):
-        """
-        打印最新的所有面具
-        """
-        masks = self.session.query(Mask).all()
-        for mask in masks:
-            print(f"面具id: {mask.mask_id}, 面具名: {mask.mask_name}, 面具描述: {mask.mask_describe}")
-
-    def print_dialogues(self):
-        """
-        打印所有对话
-        """
-        dialogues = self.session.query(Dialogue).all()
-        for dialogue in dialogues:
-            print(f"对话名: {dialogue.dialogue_name}, 面具id: {dialogue.mask_id}")
+        try:
+            with self.DB_session() as session:
+                if format_spec == "dialogues":
+                    dialogues = session.query(Dialogue).all()
+                    return "\n".join(
+                        [f"对话名: {dialogue.dialogue_name}, 面具id: {dialogue.mask_id}" for dialogue in dialogues])
+                elif format_spec == "masks":
+                    masks = session.query(Mask).all()
+                    return "\n".join(
+                        [f"面具id: {mask.mask_id}, 面具名: {mask.mask_name}, 面具描述: {mask.mask_describe}" for mask in
+                         masks])
+                elif "messages" in format_spec:  # e.g. "messages Dialogue1 5"
+                    a = format_spec.split(' ')
+                    if len(a) < 2:
+                        return "Miss parameters"
+                    update_num = int(a[-1]) if len(a) >= 2 else 5
+                    dialogue_name = a[1]
+                    dialogue = session.query(Dialogue).filter_by(dialogue_name=dialogue_name).first()
+                    if dialogue:
+                        messages = dialogue.messages
+                        sorted_messages = sorted(messages, key=lambda x: x.id, reverse=True)
+                        print_messages = sorted_messages[:update_num]
+                        return "\n".join([
+                                             f"信息id: {message.id}, 发送者: {message.sender.name}, 发送时间: {message.send_time}, 发送类型: {message.send_type.name}, 发送内容: {message.send_info}, 发送是否成功: {message.send_succeed}"
+                                             for message in print_messages])
+                    else:
+                        return f"未找到 {dialogue_name} 这个对话"
+                else:
+                    app_logger.info("Unknown format specifier")
+        except Exception as e:
+            app_logger.info(str(e))
+            return str(e)
 
 
 if __name__ == '__main__':
-    sql = ChatSqlLocal()
-    try:
-        sql.add_mask("Mask1", mask_describe="test mask")
-        sql.create_dialogue("Dialogue1", "Mask1")
-        for i in range(30):
-            sql.add_message("Dialogue1", SenderType.USER, SendType.TEXT, str(i), True)
-        # dialogue = sql.get_dialogue("Dialogue1")
-        # messages = sql.get_messages("Dialogue1")
-        sql.print_dialogues()
-        sql.print_messages("Dialogue1")
-        sql.print_masks()
-    except Exception as e:
-        print(f"error: {e}")
+    sql = ChatSql()
+    sql.add_mask("Mask1", mask_describe="test mask")
+    sql.create_dialogue("Dialogue1", "Mask1")
+    for i in range(30):
+        sql.add_message("Dialogue1", SenderType.USER, SendType.TEXT, str(i), True)
+    dialogue = sql.get_dialogue("Dialogue1")
+    messages = sql.get_messages("Dialogue1")
+    print(format(sql, "dialogues"))
+    print(format(sql, "masks"))
+    print(format(sql, "messages Dialogue1 6"))
