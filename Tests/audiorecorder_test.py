@@ -20,7 +20,7 @@ class AudioTestWindow(QWidget):
 
     def initUI(self):
         layout = QVBoxLayout()
-        self.recorder.prefix_path = r"D:\GitHub\AiProject\Temp"
+        self.recorder.prefix_path = r"..\Temp"
         btn = QPushButton("Start Recording")
         btn.clicked.connect(self.on_start_recording)
         stop_btn = QPushButton("Stop Recording")
