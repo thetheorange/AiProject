@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QHBoxLayout, QFrame, QSizePolicy
+from PyQt5.QtWidgets import QHBoxLayout, QFrame
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QListWidget, QListWidgetItem
 from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget
@@ -8,8 +8,6 @@ from PyQt5.QtWidgets import QLabel
 from PyQt5.QtGui import QPixmap, QRegion
 from PyQt5.QtCore import Qt
 from qfluentwidgets import AvatarWidget
-
-
 class AvatarContainer(QFrame):
     """
     聊天头像样式
@@ -20,7 +18,7 @@ class AvatarContainer(QFrame):
         self.initUI(avatar_path)
 
     def initUI(self, avatar_path: str):
-        self.avatar_label = AvatarWidget(avatar_path)
+        self.avatar_label =AvatarWidget(avatar_path)
         self.avatar_label.setRadius(20)
 
         avatar_pixmap = QPixmap(avatar_path).scaled(50, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation)
@@ -31,7 +29,7 @@ class AvatarContainer(QFrame):
         self.setLayout(QHBoxLayout())
         self.layout().addWidget(self.avatar_label)
         self.layout().setAlignment(Qt.AlignCenter)
-        # self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().setContentsMargins(0, 0, 0, 30)
 
 
 class MessageBubble(QWidget):
@@ -43,18 +41,20 @@ class MessageBubble(QWidget):
         super(MessageBubble, self).__init__(parent)
         self.initUI(text, avatar_path, is_sender)
 
-    def initUI(self, text, avatar_path, is_sender):
+    def initUI(self, text:str, avatar_path:str, is_sender:bool):
         self.bubble_container = QWidget(self)  # 气泡容器
         bubble_layout = QHBoxLayout(self.bubble_container)  # 气泡内部水平布局
         # 文本容器QWidget
         self.text_container = QWidget(self.bubble_container)
         text_layout = QVBoxLayout(self.text_container)
         text_layout.setContentsMargins(0, 0, 0, 0)  # 设置文本容器的边距
+        text=self.text_line_break(text)
+        print(text)
         self.text_label = QLabel(text, self.text_container)
         self.text_label.setWordWrap(True)
         text_layout.addWidget(self.text_label)
-        # # 设置高度
-        # self.text_container.setMinimumHeight(50)
+        # 设置高度
+        self.text_container.setMinimumHeight(50)
         # self.text_container.setMaximumHeight(self.text_label.height())
         # self.setMaximumHeight(self.text_container.height() + 200)
         # 把字体设置成微雅软黑
@@ -71,9 +71,8 @@ class MessageBubble(QWidget):
                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 阴影 */
             }  
             QLabel {                                  /* 假设文本容器中包含QLabel */  
-                font-size: 16px;                       /* 字体大小 */  
+                font-size: 14px;                       /* 字体大小 */  
                 color: #333;                           /* 字体颜色 */
-                padding-top: 0px; padding-bottom: 0px; margin-top: 0px; margin-bottom: 0px;
             }  
             QWidget:hover {                            /* 鼠标悬停效果 */  
                 background-color: #dbc6e0;             /* 悬停时背景色变化 */  
@@ -92,7 +91,7 @@ class MessageBubble(QWidget):
                 QWidget {  
                     background-color:rgba(255, 255, 255, 0);  
                     border-radius: 10px 10px 10px 0;  
-                    padding: 5px;  
+                    padding: 10px;  
                 }  
             """
         else:
@@ -102,7 +101,7 @@ class MessageBubble(QWidget):
                 QWidget {  
                     background-color: rgba(255, 255, 255, 0);  
                     border-radius: 10px 10px 0 10px;  
-                    padding: 5px;  
+                    padding: 10px;  
                 }  
             """
         self.bubble_container.setStyleSheet(bubble_style)
@@ -116,6 +115,12 @@ class MessageBubble(QWidget):
         else:
             main_layout.addWidget(self.bubble_container, alignment=Qt.AlignLeft)
 
+    @staticmethod
+    def text_line_break(s: str, limit: int = 15) -> str:
+        lines = []
+        for i in range(0, len(s), limit):
+            lines.append(s[i:i + limit])
+        return '\n'.join(lines)
 
 class MessageBubbleWindow(QListWidget):
     """测试用"""
@@ -127,11 +132,11 @@ class MessageBubbleWindow(QListWidget):
     def initUI(self):
         self.setWindowTitle('Message Bubble Example')
         self.setGeometry(300, 300, 400, 300)  # 设置窗口位置和大小
-        text = "Hello"
+        text = "Hellohhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
         is_sender = True  # 假设总是发送者
-        avatar_path = "../Assets/image/background.jpg"  # 发送者头像路径
+        avatar_path = "../Assets/image/logo.png"  # 发送者头像路径
         bubble = MessageBubble(text, avatar_path, is_sender=is_sender)
-
+        
         item = QListWidgetItem(self)
         item.setSizeHint(bubble.sizeHint())
 
@@ -141,9 +146,11 @@ class MessageBubbleWindow(QListWidget):
         self.show()
 
 
+
 if __name__ == '__main__':
     import sys
 
     app = QApplication(sys.argv)
     ex = MessageBubbleWindow()
     sys.exit(app.exec_())
+
