@@ -1,28 +1,40 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <el-container>
+      <el-header >
+        <el-row type="flex" align="middle" justify="space-between">
+          <el-col :span="20">
+            <el-menu class="el-menu-demo" mode="horizontal">
+              <el-menu-item index="1">服务通道测试</el-menu-item>
+              <el-menu-item index="2">用户管理</el-menu-item>
+              <el-menu-item index="3">黑名单管理</el-menu-item>
+              <el-menu-item index="4">token兑换码</el-menu-item>
+            </el-menu>
+          </el-col>
+          <el-col :span="4">
+            <el-switch active-color="#13ce66" inactive-color="#ff4949"></el-switch>
+          </el-col>
+        </el-row>
+      </el-header>
+      <el-main>
+        <router-view></router-view>
+      </el-main>
+      <el-footer></el-footer>
+    </el-container>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
 
 export default {
   name: 'App',
-  components: {
-    HelloWorld
-  }
 }
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 </style>
