@@ -1,5 +1,9 @@
 <div align="center">   
+<<<<<<< Updated upstream
 <img  alt="logo" src="https://github.com/joana123123/-/blob/main/logo2.jpg?raw=true" />
+=======
+<img  alt="logo" src="https://github.com/joana123123/AiProject/blob/main/Assets/image/logo.jpg?raw=true" />
+>>>>>>> Stashed changes
 </div>
 
 <h1 align="center">AiProject</h1>
@@ -13,11 +17,19 @@
     <img alt="Static Badge" src=https://img.shields.io/badge/manage%20interface-vue2-purple>
 </div>
 
+<<<<<<< Updated upstream
 ![show_photo](https://github.com/joana123123/-/blob/main/show3.jpg?raw=true)
 
 ## 特别鸣谢
 
 [![](https://github.com/joana123123/-/blob/main/xunfei_logo.png?raw=true)](https://xinghuo.xfyun.cn/)
+=======
+![show_photo](https://github.com/joana123123/AiProject/blob/main/Assets/image/show.jpg?raw=true)
+
+## 特别鸣谢
+
+[![](https://github.com/joana123123/AiProject/blob/main/Assets/image/xunfei_logo.png?raw=true)](https://xinghuo.xfyun.cn/)
+>>>>>>> Stashed changes
 
 ## 项目架构  :bookmark_tabs:
 ```text
@@ -567,8 +579,13 @@ CREATE TABLE user (
 
 
 ##  使用剪影 :sparkler: 
+<<<<<<< Updated upstream
  <img alt="using_cut_photo" src="https://github.com/joana123123/-/blob/main/using_cut_photo.jpg?raw=true">
 <img alt="using_cut_photo" src="https://github.com/joana123123/-/blob/main/using_cut_photo2.jpg?raw=true">
+=======
+ <img alt="using_cut_photo" src="https://github.com/joana123123/AiProject/blob/main/Assets/image/using_cut_photo.jpg?raw=true">
+<img alt="using_cut_photo" src="https://github.com/joana123123/AiProject/blob/main/Assets/image/using_cut_photo2.jpg?raw=true">
+>>>>>>> Stashed changes
 
 ## Contributor :bow:
 [@thetheorange](https://github.com/thetheorange)
