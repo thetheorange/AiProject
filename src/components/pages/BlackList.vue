@@ -1,6 +1,6 @@
 <template>
     <div>
-
+        <el-empty description="None"></el-empty>
     </div>
 </template>
 
