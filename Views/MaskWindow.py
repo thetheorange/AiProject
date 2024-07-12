@@ -3,13 +3,14 @@ Des 面具相关界面
 @Author thetheOrange
 Time 2024/6/14
 """
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt,QSize
 from PyQt5.QtWidgets import QWidget, QAction, QApplication, QHBoxLayout, QLabel, QListWidgetItem
 from PyQt5.uic import loadUi
 from qfluentwidgets import PushButton, FluentIcon, ToolTipFilter, ToolTipPosition, CommandBar, Icon, MessageBoxBase, \
     SubtitleLabel, LineEdit, PlainTextEdit, ListWidget
 import sys
 from PyQt5.QtWidgets import QWidget, QPushButton, QApplication
+from GlobalSignal import  global_signal
 
 class MaskSubSettingWindow(MessageBoxBase):
     """
@@ -41,11 +42,16 @@ class MaskSubSettingWindow(MessageBoxBase):
         self.yesButton.clicked.connect(self.on_yes_button_clicked)
 
     def on_yes_button_clicked(self):
-        name = self.mask_name_input.text()
-        description = self.mask_des_input.toPlainText()
-        icon = r"../Assets/icons/add.png"
-        print(name,icon)
-        self.add_mask_signal.emit(name, icon)
+        icon = FluentIcon.ROBOT
+        mask_name = self.mask_name_input.text()
+        mask_des = self.mask_des_input.toPlainText()
+        data = {
+            'name':  mask_name,
+            'icon': icon
+        }
+        print(data)
+        # 发射全局信号
+        global_signal.mask_submitted.emit(data)
 
 
 class MaskWidget(QWidget):
@@ -65,6 +71,11 @@ class MaskWidget(QWidget):
         layout.addWidget(self.button)
         # 设置自定义小部件的布局
         self.setLayout(layout)
+
+    def sizeHint(self):
+        # 返回一个建议的大小，布局管理器可能会使用它
+        # 但请注意，如果设置了最小/最大尺寸，则这些尺寸可能会覆盖它
+        return QSize(100, 40)  # 示例值
 
 
 class MaskSettingWindow(QWidget):
@@ -91,11 +102,17 @@ class MaskSettingWindow(QWidget):
                           ("小红书写手", FluentIcon.BOOK_SHELF)]
 
         for text, icon_name in data_and_icons:
-            self.add_mask_list(text, icon_name)
-
-    def add_mask_list(self, name, icon):
+            data={
+                'name':text,
+                'icon':icon_name
+            }
+            self.add_mask_list(data)
+        global_signal.mask_submitted.connect(self.add_mask_list)
+        #global_signal.ChatOperation.connect(self.test)
+    def add_mask_list(self, data):
         item = QListWidgetItem(self.mask_info)
-
+        name = data.get('name')
+        icon = data.get('icon')
         # 创建CustomWidget实例，这里我们传递文本和一个模拟的图标名（实际实现可能需要调整）
         custom_widget = MaskWidget(name, icon)
 
@@ -108,11 +125,14 @@ class MaskSettingWindow(QWidget):
 
 
 if __name__ == "__main__":
-    QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
-    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
-    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
+    try:
+        QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+        QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
 
-    app = QApplication(sys.argv)
-    w = MaskSettingWindow()
-    w.show()
-    sys.exit(app.exec_())
+        app = QApplication(sys.argv)
+        w = MaskSettingWindow()
+        w.show()
+        sys.exit(app.exec_())
+    except Exception as e:
+        print(str(e))
