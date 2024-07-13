@@ -1,14 +1,15 @@
 import SimpleTest from "@/components/pages/SimpleTest.vue"
 import ModelConsole from "@/components/pages/ModelConsole.vue"
-import BlackList from "@/components/pages/BlackList.vue"
-import UserManager from "@/components/pages/UserManager.vue"
+import AppInfo from "@/components/pages/AppInfo.vue"
+import NormalUserManager from "@/components/pages/NormalUserManager.vue"
+import AdminUserManager from "@/components/pages/AdminUserManager.vue"
 
 import VueRouter from "vue-router"
 
 const router = new VueRouter({
     routes: [
         {
-            path: "/simpleTest",
+            path: "/SimpleTest",
             component: SimpleTest
         },
         {
@@ -16,12 +17,16 @@ const router = new VueRouter({
             component: ModelConsole,
         },
         {
-            path: "/BlackList",
-            component: BlackList,
+            path: "/AppInfo",
+            component: AppInfo,
         },
         {
-            path: "/UserManager",
-            component: UserManager,
+            path: "/NormalUserManager",
+            component: NormalUserManager,
+        },
+        {
+            path: "/AdminUserManager",
+            component: AdminUserManager,
         }
     ]
 })

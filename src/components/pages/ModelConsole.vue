@@ -15,7 +15,7 @@
                                 </el-select>
                             </div>
                             <div class="token-info">
-                                <span>剩余token</span><span class="second-text">{{ $store.state.textModelToken }}</span>
+                                <span>剩余token</span><span class="second-text">{{ $store.state.APPInfo.textModelToken }}</span>
                             </div>
                         </div>
                         <!-- 角色设定 -->

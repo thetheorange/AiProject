@@ -13,7 +13,9 @@ import {
   FormItem,
   Empty,
   Slider,
-  Option
+  Option,
+  Drawer,
+  Divider
 } from 'element-ui'
 
 import App from './App.vue'
@@ -43,19 +45,25 @@ Vue.use(Option);
 Vue.use(Table); Vue.use(TableColumn);
 
 // 导航栏控件
-Vue.use(Menu); Vue.use(MenuItem); Vue.use(MenuItemGroup); Vue.use(Submenu)
+Vue.use(Menu); Vue.use(MenuItem); Vue.use(MenuItemGroup); Vue.use(Submenu);
+
+// 抽屉控件
+Vue.use(Drawer);
 
 // 开关控件
-Vue.use(Switch)
+Vue.use(Switch);
 
 // 标签tag
-Vue.use(Tag)
+Vue.use(Tag);
 
 // 空白占位
-Vue.use(Empty)
+Vue.use(Empty);
+
+// 分割线
+Vue.use(Divider);
 
 // 滑块
-Vue.use(Slider)
+Vue.use(Slider);
 // =============== 引入element-ui控件 END ===============
 
 // =============== 引入font awesome START ===============

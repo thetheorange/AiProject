@@ -71,4 +71,25 @@ body {
 .card-float:hover {
   transform: translateY(-0.5em);
 }
+/* 间隔 */
+.gap-horizontal {
+  margin: 0 0.5em;
+}
+.gap-vertical {
+  margin: 0.5em 0;
+}
+/* 基础表格设置 */
+.table {
+  width: 100%;
+  overflow: auto;
+}
+/* 搜索框 */
+.search {
+  display: flex;
+  justify-content: end;
+  align-items: center;
+}
+.search i {
+  margin-right: 10px;
+}
 </style>

@@ -6,14 +6,19 @@
       default-active="1-1"
       active-text-color="#66b1ff"
       >
+        
         <el-submenu index="1">
           <template slot="title">测试服务</template>
-          <el-menu-item index="1-1"><router-link to="/simpleTest" class="second-text">简单测试</router-link></el-menu-item>
-          <el-menu-item index="1-1"><router-link to="/ModelConsole" class="second-text">控制台</router-link></el-menu-item>
+          <el-menu-item index="1-1"><router-link to="/SimpleTest" class="second-text">简单测试</router-link></el-menu-item>
+          <el-menu-item index="1-2"><router-link to="/ModelConsole" class="second-text">控制台</router-link></el-menu-item>
         </el-submenu>
-        <el-menu-item index="2"><router-link to="/UserManager" class="second-text">用户管理</router-link></el-menu-item>
-        <el-menu-item index="3"><router-link to="/BlackList" class="second-text">黑名单管理</router-link></el-menu-item>
+        <el-submenu index="2">
+          <template slot="title">用户管理</template>
+          <el-menu-item index="2-1"><router-link to="/NormalUserManager" class="second-text">普通用户</router-link></el-menu-item>
+          <el-menu-item index="2-2"><router-link to="/AdminUserManager" class="second-text">管理员用户</router-link></el-menu-item>
+        </el-submenu>
         <el-menu-item index="4">token兑换码</el-menu-item>
+        <el-menu-item index="5"><router-link to="/AppInfo">应用信息</router-link></el-menu-item>
       </el-menu>
     </el-col>
     <el-col :md="4" class="theme-change">

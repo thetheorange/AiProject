@@ -3,15 +3,12 @@ import Vuex from "vuex"
 
 Vue.use(Vuex);
 
-const actions = {
+import APPInfo from "./APPInfo";
+import AdminInfo from "./AdminInfo";
 
-}
-const mutations = {
-
-}
-const state = {
-    textModelToken: 1000
-}
 export default new Vuex.Store({
-    actions, mutations, state
+    modules: {
+        APPInfo,
+        AdminInfo
+    }
 })

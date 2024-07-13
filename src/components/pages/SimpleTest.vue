@@ -68,19 +68,6 @@
 </script>
 
 <style scoped>
-.table {
-    width: 100%;
-    overflow: auto;
-}
-/* 搜索框 */
-.table .search {
-    display: flex;
-    justify-content: end;
-    align-items: center
-}
-.table .search i {
-    margin-right: 10px;
-}
 /* 服务详细信息 */
 .detail {
     margin-bottom: 10px;
