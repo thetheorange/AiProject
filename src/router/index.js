@@ -3,6 +3,7 @@ import ModelConsole from "@/components/pages/ModelConsole.vue"
 import AppInfo from "@/components/pages/AppInfo.vue"
 import NormalUserManager from "@/components/pages/NormalUserManager.vue"
 import AdminUserManager from "@/components/pages/AdminUserManager.vue"
+import TokenManager from "@/components/pages/TokenManager.vue"
 
 import VueRouter from "vue-router"
 
@@ -27,6 +28,10 @@ const router = new VueRouter({
         {
             path: "/AdminUserManager",
             component: AdminUserManager,
+        },
+        {
+            path: "/TokenManager",
+            component: TokenManager
         }
     ]
 })

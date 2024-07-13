@@ -17,7 +17,7 @@
           <el-menu-item index="2-1"><router-link to="/NormalUserManager" class="second-text">普通用户</router-link></el-menu-item>
           <el-menu-item index="2-2"><router-link to="/AdminUserManager" class="second-text">管理员用户</router-link></el-menu-item>
         </el-submenu>
-        <el-menu-item index="4">token兑换码</el-menu-item>
+        <el-menu-item index="4"><router-link to="/TokenManager">token兑换码</router-link></el-menu-item>
         <el-menu-item index="5"><router-link to="/AppInfo">应用信息</router-link></el-menu-item>
       </el-menu>
     </el-col>
