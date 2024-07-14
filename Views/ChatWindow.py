@@ -4,13 +4,35 @@ Des 聊天相关界面
 Time 2024/6/14
 """
 from PyQt5.QtWidgets import QWidget, QAction, QLabel, QVBoxLayout, QHBoxLayout, QSpacerItem, QSizePolicy, \
-    QListWidgetItem, QFrame, QListWidget
+    QListWidgetItem, QFrame, QListWidget, QPushButton
 from PyQt5.uic import loadUi
 from qfluentwidgets import ToolTipFilter, PushButton, Icon, FluentIcon, ToolTipPosition, CommandBar, MessageBoxBase, \
-    SubtitleLabel, ListWidget, PlainTextEdit
-
-from Views.GlobalSignal import global_signal
+    SubtitleLabel, ListWidget, PlainTextEdit, SearchLineEdit, MessageBox
+from AiProject2.AiProject.Views.GlobalSignal import global_signal
 from PyQt5.QtGui import QPixmap
+
+
+class ChatLineWidget(QWidget):
+    """
+    每行聊天按钮样式
+    """
+
+    def __init__(self, text, icon, parent=None):
+        super(ChatLineWidget, self).__init__(parent)
+        # 创建一个水平布局
+        layout = QHBoxLayout()
+        # 创建一个标签和一个按钮
+        # self.label = QLabel()
+        print(text, icon)
+        self.button = PushButton(icon, text)
+        layout.addWidget(self.button)
+        self.setLayout(layout)
+        self.button.clicked.connect(self.start_chat)
+    def start_chat(self) -> None:
+        """
+        点击面具按钮直接开始会话
+        """
+        global_signal.ChatOperation_Mask.emit("start_chat")
 
 
 class ChatSearchWindow(QWidget):
@@ -32,6 +54,71 @@ class ChatSearchWindow(QWidget):
         self.add_session_btn.clicked.connect(lambda x: ChatChoiceWindow(self).exec())
 
         # =============================================基础设置end=============================================
+        # =============================================搜索设置start=============================================
+        self.SearchLineEdit: SearchLineEdit
+        self.SearchLineEdit.searchSignal.connect(self.search)
+        # =============================================搜索设置end=============================================
+
+        # =============================================添加聊天按钮行start=============================================
+        self.ListWidget: ListWidget
+        datadict = [
+            {'name': '你好，新用户', 'icon': FluentIcon.CHAT},
+            {'name': '这题怎么做', 'icon': FluentIcon.CALENDAR},
+            {'name': '以“星期天为题”写一篇作文', 'icon': FluentIcon.BOOK_SHELF},
+        ]
+        for data in datadict:
+            self.add_chat_list(data)
+
+        # =============================================添加聊天按钮行end=============================================
+
+    def search(self):
+        """
+        点击搜索框触发函数
+        """
+        cur_text = self.SearchLineEdit.text()
+        print(cur_text)
+        self.show_dialog(True, cur_text)
+
+    def show_dialog(self, flag: bool, name: str):
+        """
+        搜索时弹出消息框
+        """
+        if flag:
+            title = '"' + name + '"' + '对话存在，开始对话？'
+            content = """"""
+            w = MessageBox(title, content, self)
+            if w.exec():
+                self.start_chat()
+            else:
+                print('Cancel button is pressed')
+        else:
+            title = '"' + name + '"' + '对话不存在，请重新搜索'
+            content = """"""
+            w2 = MessageBox(title, content, self)
+            if w2.exec():
+                print('Yes')
+            else:
+                print('Cancel button is pressed')
+
+    def start_chat(self) -> None:
+        """
+        点击面具按钮直接开始会话
+        """
+        global_signal.ChatOperation_Mask.emit("start_chat")
+
+    def add_chat_list(self, data):
+        name = data.get('name')
+        icon = data.get('icon')
+        item = QListWidgetItem(self.ListWidget)
+        # self.data_and_icons.append((name,icon))
+        # 创建CustomWidget实例，这里我们传递文本和一个模拟的图标名（实际实现可能需要调整）
+        custom_widget = ChatLineWidget(name, icon)
+
+        # 设置item的大小提示为custom_widget的大小提示
+        item.setSizeHint(custom_widget.sizeHint())
+
+        # 将custom_widget设置为item的widget
+        self.ListWidget.setItemWidget(item, custom_widget)
 
 
 class ChatChoiceWindow(MessageBoxBase):
@@ -76,9 +163,9 @@ class ChatChoiceWindow(MessageBoxBase):
 
         :return:
         """
-       # print("?")
+        # print("?")
         global_signal.mask_chatOperation.emit("choice_mask")
-       # ChatChoiceMaskWindow(self).exec()
+        # ChatChoiceMaskWindow(self).exec()
         self.close()
 
     def start_chat(self) -> None:
@@ -312,14 +399,12 @@ class ChatSessionWindow(QWidget):
         """
         self.ListWidget.clear()
 
-
     def change_model(self) -> None:
         """
         切换模型
 
         :return:
         """
-
 
     def upload_img(self) -> None:
         """
