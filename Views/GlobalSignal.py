@@ -8,6 +8,7 @@ from PyQt5.QtCore import QObject, pyqtSignal
 
 class GlobalSignal(QObject):
     ChatOperation = pyqtSignal(str)
+    ChatOperation_Mask = pyqtSignal(str)
     mask_submitted = pyqtSignal(dict)  # 假设我们传递面具名和描述
 
 # 全局信号

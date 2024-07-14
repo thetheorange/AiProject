@@ -3,14 +3,17 @@ Des 面具相关界面
 @Author thetheOrange
 Time 2024/6/14
 """
-from PyQt5.QtCore import Qt,QSize
-from PyQt5.QtWidgets import QWidget, QAction, QApplication, QHBoxLayout, QLabel, QListWidgetItem
-from PyQt5.uic import loadUi
-from qfluentwidgets import PushButton, FluentIcon, ToolTipFilter, ToolTipPosition, CommandBar, Icon, MessageBoxBase, \
-    SubtitleLabel, LineEdit, PlainTextEdit, ListWidget
 import sys
-from PyQt5.QtWidgets import QWidget, QPushButton, QApplication
-from GlobalSignal import  global_signal
+from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtWidgets import QHBoxLayout, QListWidgetItem
+from PyQt5.uic import loadUi
+from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QApplication
+from qfluentwidgets import PushButton, ToolTipFilter, ToolTipPosition, MessageBoxBase, \
+    LineEdit, PlainTextEdit, ListWidget, SearchLineEdit, MessageBox
+from qfluentwidgets import FluentIcon
+from Views.GlobalSignal import global_signal
+
 
 class MaskSubSettingWindow(MessageBoxBase):
     """
@@ -46,7 +49,7 @@ class MaskSubSettingWindow(MessageBoxBase):
         mask_name = self.mask_name_input.text()
         mask_des = self.mask_des_input.toPlainText()
         data = {
-            'name':  mask_name,
+            'name': mask_name,
             'icon': icon
         }
         print(data)
@@ -66,16 +69,31 @@ class MaskWidget(QWidget):
         # 创建一个标签和一个按钮
         # self.label = QLabel()
         self.button = PushButton(icon, text)
+        self.button.clicked.connect(self.start_chat)
+        global_signal.ChatOperation_Mask.connect(self.__handle_chat_signal2)
         # 将标签和按钮添加到布局中
         # layout.addWidget(self.label)
         layout.addWidget(self.button)
         # 设置自定义小部件的布局
         self.setLayout(layout)
 
+    def start_chat(self) -> None:
+        """
+        点击面具按钮直接开始会话
+        """
+        global_signal.ChatOperation_Mask.emit("start_chat")
+
+    def __handle_chat_signal2(self, signal: str) -> None:
+        """
+        处理窗口的信号
+        """
+        if signal == "start_chat":
+            global_signal.ChatOperation.emit("start_chat")
+
     def sizeHint(self):
         # 返回一个建议的大小，布局管理器可能会使用它
         # 但请注意，如果设置了最小/最大尺寸，则这些尺寸可能会覆盖它
-        return QSize(100, 40)  # 示例值
+        return QSize(100, 45)  # 示例值
 
 
 class MaskSettingWindow(QWidget):
@@ -97,22 +115,76 @@ class MaskSettingWindow(QWidget):
 
         self.mask_info: ListWidget
         # =============================================基础设置end=============================================
-        # 向列表中添加自定义小部件
-        data_and_icons = [("机器学习", FluentIcon.ROBOT), ("机器学习", FluentIcon.CHAT),
-                          ("小红书写手", FluentIcon.BOOK_SHELF)]
-
-        for text, icon_name in data_and_icons:
-            data={
-                'name':text,
-                'icon':icon_name
+        # =============================================每行mask设置begin=============================================
+        self.data_and_icons = [("机器学习", FluentIcon.ROBOT), ("英语写作", FluentIcon.CHAT),
+                               ("小红书写手", FluentIcon.BOOK_SHELF), ("数学物理", FluentIcon.CALENDAR)]
+        for text, icon_name in self.data_and_icons:
+            data = {
+                'name': text,
+                'icon': icon_name
             }
             self.add_mask_list(data)
+
         global_signal.mask_submitted.connect(self.add_mask_list)
-        #global_signal.ChatOperation.connect(self.test)
+        # global_signal.ChatOperation.connect(self.test)
+        # =============================================每行mask设置end=============================================
+        # =============================================搜索设置begin=============================================
+        self.search_mask: SearchLineEdit
+        self.search_mask.searchSignal.connect(self.search)
+        # =============================================搜索设置end=============================================
+
+    def find_text_in_list(self, text):
+        """
+        在给定的数据列表中查找文本。
+
+        :param text: 要查找的文本。
+        :return: 如果找到文本，则返回1；否则返回0。
+        """
+        # print("?")
+        for item_text, _ in self.data_and_icons:
+            # print(item_text)
+            if item_text == text:
+                return True
+        return False
+
+    def search(self):
+        """
+        点击搜索框触发函数
+        """
+        cur_text = self.search_mask.text()
+        print(cur_text)
+        flag = self.find_text_in_list(cur_text)
+        self.show_dialog(flag, cur_text)
+
+    def show_dialog(self, flag: bool, name: str):
+        if flag:
+            title = '"' + name + '"' + '面具存在，开始对话？'
+            content = """"""
+            w = MessageBox(title, content, self)
+            if w.exec():
+                self.start_chat()
+            else:
+                print('Cancel button is pressed')
+        else:
+            title = '"' + name + '"' + '面具不存在，请重新搜索'
+            content = """"""
+            w2 = MessageBox(title, content, self)
+            if w2.exec():
+                print('Yes')
+            else:
+                print('Cancel button is pressed')
+
+    def start_chat(self) -> None:
+        """
+        点击面具按钮直接开始会话
+        """
+        global_signal.ChatOperation_Mask.emit("start_chat")
+
     def add_mask_list(self, data):
-        item = QListWidgetItem(self.mask_info)
         name = data.get('name')
         icon = data.get('icon')
+        item = QListWidgetItem(self.mask_info)
+        # self.data_and_icons.append((name,icon))
         # 创建CustomWidget实例，这里我们传递文本和一个模拟的图标名（实际实现可能需要调整）
         custom_widget = MaskWidget(name, icon)
 
@@ -121,7 +193,6 @@ class MaskSettingWindow(QWidget):
 
         # 将custom_widget设置为item的widget
         self.mask_info.setItemWidget(item, custom_widget)
-
 
 
 if __name__ == "__main__":
