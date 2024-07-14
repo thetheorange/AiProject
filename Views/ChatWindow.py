@@ -3,16 +3,14 @@ Des 聊天相关界面
 @Author thetheOrange
 Time 2024/6/14
 """
-from PyQt5.QtCore import QTimer, Qt, QObject, pyqtSignal
 from PyQt5.QtWidgets import QWidget, QAction, QLabel, QVBoxLayout, QHBoxLayout, QSpacerItem, QSizePolicy, \
-    QListWidgetItem, QFrame,QListWidget
+    QListWidgetItem, QFrame, QListWidget
 from PyQt5.uic import loadUi
 from qfluentwidgets import ToolTipFilter, PushButton, Icon, FluentIcon, ToolTipPosition, CommandBar, MessageBoxBase, \
     SubtitleLabel, ListWidget, PlainTextEdit
 
 from Views.GlobalSignal import global_signal
 from PyQt5.QtGui import QPixmap
-
 
 
 class ChatSearchWindow(QWidget):
@@ -78,7 +76,9 @@ class ChatChoiceWindow(MessageBoxBase):
 
         :return:
         """
-        ChatChoiceMaskWindow(self).exec()
+       # print("?")
+        global_signal.mask_chatOperation.emit("choice_mask")
+       # ChatChoiceMaskWindow(self).exec()
         self.close()
 
     def start_chat(self) -> None:
@@ -110,8 +110,12 @@ class ChatChoiceMaskWindow(MessageBoxBase):
 
 from PyQt5.QtCore import Qt, pyqtSlot
 
+
 class AvatarContainer(QFrame):
-    '''聊天图像样式'''
+    """
+    聊天图像样式
+    """
+
     def __init__(self, avatar_path, parent=None):
         super(AvatarContainer, self).__init__(parent, frameShape=QFrame.NoFrame)  # 无边框
         self.initUI(avatar_path)
@@ -132,10 +136,17 @@ class AvatarContainer(QFrame):
         # 如果需要，可以设置头像容器的边框和背景
         # self.setStyleSheet("QFrame { border: 1px solid #ccc; background-color: #f0f0f0; }")
 
+
 class MessageBubble(QWidget):
-    '''消息气泡'''
+    """
+    消息气泡
+    """
+
     def __init__(self, text, avatar_path, is_sender=True, parent=None):
         super(MessageBubble, self).__init__(parent)
+        self.bubble_container = None
+        self.text_container = None
+        self.text_label = None
         self.initUI(text, avatar_path, is_sender)
 
     def initUI(self, text, avatar_path, is_sender):
@@ -210,7 +221,6 @@ class MessageBubble(QWidget):
             main_layout.addWidget(self.bubble_container, alignment=Qt.AlignLeft)
 
 
-
 class ChatSessionWindow(QWidget):
     """
     聊天会话界面
@@ -260,7 +270,6 @@ class ChatSessionWindow(QWidget):
         self.chat_frame: QFrame
         self.chat_frame.setFixedHeight(100)
 
-
         self.chat_input: PlainTextEdit
         self.chat_input.setFixedHeight(80)
 
@@ -271,19 +280,17 @@ class ChatSessionWindow(QWidget):
         self.send_btn: PushButton
         self.send_btn.setIcon(Icon(FluentIcon.SEND))
         self.send_btn.clicked.connect(self.send_button_clicked)
-        #self.chat_input.returnPressed.connect(self.send_button_clicked)
+        # self.chat_input.returnPressed.connect(self.send_button_clicked)
 
-        # =============================================发送按钮设置start=============================================
-
-
+        # =============================================发送按钮设置end=============================================
 
     def send_button_clicked(self):
-        '''
+        """
             获取 PlainTextEdit 控件中的文本并发送聊天气泡
-        '''
+        """
         text = self.chat_input.toPlainText()
         print(text)
-        is_sender =True  # 假设总是发送者
+        is_sender = True  # 假设总是发送者
         avatar_path = "../Assets/image/logo.png"  # 发送者头像路径
         bubble = MessageBubble(text, avatar_path, is_sender=is_sender)
 
@@ -297,14 +304,14 @@ class ChatSessionWindow(QWidget):
         # 滚动到底部以显示最新消息（可选）
         self.ListWidget.scrollToBottom()
 
-
     def clear_history(self) -> None:
         """
         清除所有的聊天记录
 
         :return:
         """
-        ...
+        self.ListWidget.clear()
+
 
     def change_model(self) -> None:
         """
@@ -312,7 +319,7 @@ class ChatSessionWindow(QWidget):
 
         :return:
         """
-        ...
+
 
     def upload_img(self) -> None:
         """

@@ -8,11 +8,16 @@ from PyQt5.QtCore import QObject, pyqtSignal
 
 class GlobalSignal(QObject):
     ChatOperation = pyqtSignal(str)
+    # 从面具窗口跳转聊天窗口
     ChatOperation_Mask = pyqtSignal(str)
-    mask_submitted = pyqtSignal(dict)  # 假设我们传递面具名和描述
+    # 从聊天窗口跳转面具窗口
+    mask_chatOperation = pyqtSignal(str)
+    # 传递面具名和描述
+    mask_submitted = pyqtSignal(dict)
 
 # 全局信号
 global_signal = GlobalSignal()
+
 
 if __name__=="__main__":
     ...

@@ -71,6 +71,16 @@ class MainWindow(SplitFluentWindow):
 
         # 处理聊天窗口的信号
         global_signal.ChatOperation.connect(self.__handle_chat_signal)
+        # 从选择聊天窗口跳转到选择面具窗口的信号处理
+        global_signal.mask_chatOperation.connect(self.mask_chatOperation_signal)
+
+    def mask_chatOperation_signal(self, signal: str) -> None:
+        """
+            从选择聊天窗口跳转到选择面具窗口
+        """
+        if signal == "choice_mask":
+            # 切换当前窗口到会话界面
+            self.stackedWidget.setCurrentWidget(self.mask_info_window)
 
     def __handle_chat_signal(self, signal: str) -> None:
         """
@@ -81,7 +91,8 @@ class MainWindow(SplitFluentWindow):
             session_name: str = "对话" + str(time.time())
             self.chat_session_window = ChatSessionWindow()
             self.chat_session_window.setObjectName(session_name)
-            self.addSubInterface(self.chat_session_window, FluentIcon.CHAT, session_name, parent=self.chat_search_window)
+            self.addSubInterface(self.chat_session_window, FluentIcon.CHAT, session_name,
+                                 parent=self.chat_search_window)
 
             # 切换当前窗口到会话界面
             self.stackedWidget.setCurrentWidget(self.chat_session_window)
