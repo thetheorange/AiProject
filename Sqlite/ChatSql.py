@@ -246,7 +246,8 @@ class ChatSql:
         except Exception as e:
             app_logger.info(str(e))
             print(str(e))
-    def update_account_id(self, username:str):
+
+    def update_account_id(self, username: str):
         """
         根据用户名获取本地账户id
         :param username: 用户名
@@ -258,11 +259,10 @@ class ChatSql:
                     static.sql_account_id = account.id
                 else:
                     print(f"找不到用户：{username}")
-                    static.sql_account_id=-1
+                    static.sql_account_id = -1
         except Exception as e:
             app_logger.info(str(e))
             print(str(e))
-
 
     # =============================================账户设置end=============================================
     # =============================================对话start=============================================
@@ -303,7 +303,7 @@ class ChatSql:
             app_logger.info(str(e))
             return None
 
-    def update_dialogue_by_account_and_name(self, account_id: int, dialogue_name: str)->None:
+    def update_dialogue_by_account_and_name(self, account_id: int, dialogue_name: str) -> None:
         """
         根据账户 ID 和对话名称更新对话id
         :param account_id: 账户 ID
@@ -326,7 +326,7 @@ class ChatSql:
 
     # =============================================对话end=============================================
     # =============================================消息start=============================================
-    def add_message(self, sender: SenderType|int, send_type: SendType | int,
+    def add_message(self, sender: SenderType | int, send_type: SendType | int,
                     send_info: str, send_succeed: bool, send_time: DateTime = datetime.now()):
         """
         添加消息
@@ -385,8 +385,6 @@ class ChatSql:
         except Exception as e:
             app_logger.info(str(e))
 
-
-
     def get_messages(self) -> list:
         """
         根据对话id获取消息
@@ -411,7 +409,7 @@ class ChatSql:
         """
         try:
             with self.DB_session() as session:
-                new_mask = Mask(mask_name=mask_name, mask_describe=mask_describe,account_id=static.sql_account_id)
+                new_mask = Mask(mask_name=mask_name, mask_describe=mask_describe, account_id=static.sql_account_id)
                 session.add(new_mask)
                 session.commit()
         except Exception as e:

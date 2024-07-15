@@ -16,6 +16,7 @@ class SettingWindow(QWidget):
     设置界面
     """
     signal = pyqtSignal(str)
+
     def __init__(self):
         super().__init__()
         loadUi("../Templates/setting.ui", self)
@@ -51,6 +52,7 @@ class SettingWindow(QWidget):
         self.history_compress_limit_spin_box.setRange(5, 20)
 
         # =============================================大模型参数设置end=============================================
+
     def test_button(self):
         self.signal.emit("start_login")
         global_signal.ChatOperation.emit("start_login")
