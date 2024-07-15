@@ -12,7 +12,7 @@ from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QApplication, QAction
 from PyQt5.uic import loadUi
 from qfluentwidgets import FluentIcon, CommandBar, PushButton, LineEdit, PasswordLineEdit, InfoBar, InfoBarPosition, \
-    SplashScreen
+    SplashScreen, EditableComboBox, RadioButton
 from qfluentwidgets.common.icon import Icon
 
 from Views.BaseWindow import BaseWindow
@@ -20,7 +20,6 @@ from Views.GlobalSignal import global_signal
 from Views.RegisterWindow import RegisterWindow
 from Sqlite.Static import static
 from Sqlite.ChatSql import ChatSql
-from Sqlite.LoginSql import LoginSql
 
 
 class LoginWindow(BaseWindow):
@@ -88,6 +87,21 @@ class LoginWindow(BaseWindow):
         # =============================================CommandBar设置end=============================================
 
         self.__bind_signal()
+        # 账号、密码输入框 <widget class="RadioButton" name="remember_password_button">
+        self.user_name_input: EditableComboBox
+        self.pwd_input: PasswordLineEdit
+        self.remember_password_button: RadioButton
+        self.accounts: list[dict] = []
+        self.update_all_accounts()
+        self.user_name_input.currentIndexChanged.connect(self.change_user_name_input)
+        self.change_user_name_input(0)
+    def change_user_name_input(self,index):
+        """
+        切换用户名
+        """
+        print(index)
+        self.pwd_input.setText(self.accounts[index]['password'])
+        self.remember_password_button.setChecked(self.accounts[index]['auto_fill'])
 
     def __bind_signal(self) -> None:
         """
@@ -97,6 +111,17 @@ class LoginWindow(BaseWindow):
         """
         self.login_button.clicked.connect(self.login)
         self.register_link.clicked.connect(lambda x: self.register_win.show())
+    def update_all_accounts(self):
+        """
+        更新所有已经存的账号
+        参考：https://qfluentwidgets.com/zh/pages/components/combobox/#combobox
+        """
+        self.accounts=[]
+        sql = ChatSql()
+        self.accounts = sql.get_all_accounts()
+        usernames=[account['username'] for account in self.accounts]
+        self.user_name_input.addItems(usernames)
+
 
     def login(self) -> None:
         """
@@ -149,6 +174,7 @@ class LoginWindow(BaseWindow):
                         parent=self
                     )
                 else:
+                    # 唯一登录成功状态
                     InfoBar.success(
                         title="登录状态",
                         content="登录成功",
@@ -163,6 +189,9 @@ class LoginWindow(BaseWindow):
                     static.username = r.json()['username']
                     static.tokens = r.json()['tokens']
                     static.picTimes = r.json()['picTimes']
+                    # 更新本地数据库
+                    sql = ChatSql()
+                    sql.add_account(user_name, user_pwd, auto_fill=self.remember_password_button.isChecked())
                     global_signal.ChatOperation.emit("close_login_success")
                 break
             # time.sleep(0.1)

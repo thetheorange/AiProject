@@ -71,6 +71,7 @@ class Mask(Base):
     mask_id = Column(Integer, primary_key=True, autoincrement=True)  # 主键
     mask_name = Column(String(50), unique=True)  # 不可重复
     mask_describe = Column(String(500))
+    account_id = Column(Integer)
 
 
 class Dialogue(Base):
@@ -128,17 +129,22 @@ class ChatSql:
     # =============================================账户设置start=============================================
     def add_account(self, username: str, password: str = "", auto_fill: bool = False):
         """
-        添加账号
+        添加账号，没问题
         :param username: 用户名
         :param password: 密码
         :param auto_fill: 是否自动填充密码
         """
         try:
             with self.DB_session() as session:
-                # 后端会过滤重复用户名？但是放在这儿便于查找代码示范。
+                # 先查找
                 existing_account = session.query(LoginAccount).filter_by(username=username).first()
                 if existing_account:
-                    print("重复")
+                    if auto_fill:
+                        existing_account.password = password
+                    else:
+                        existing_account.password = ""
+                    existing_account.auto_fill = auto_fill
+                    session.commit()
                     return
                 account = LoginAccount(username=username, password=password, auto_fill=auto_fill)
                 session.add(account)
@@ -166,7 +172,7 @@ class ChatSql:
 
     def get_all_accounts(self) -> list:
         """
-        获取所有账号密码信息
+        获取所有账号密码信息，没问题
         :return: 包含账号密码信息的列表
         """
         try:
@@ -180,6 +186,7 @@ class ChatSql:
                         'password': account.password,
                         'auto_fill': account.auto_fill
                     })
+            print(result)
             return result
         except Exception as e:
             app_logger.info(str(e))
@@ -479,8 +486,9 @@ class ChatSql:
 
 if __name__ == '__main__':
     sql = ChatSql()
-    # sql.add_account("wly", "561")
+    sql.add_account("wly", "561")
     print(sql.get_all_accounts())
+    exit(0)
     sql.add_mask("Mask1", mask_describe="test mask。测试测试")
     sql.create_dialogue("Dialogue1", "Mask1")
     for i in range(30):

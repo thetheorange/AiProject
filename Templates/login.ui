@@ -170,7 +170,7 @@
                </spacer>
               </item>
               <item>
-               <widget class="RadioButton" name="remember_password_Button">
+               <widget class="RadioButton" name="remember_password_button">
                 <property name="text">
                  <string>记住密码</string>
                 </property>
