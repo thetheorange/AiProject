@@ -11,28 +11,30 @@ class AudioPlayer(QWidget):
         # 初始化播放器
         self.player = QMediaPlayer(None)
         # 设置音频文件
-        print(path)
         self.player.setMedia(QMediaContent(QUrl.fromLocalFile(path)))
         self.init_ui()
 
         # 设置音量
         self.player.setVolume(50)
+        # 初始化时播放音频（如果你不想在初始化时播放，可以注释掉这一行）
         # self.play_audio_begin()
-        self.on_state_changes(self.player.state())
 
     def init_ui(self):
-        # 创建播放按钮
+        # 创建播放和停止按钮
         self.play_button = QPushButton('播放')
-        # 连接按钮的clicked信号到播放音频的槽
+        self.stop_button = QPushButton('停止')
+        # 连接按钮的clicked信号到对应的槽
         self.play_button.clicked.connect(self.play_audio_begin)
+        self.stop_button.clicked.connect(self.stop_audio)
 
         # 创建布局并添加按钮
         layout = QVBoxLayout()
         layout.addWidget(self.play_button)
+        layout.addWidget(self.stop_button)
         self.setLayout(layout)
 
         # 设置窗口大小
-        self.setGeometry(100, 100, 200, 100)
+        self.setGeometry(100, 100, 200, 150)  # 增加高度以适应停止按钮
 
     def on_state_changes(self, state):
         if state == QMediaPlayer.PlayingState:
@@ -43,10 +45,12 @@ class AudioPlayer(QWidget):
             print("已停止")
 
     def play_audio_begin(self):
-        self.on_state_changes(self.player.state())
-        # 播放音频
         if not self.player.state() == QMediaPlayer.PlayingState:
             self.player.play()
+
+    def stop_audio(self):
+        self.player.stop()
+        # 更新状态（可选，因为stop()后状态会自动更新）  
         self.on_state_changes(self.player.state())
 
 
