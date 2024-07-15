@@ -5,10 +5,9 @@ Time 2024/6/29
 """
 from sqlalchemy import create_engine, Column, Integer, String, Boolean
 from sqlalchemy.orm import declarative_base, sessionmaker
-from Core.Tools.Md5Password import Md5Password
 
 Base = declarative_base()
-md5password = Md5Password()
+
 
 
 class LoginAccount(Base):
@@ -33,7 +32,7 @@ class LoginSql:
         :param password: 密码
         :param auto_fill: 是否自动填充密码
         """
-        account = LoginAccount(username=username, password=md5password.encrypt(password), auto_fill=auto_fill)
+        account = LoginAccount(username=username, password=password, auto_fill=auto_fill)
         self.session.add(account)
         self.session.commit()
 
