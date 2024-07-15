@@ -33,11 +33,13 @@ Change:
         改：改发送状态、发送内容
         查：按日期排序查询一个对话的多个信息
 """
-from sqlalchemy import create_engine, DateTime, Integer, String, Boolean, Enum, ForeignKey
-from sqlalchemy.orm import declarative_base, sessionmaker
-from sqlalchemy import Column
-from enum import Enum as BaseEnum
 from datetime import datetime
+from enum import Enum as BaseEnum
+
+from sqlalchemy import Column
+from sqlalchemy import create_engine, DateTime, Integer, String, Boolean, Enum
+from sqlalchemy.orm import declarative_base, sessionmaker
+
 from Logging import app_logger
 from Sqlite.Static import static
 
@@ -153,13 +155,15 @@ class ChatSql:
 
                 # 没在本机登录过的
                 account = LoginAccount(username=username, password=password, auto_fill=auto_fill)
-                static.sql_account_id = account.id
                 session.add(account)
                 session.commit()
+                account = session.query(LoginAccount).filter_by(username=username).first()
+                static.sql_account_id = account.id
                 self.add_mask("默认对话")
                 self.create_dialogue('你好，新用户', icon='CHAT')
                 self.create_dialogue('这题怎么做', icon='CALENDAR')
                 self.create_dialogue('以“星期天为题”写一篇作文', icon='BOOK_SHELF')
+                session.commit()
         except Exception as e:
             app_logger.info(str(e))
             print(str(e))
@@ -303,7 +307,7 @@ class ChatSql:
             print(str(e))
 
     def get_dialogue_by_account_and_name(self, dialogue_name: str,
-                                         account_id: int = static.sql_account_id) -> Dialogue | None:
+                                         account_id=-1) -> Dialogue | None:
         """
         根据账户 ID 和对话名称获取对话
         :param dialogue_name: 对话名称
@@ -311,6 +315,8 @@ class ChatSql:
         :return: 对话对象，如果未找到则返回 None
         """
         try:
+            if account_id == -1:
+                account_id = static.sql_account_id
             with self.DB_session() as session:
                 return session.query(Dialogue).filter_by(account_id=account_id, dialogue_name=dialogue_name).first()
         except Exception as e:
@@ -338,13 +344,15 @@ class ChatSql:
         except Exception as e:
             app_logger.info(str(e))
 
-    def get_dialogues(self, account_id=static.sql_account_id) -> list:
+    def get_dialogues(self, account_id=-1) -> list:
         """
         :param account_id: id
         :return: 列表
         """
         try:
             result = []
+            if account_id == -1:
+                account_id = static.sql_account_id
             with self.DB_session() as session:
                 dialogues = session.query(Dialogue).filter_by(account_id=account_id).all()
                 for dialogue in dialogues:
@@ -353,7 +361,7 @@ class ChatSql:
                         'icon': dialogue.icon,
                         'id': dialogue.dialogue_id
                     })
-            print(result)
+            print("dialogue list", account_id, result)
             return result
         except Exception as e:
             app_logger.info(str(e))
@@ -437,7 +445,7 @@ class ChatSql:
             app_logger.info(str(e))
 
     # =============================================消息end=============================================
-    def add_mask(self, mask_name: str, mask_describe: str = "", account_id=static.sql_account_id, icon: str = "CHAT"):
+    def add_mask(self, mask_name: str, mask_describe: str = "", account_id=-1, icon: str = "CHAT"):
         """
         增加新的面具
         :param mask_name: 面具名称
