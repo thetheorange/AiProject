@@ -6,8 +6,9 @@ Time 2024/6/29
 from sqlalchemy import create_engine, Column, Integer, String, Boolean
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-Base = declarative_base()
+from Logging import app_logger
 
+Base = declarative_base()
 
 
 class LoginAccount(Base):
@@ -22,8 +23,7 @@ class LoginSql:
     def __init__(self):
         engine = create_engine('sqlite:///login.db')
         Base.metadata.create_all(engine)
-        DB_session = sessionmaker(bind=engine)
-        self.session = DB_session()
+        self.DB_session = sessionmaker(bind=engine)
 
     def add_account(self, username: str, password: str = "", auto_fill: bool = False):
         """
@@ -32,36 +32,52 @@ class LoginSql:
         :param password: 密码
         :param auto_fill: 是否自动填充密码
         """
-        account = LoginAccount(username=username, password=password, auto_fill=auto_fill)
-        self.session.add(account)
-        self.session.commit()
+        try:
+            with self.DB_session() as session:
+                account = LoginAccount(username=username, password=password, auto_fill=auto_fill)
+                session.add(account)
+                session.commit()
+        except Exception as e:
+            app_logger.info(str(e))
+            print(str(e))
 
     def delete_account(self, username: str):
         """
         删除账号
         :param username: 用户名
         """
-        account = self.session.query(LoginAccount).filter_by(username=username).first()
-        if account:
-            self.session.delete(account)
-            self.session.commit()
-        else:
-            print(f"找不到用户：{username}")
+        try:
+            with self.DB_session() as session:
+                account = session.query(LoginAccount).filter_by(username=username).first()
+                if account:
+                    session.delete(account)
+                    session.commit()
+                else:
+                    print(f"找不到用户：{username}")
+        except Exception as e:
+            app_logger.info(str(e))
+            print(str(e))
 
     def get_all_accounts(self):
         """
         获取所有账号密码信息
         :return: 包含账号密码信息的列表
         """
-        accounts = self.session.query(LoginAccount).all()
-        result = []
-        for account in accounts:
-            result.append({
-                'username': account.username,
-                'password': account.password,
-                'auto_fill': account.auto_fill
-            })
-        return result
+        try:
+            result = []
+            with self.DB_session() as session:
+                accounts = session.query(LoginAccount).all()
+                for account in accounts:
+                    result.append({
+                        'username': account.username,
+                        'password': account.password,
+                        'auto_fill': account.auto_fill
+                    })
+            return result
+        except Exception as e:
+            app_logger.info(str(e))
+            print(str(e))
+
 
 if __name__ == '__main__':
     sql = LoginSql()
