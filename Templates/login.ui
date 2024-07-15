@@ -134,7 +134,7 @@
              </widget>
             </item>
             <item>
-             <widget class="LineEdit" name="user_name_input">
+             <widget class="EditableComboBox" name="user_name_input">
               <property name="placeholderText">
                <string>用户名</string>
               </property>
@@ -155,11 +155,64 @@
              </widget>
             </item>
             <item>
-             <widget class="HyperlinkButton" name="register_link">
-              <property name="text">
-               <string>没有账户？立即注册</string>
-              </property>
-             </widget>
+             <layout class="QHBoxLayout" name="horizontalLayout_3">
+              <item>
+               <spacer name="horizontalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="RadioButton" name="remember_password_Button">
+                <property name="text">
+                 <string>记住密码</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_3">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="HyperlinkButton" name="register_link">
+                <property name="text">
+                 <string>没有账户？立即注册</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_2">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_4"/>
             </item>
            </layout>
           </item>
@@ -174,6 +227,11 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>EditableComboBox</class>
+   <extends>LineEdit</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
    <class>HyperlinkButton</class>
    <extends>PushButton</extends>
    <header>qfluentwidgets</header>
@@ -181,6 +239,11 @@
   <customwidget>
    <class>PushButton</class>
    <extends>QPushButton</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>RadioButton</class>
+   <extends>QRadioButton</extends>
    <header>qfluentwidgets</header>
   </customwidget>
   <customwidget>

@@ -158,11 +158,10 @@ class LoginWindow(BaseWindow):
                         parent=self
                     )
                     print("json是这样的", r.json())
-                    # try:
-                    #     print(r.json()['uuid'])
-                    # except Exception as e:
-                    #     print(str(e))
-                    # static.uuid = r.json()['uuid']
+                    static.uuid = r.json()['uuid']
+                    static.username = r.json()['username']
+                    static.tokens = r.json()['tokens']
+                    static.picTimes = r.json()['picTimes']
                 break
             # time.sleep(0.1)
         if r.status_code != 200:
@@ -175,8 +174,6 @@ class LoginWindow(BaseWindow):
                 duration=1000,
                 parent=self
             )
-
-
 
     def create_sub_interface(self) -> None:
         """
