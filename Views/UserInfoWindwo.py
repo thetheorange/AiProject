@@ -5,9 +5,11 @@ Time 2024/6/12
 """
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QLabel
 from PyQt5.uic import loadUi
 from qfluentwidgets import AvatarWidget
+
+from Sqlite.Static import static
 
 
 class UserInfoWindow(QWidget):
@@ -26,5 +28,18 @@ class UserInfoWindow(QWidget):
         self.avatar.setImage(QPixmap(avatar_img).scaled(125, 125, Qt.KeepAspectRatio,
                                                         Qt.SmoothTransformation))
         self.avatar.setRadius(64)
-
+        # 用户信息标签
+        self.user_name_label: QLabel
+        self.email_label: QLabel
+        self.id_label: QLabel
+        self.info_show()
         # =============================================基础设置end=============================================
+
+    def info_show(self):
+        """
+        用户信息bar的展示
+        """
+        self.user_name_label.setText(f'Username: \t{static.username}')
+        # self.email_label.setText(f'Email: ')
+        # self.id_label.setText(f'Id: {static}')
+
