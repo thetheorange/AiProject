@@ -10,6 +10,9 @@ class Static:
     username: str = "未登录"
     tokens: int = 0
     picTimes: int = 0
+    logining: bool = False
+    sql_account_id: int = -1
+    sql_dialogue_id: int = -1
 
 
 static = Static()
