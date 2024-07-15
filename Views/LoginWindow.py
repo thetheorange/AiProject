@@ -5,7 +5,7 @@ Time 2024/6/4
 """
 import json
 import sys
-
+import time
 import requests
 from PyQt5.QtCore import Qt, QSize, QEventLoop, QTimer
 from PyQt5.QtGui import QPixmap, QIcon
@@ -17,6 +17,9 @@ from qfluentwidgets.common.icon import Icon
 
 from Views.BaseWindow import BaseWindow
 from Views.RegisterWindow import RegisterWindow
+from Sqlite.Static import static
+from Sqlite.ChatSql import ChatSql
+from Sqlite.LoginSql import LoginSql
 
 
 class LoginWindow(BaseWindow):
@@ -103,12 +106,11 @@ class LoginWindow(BaseWindow):
         self.user_name_input: LineEdit  # 用户名
         self.pwd_input: PasswordLineEdit  # 用户密码
         # 登录接口
-        login_api: str = r"http://127.0.0.1:5000/auth/login"
-
+        login_api: str = r'http://47.121.115.252:8193/auth/login'
         user_name: str = self.user_name_input.text()
         user_pwd: str = self.pwd_input.text()
-
-        if not user_name and not user_pwd:
+        print(user_name, user_pwd)
+        if not user_name or not user_pwd:
             InfoBar.error(
                 title="登录状态",
                 content="输入不能为空",
@@ -118,7 +120,10 @@ class LoginWindow(BaseWindow):
                 duration=1000,
                 parent=self
             )
-        else:
+            return
+        r = None
+
+        for i in range(2):
             r = requests.post(url=login_api,
                               headers={
                                   "Content-Type": "application/json"
@@ -127,10 +132,11 @@ class LoginWindow(BaseWindow):
                                   "username": user_name,
                                   "password": user_pwd
                               }))
-            print(r.content.decode())
+            # print(r.request.body)
+            # print(r.content.decode())
             if r.status_code == 200:
                 # 检查是否登录成功
-                code: int | str = r.json()["code"]
+                code = r.json()["code"]
                 if code != 0:
                     InfoBar.error(
                         title="登录状态",
@@ -151,16 +157,26 @@ class LoginWindow(BaseWindow):
                         duration=1000,
                         parent=self
                     )
-            else:
-                InfoBar.error(
-                    title="登录状态",
-                    content=f"网络异常 {r.status_code}",
-                    orient=Qt.Vertical,
-                    isClosable=True,
-                    position=InfoBarPosition.BOTTOM_RIGHT,
-                    duration=1000,
-                    parent=self
-                )
+                    print("json是这样的", r.json())
+                    # try:
+                    #     print(r.json()['uuid'])
+                    # except Exception as e:
+                    #     print(str(e))
+                    # static.uuid = r.json()['uuid']
+                break
+            # time.sleep(0.1)
+        if r.status_code != 200:
+            InfoBar.error(
+                title="登录状态",
+                content=f"网络异常 {r.status_code}",
+                orient=Qt.Vertical,
+                isClosable=True,
+                position=InfoBarPosition.BOTTOM_RIGHT,
+                duration=1000,
+                parent=self
+            )
+
+
 
     def create_sub_interface(self) -> None:
         """
@@ -175,11 +191,14 @@ class LoginWindow(BaseWindow):
 
 
 if __name__ == "__main__":
-    QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
-    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
-    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
+    try:
+        QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+        QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
 
-    app = QApplication(sys.argv)
-    w = LoginWindow()
-    w.show()
-    sys.exit(app.exec_())
+        app = QApplication(sys.argv)
+        w = LoginWindow()
+        w.show()
+        sys.exit(app.exec_())
+    except Exception as e:
+        print(str(e))
