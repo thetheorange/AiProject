@@ -16,6 +16,7 @@ from qfluentwidgets import FluentIcon, CommandBar, PushButton, LineEdit, Passwor
 from qfluentwidgets.common.icon import Icon
 
 from Views.BaseWindow import BaseWindow
+from Views.GlobalSignal import global_signal
 from Views.RegisterWindow import RegisterWindow
 from Sqlite.Static import static
 from Sqlite.ChatSql import ChatSql
@@ -162,6 +163,7 @@ class LoginWindow(BaseWindow):
                     static.username = r.json()['username']
                     static.tokens = r.json()['tokens']
                     static.picTimes = r.json()['picTimes']
+                    global_signal.ChatOperation.emit("close_login_success")
                 break
             # time.sleep(0.1)
         if r.status_code != 200:
