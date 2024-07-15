@@ -11,44 +11,22 @@ Change:
 一账户-> 多面具（不可重复）
 一对话 -> 0/1面具
 1面具 ->多对话
-功能如下：
-    1. 账户
-        增
-        删
-        改： 账号、密码、自动填充
-        查： 根据账号查id
-    2. 对话
-        增：绑定账户id和消息id
-        删
-        改？
-        查：根据账户id和对话名查对话id
-    3. 面具
-        增：绑定账户id
-        删
-        改？
-        查： 根据面具id查面具名和描述，根据账户id和面具名查面具id
-    4. 消息
-        增：绑定对话id
-        删
-        改：改发送状态、发送内容
-        查：按日期排序查询一个对话的多个信息
 """
 from sqlalchemy import create_engine, DateTime, Integer, String, Boolean, Enum, ForeignKey
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker
+from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy import Column
 from enum import Enum as BaseEnum
 from datetime import datetime
 from Logging import app_logger
-from Sqlite.Static import static
 
 Base = declarative_base()
-
 
 # =============================================表的定义=============================================
 
 class SenderType(BaseEnum):
     """
-    信息发送人枚举体
+    信息发送人枚举体（弃用）
     """
     USER = 0
     GPT = 1
@@ -56,7 +34,7 @@ class SenderType(BaseEnum):
 
 class SendType(BaseEnum):
     """
-    信息发送类型枚举体
+    信息发送类型枚举体（弃用）
     """
     TEXT = 0
     IMAGE = 1
@@ -68,11 +46,9 @@ class Mask(Base):
     面具
     """
     __tablename__ = 'mask'
-    mask_id = Column(Integer, primary_key=True, autoincrement=True)  # 主键
-    mask_name = Column(String(50))
+    mask_id = Column(Integer, primary_key=True, autoincrement=True) # 主键
+    mask_name = Column(String(50), unique=True) # 不可重复
     mask_describe = Column(String(500))
-    account_id = Column(Integer)
-    icon = Column(String(20))
 
 
 class Dialogue(Base):
@@ -80,25 +56,36 @@ class Dialogue(Base):
     对话
     """
     __tablename__ = 'dialogue'
-    dialogue_id = Column(Integer, primary_key=True, autoincrement=True)  # 主键
-    dialogue_name = Column(String(50))
-    mask_id = Column(Integer)
-    account_id = Column(Integer)
-    icon = Column(String(20))
+    dialogue_name = Column(String(50), primary_key=True)
+    mask_id = Column(Integer, ForeignKey('mask.mask_id'))  # 外键关联到Mask表的mask_id
+    mask = relationship("Mask", back_populates="dialogues")  # 关联到Mask，并设置反向引用
+    account_id = Column(Integer, ForeignKey('accounts.id')) # 外键，与账户的多对一关系
+    account = relationship("LoginAccount", back_populates="dialogues") # 还需要吗？
+    messages = relationship("Message", back_populates="dialogue")
+
+    # 反向引用到Mask，表示一个Mask可以有多个Dialogue
+    @declared_attr
+    def mask(cls):
+        return relationship("Mask", foreign_keys=[cls.mask_id])
+
+    @declared_attr
+    def account(cls):
+        return relationship("LoginAccount", foreign_keys=[cls.account_id])
 
 
 class Message(Base):
     """
     聊天信息
     """
-    __tablename__ = 'message'
-    message_id = Column(Integer, primary_key=True, autoincrement=True)
+    __tablename__ = 'essage'  # 表名修改为'message'
+    id = Column(Integer, primary_key=True, autoincrement=True)
     sender = Column(Enum(SenderType, name="sender_enum"))
     send_time = Column(DateTime)
     send_type = Column(Enum(SendType, name="send_type_enum"))
     send_info = Column(String(2000))
     send_succeed = Column(Boolean)
-    dialogue_id = Column(Integer)
+    dialogue_name = Column(String(50), ForeignKey('dialogue.dialogue_name'))  # 外键关联到Dialogue表的dialogue_name
+    dialogue = relationship("Dialogue", back_populates="messages")  # 关联到Dialogue，并设置反向引用
 
 
 class LoginAccount(Base):
@@ -107,8 +94,8 @@ class LoginAccount(Base):
     username = Column(String(50), unique=True)
     password = Column(String(50))
     auto_fill = Column(Boolean)
-    email = Column(String(50))
-    academy = Column(String(50))
+    # 与对话的一对多关系
+    dialogues = relationship("Dialogue", back_populates="account")
 
 
 # =============================================数据库封装=============================================
@@ -123,6 +110,7 @@ class ChatSql:
             engine = create_engine('sqlite:///chat.db')
             Base.metadata.create_all(engine)
             self.DB_session = sessionmaker(bind=engine)
+            # self.add_mask("default") # 我觉得不用默认面具，只需要在前端完成就可以了
         except Exception as e:
             app_logger.info(str(e))
 
@@ -131,35 +119,21 @@ class ChatSql:
     # =============================================账户设置start=============================================
     def add_account(self, username: str, password: str = "", auto_fill: bool = False):
         """
-        添加账号，没问题
+        添加账号
         :param username: 用户名
         :param password: 密码
         :param auto_fill: 是否自动填充密码
         """
         try:
             with self.DB_session() as session:
-                # 先查找
-                existing_account = session.query(LoginAccount).filter_by(username=username).first()
-                # 在本机登录过的
-                if existing_account:
-                    if auto_fill:
-                        existing_account.password = password
-                    else:
-                        existing_account.password = ""
-                    static.sql_account_id = existing_account.id
-                    existing_account.auto_fill = auto_fill
-                    session.commit()
-                    return
-
-                # 没在本机登录过的
+                # 因为后端会过滤重复用户名，所以这一段其实不用写。但是放在这儿便于查找。
+                # existing_account = session.query(LoginAccount).filter_by(username=username).first()
+                # if existing_account:
+                #     print("重复")
+                #     return
                 account = LoginAccount(username=username, password=password, auto_fill=auto_fill)
-                static.sql_account_id = account.id
                 session.add(account)
                 session.commit()
-                self.add_mask("默认对话")
-                self.create_dialogue('你好，新用户', icon='CHAT')
-                self.create_dialogue('这题怎么做', icon='CALENDAR')
-                self.create_dialogue('以“星期天为题”写一篇作文', icon='BOOK_SHELF')
         except Exception as e:
             app_logger.info(str(e))
             print(str(e))
@@ -181,28 +155,25 @@ class ChatSql:
             app_logger.info(str(e))
             print(str(e))
 
-    def get_all_accounts(self) -> list:
+    def get_all_accounts(self):
         """
-        获取所有账号密码信息，没问题
+        获取所有账号密码信息
         :return: 包含账号密码信息的列表
         """
         try:
             result = []
             with self.DB_session() as session:
                 accounts = session.query(LoginAccount).all()
-                print(accounts)
                 for account in accounts:
                     result.append({
                         'username': account.username,
                         'password': account.password,
                         'auto_fill': account.auto_fill
                     })
-            print(result)
             return result
         except Exception as e:
             app_logger.info(str(e))
             print(str(e))
-            return []
 
     def change_username(self, old_username: str, new_username: str):
         """
@@ -257,44 +228,27 @@ class ChatSql:
         except Exception as e:
             app_logger.info(str(e))
             print(str(e))
-
-    def update_account_id(self, username: str):
-        """
-        根据用户名获取本地账户id
-        :param username: 用户名
-        """
-        try:
-            with self.DB_session() as session:
-                account = session.query(LoginAccount).filter_by(username=username).first()
-                if account:
-                    static.sql_account_id = account.id
-                else:
-                    print(f"找不到用户：{username}")
-                    static.sql_account_id = -1
-        except Exception as e:
-            app_logger.info(str(e))
-            print(str(e))
-
     # =============================================账户设置end=============================================
-    # =============================================对话start=============================================
-    def create_dialogue(self, name: str, mask_name: str = "默认对话", icon: str = "CHAT"):
+    # =============================================对话与面具start=============================================
+    def create_dialogue(self, name: str, account_id: int, mask_name: str = ""):
         """
         创建对话
-        绑定账户id和面具id
         :param name: 对话名称
-        :param mask_name: 面具名称，可以没有，默认
-        :param icon: fluent图标
+        :param mask_name: 面具名称，可以没有
+        :param account_id: 所属账户的 ID
         """
         try:
             with self.DB_session() as session:
                 mask = session.query(Mask).filter_by(mask_name=mask_name).first()
                 if mask_name == "" or not mask:
-                    mask = session.query(Mask).filter_by(mask_name="默认对话").first()
-                if session.query(Dialogue).filter_by(dialogue_name=name).first():  # 已经出现
-                    print("对话重复")
+                    mask = session.query(Mask).filter_by(mask_name="default").first()
+                account = session.query(LoginAccount).get(account_id)
+                if not account:
+                    print(f"找不到账户 ID 为 {account_id} 的账户")
                     return
-                dialogue = Dialogue(dialogue_name=name, mask_id=mask.mask_id, account_id=static.sql_account_id,
-                                    icon=icon)
+                if session.query(Dialogue).filter_by(dialogue_name=name).first():  # 已经出现
+                    return
+                dialogue = Dialogue(dialogue_name=name, mask_id=mask.mask_id, account=account)
                 session.add(dialogue)
                 session.flush()
                 session.commit()
@@ -302,70 +256,11 @@ class ChatSql:
             app_logger.info(str(e))
             print(str(e))
 
-    def get_dialogue_by_account_and_name(self, dialogue_name: str,
-                                         account_id: int = static.sql_account_id) -> Dialogue | None:
-        """
-        根据账户 ID 和对话名称获取对话
-        :param dialogue_name: 对话名称
-        :param account_id: 账户 ID
-        :return: 对话对象，如果未找到则返回 None
-        """
-        try:
-            with self.DB_session() as session:
-                return session.query(Dialogue).filter_by(account_id=account_id, dialogue_name=dialogue_name).first()
-        except Exception as e:
-            app_logger.info(str(e))
-            return None
-
-    def update_dialogue_by_account_and_name(self, dialogue_name: str, account_id: int) -> None:
-        """
-        根据账户 ID 和对话名称更新对话id
-        :param dialogue_name: 对话名称
-        :param account_id: 账户 ID
-        """
-        dialogue = self.get_dialogue_by_account_and_name(dialogue_name, account_id)
-        if dialogue:
-            static.sql_dialogue_id = dialogue.dialogue_id
-
-    def get_dialogue(self, dialogue_name: str) -> list | None:
-        """
-        根据名称获取对话
-        :param dialogue_name: 对话名称
-        """
-        try:
-            with self.DB_session() as session:
-                return session.query(Dialogue).filter_by(dialogue_name=dialogue_name).first()
-        except Exception as e:
-            app_logger.info(str(e))
-
-    def get_dialogues(self, account_id=static.sql_account_id) -> list:
-        """
-        :param account_id: id
-        :return: 列表
-        """
-        try:
-            result = []
-            with self.DB_session() as session:
-                dialogues = session.query(Dialogue).filter_by(account_id=account_id).all()
-                for dialogue in dialogues:
-                    result.append({
-                        'name': dialogue.dialogue_name,
-                        'icon': dialogue.icon,
-                        'id': dialogue.dialogue_id
-                    })
-            print(result)
-            return result
-        except Exception as e:
-            app_logger.info(str(e))
-            print(str(e))
-            return []
-
-    # =============================================对话end=============================================
-    # =============================================消息start=============================================
-    def add_message(self, sender: SenderType | int, send_type: SendType | int,
+    def add_message(self, dialogue_name: str, sender: SenderType, send_type: SendType,
                     send_info: str, send_succeed: bool, send_time: DateTime = datetime.now()):
         """
         添加消息
+        :param dialogue_name: 对话名称
         :param sender: 发送者类型
         :param send_time: 发送时间
         :param send_type: 发送类型
@@ -373,15 +268,11 @@ class ChatSql:
         :param send_succeed: 发送是否成功
         """
         try:
-            if static.sql_dialogue_id == -1 or static.sql_account_id == -1:
-                print("未登录")
-                return
             with self.DB_session() as session:
-                dialogue = session.query(Dialogue).filter_by(dialogue_id=static.sql_dialogue_id).first()
+                dialogue = session.query(Dialogue).filter_by(dialogue_name=dialogue_name).first()
                 if not dialogue:
-                    print(f"Dialogue with id {static.sql_dialogue_id} not found")
-                message = Message(dialogue_id=static.sql_dialogue_id, sender=sender, send_time=send_time,
-                                  send_type=send_type,
+                    print(f"Dialogue with name {dialogue_name} not found")
+                message = Message(dialogue=dialogue, sender=sender, send_time=send_time, send_type=send_type,
                                   send_info=send_info, send_succeed=send_succeed)
                 session.add(message)
                 session.commit()
@@ -421,14 +312,26 @@ class ChatSql:
         except Exception as e:
             app_logger.info(str(e))
 
-    def get_messages(self) -> list:
+    def get_dialogue(self, dialogue_name: str) -> list|None:
         """
-        根据对话id获取消息
+        根据名称获取对话
+        :param dialogue_name: 对话名称
+        """
+        try:
+            with self.DB_session() as session:
+                return session.query(Dialogue).filter_by(dialogue_name=dialogue_name).first()
+        except Exception as e:
+            app_logger.info(str(e))
+
+    def get_messages(self, dialogue_name: str) -> list:
+        """
+        根据对话名称获取消息
+        :param dialogue_name: 对话名称
         :return: 消息列表，如果未找到相关对话则返回空列表
         """
         try:
             with self.DB_session() as session:
-                dialogue = session.query(Dialogue).filter_by(dialogue_id=static.sql_dialogue_id).first()
+                dialogue = session.query(Dialogue).filter_by(dialogue_name=dialogue_name).first()
                 if dialogue:
                     return dialogue.messages
                 else:
@@ -436,8 +339,7 @@ class ChatSql:
         except Exception as e:
             app_logger.info(str(e))
 
-    # =============================================消息end=============================================
-    def add_mask(self, mask_name: str, mask_describe: str = "", account_id=static.sql_account_id, icon: str = "CHAT"):
+    def add_mask(self, mask_name: str, mask_describe: str = ""):
         """
         增加新的面具
         :param mask_name: 面具名称
@@ -445,13 +347,13 @@ class ChatSql:
         """
         try:
             with self.DB_session() as session:
-                new_mask = Mask(mask_name=mask_name, mask_describe=mask_describe, account_id=account_id, icon=icon)
+                new_mask = Mask(mask_name=mask_name, mask_describe=mask_describe)
                 session.add(new_mask)
                 session.commit()
         except Exception as e:
             app_logger.info(str(e))
 
-    def get_mask(self, mask_name: str) -> Mask:
+    def get_mask(self, mask_name: str):
         """
         根据名称查找面具
         :param mask_name: 面具名称
@@ -507,8 +409,8 @@ class ChatSql:
                         sorted_messages = sorted(messages, key=lambda x: x.id, reverse=True)
                         print_messages = sorted_messages[:update_num]
                         return "\n".join([
-                            f"信息id: {message.id}, 发送者: {message.sender.name}, 发送时间: {message.send_time}, 发送类型: {message.send_type.name}, 发送内容: {message.send_info}, 发送是否成功: {message.send_succeed}"
-                            for message in print_messages])
+                                             f"信息id: {message.id}, 发送者: {message.sender.name}, 发送时间: {message.send_time}, 发送类型: {message.send_type.name}, 发送内容: {message.send_info}, 发送是否成功: {message.send_succeed}"
+                                             for message in print_messages])
                     else:
                         return f"未找到 {dialogue_name} 这个对话"
                 else:
@@ -517,18 +419,16 @@ class ChatSql:
             app_logger.info(str(e))
             return str(e)
 
-
 if __name__ == '__main__':
     sql = ChatSql()
     sql.add_account("wly", "561")
     print(sql.get_all_accounts())
-    exit(0)
-    sql.add_mask("Mask1", mask_describe="test mask。测试测试")
+    sql.add_mask("Mask1", mask_describe="test mask")
     sql.create_dialogue("Dialogue1", "Mask1")
     for i in range(30):
-        sql.add_message(SenderType.USER, SendType.TEXT, str(i), True)
-    # dialogue = sql.get_dialogue("Dialogue1")
-    # messages = sql.get_messages("Dialogue1")
-    # print(format(sql, "dialogues"))
-    # print(format(sql, "masks"))
-    # print(format(sql, "messages Dialogue1 6"))
+        sql.add_message("Dialogue1", SenderType.USER, SendType.TEXT, str(i), True)
+    dialogue = sql.get_dialogue("Dialogue1")
+    messages = sql.get_messages("Dialogue1")
+    print(format(sql, "dialogues"))
+    print(format(sql, "masks"))
+    print(format(sql, "messages Dialogue1 6"))

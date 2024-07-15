@@ -18,6 +18,7 @@ from Views.LoginWindow import LoginWindow
 from Views.MaskWindow import MaskSettingWindow
 from Views.SettingWindow import SettingWindow
 from Views.UserInfoWindwo import UserInfoWindow
+from Sqlite.ChatSql import ChatSql
 
 
 class MainWindow(SplitFluentWindow):
@@ -101,7 +102,6 @@ class MainWindow(SplitFluentWindow):
             # 切换当前窗口到会话界面
             self.stackedWidget.setCurrentWidget(self.mask_info_window)
 
-
     def __handle_chat_signal(self, signal: str) -> None:
         """
         处理各窗口的信号
@@ -128,6 +128,7 @@ class MainWindow(SplitFluentWindow):
                 self.user_info_window.info_show()
                 if self.login_window:
                     self.login_window.close()
+                self.chat_search_window.update_dialogues()
 
             case _:
                 pass
@@ -137,8 +138,10 @@ if __name__ == "__main__":
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
-
     app = QApplication(sys.argv)
-    w = MainWindow()
-    w.show()
+    try:
+        w = MainWindow()
+        w.show()
+    except Exception as e:
+        print(str(e))
     sys.exit(app.exec_())
