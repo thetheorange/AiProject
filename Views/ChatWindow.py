@@ -4,16 +4,15 @@ Des 聊天相关界面
 Time 2024/6/14
 Misaka-xxw: 记得改打开文件的路径为Aiproject！
 """
-from PyQt5.QtWidgets import QWidget, QAction, QLabel, QVBoxLayout, QHBoxLayout, QSpacerItem, QSizePolicy, \
-    QListWidgetItem, QFrame, QListWidget, QPushButton
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QWidget, QAction, QLabel, QHBoxLayout, QListWidgetItem, QFrame
 from PyQt5.uic import loadUi
 from qfluentwidgets import ToolTipFilter, PushButton, Icon, FluentIcon, ToolTipPosition, CommandBar, MessageBoxBase, \
     SubtitleLabel, ListWidget, PlainTextEdit, SearchLineEdit, MessageBox
 
 from Views.FileWindow import FileWindow
 from Views.GlobalSignal import global_signal
-from PyQt5.QtGui import QPixmap
-
 from Views.MessageBubble import MessageBubble
 
 
@@ -199,9 +198,6 @@ class ChatChoiceMaskWindow(MessageBoxBase):
 
         self.yesButton.setText("确认")
         self.cancelButton.setText("取消")
-
-
-from PyQt5.QtCore import Qt, pyqtSlot
 
 
 class AvatarContainer(QFrame):
