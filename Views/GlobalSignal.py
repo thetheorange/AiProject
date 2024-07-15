@@ -14,10 +14,12 @@ class GlobalSignal(QObject):
     mask_chatOperation = pyqtSignal(str)
     # 传递面具名和描述
     mask_submitted = pyqtSignal(dict)
+    # 提示错误信息的信号
+    error_msg = pyqtSignal(list)
+
 
 # 全局信号
 global_signal = GlobalSignal()
-
 
 if __name__ == "__main__":
     ...

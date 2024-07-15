@@ -14,7 +14,7 @@ from qfluentwidgets import ToolTipFilter, PushButton, Icon, FluentIcon, ToolTipP
 from Views.FileWindow import FileWindow
 from Views.GlobalSignal import global_signal
 from Views.MessageBubble import MessageBubble
-
+from Sqlite.ChatSql import ChatSql
 
 class ChatLineWidget(QWidget):
     """
@@ -42,7 +42,7 @@ class ChatLineWidget(QWidget):
 
 class ChatSearchWindow(QWidget):
     """
-    聊天会话搜索界面
+    聊天会话搜索界面，会被加到主页面里
     """
 
     def __init__(self):
@@ -65,14 +65,25 @@ class ChatSearchWindow(QWidget):
         # =============================================搜索设置end=============================================
 
         # =============================================添加聊天按钮行start=============================================
+        # 原来的会话示例
+        # self.ListWidget: ListWidget
+        # datadict = [
+        #     {'name': '你好，新用户', 'icon': FluentIcon.CHAT},
+        #     {'name': '这题怎么做', 'icon': FluentIcon.CALENDAR},
+        #     {'name': '以“星期天为题”写一篇作文', 'icon': FluentIcon.BOOK_SHELF},
+        # ]
+        # for data in datadict:
+        #     self.add_chat_list(data)
+        self.update_dialogues()
+
+    def update_dialogues(self):
+        """根据本地数据库加载对话"""
+        # 接入本地数据库
         self.ListWidget: ListWidget
-        datadict = [
-            {'name': '你好，新用户', 'icon': FluentIcon.CHAT},
-            {'name': '这题怎么做', 'icon': FluentIcon.CALENDAR},
-            {'name': '以“星期天为题”写一篇作文', 'icon': FluentIcon.BOOK_SHELF},
-        ]
+        sql = ChatSql()
+        datadict = sql.get_dialogues()
         for data in datadict:
-            self.add_chat_list(data)
+            self.add_chat_list({'name': data['name'], 'icon': eval(f"FluentIcon.{data['icon']}")})
 
         # =============================================添加聊天按钮行end=============================================
 
