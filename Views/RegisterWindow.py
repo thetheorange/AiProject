@@ -118,7 +118,7 @@ class RegisterWindow(QWidget):
         input_captcha: str = self.captcha_input.text()
 
         # 注册接口
-        register_api: str = r"http://127.0.0.1:5000/auth/register"
+        register_api: str = r"http://47.121.115.252:8193/auth/register"
 
         if not user_name and not user_email and not user_pwd and not input_captcha:
             InfoBar.error(
