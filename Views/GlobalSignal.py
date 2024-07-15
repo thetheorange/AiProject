@@ -19,5 +19,5 @@ class GlobalSignal(QObject):
 global_signal = GlobalSignal()
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     ...

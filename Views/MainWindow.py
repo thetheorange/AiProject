@@ -6,7 +6,7 @@ Time 2024/6/14
 import sys
 import time
 
-from PyQt5.QtCore import Qt, QObject, pyqtSignal
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication
 from qfluentwidgets import FluentIcon, SplitFluentWindow, \
@@ -14,6 +14,7 @@ from qfluentwidgets import FluentIcon, SplitFluentWindow, \
 
 from Views.ChatWindow import ChatSearchWindow, ChatSessionWindow
 from Views.GlobalSignal import global_signal
+from Views.LoginWindow import LoginWindow
 from Views.MaskWindow import MaskSettingWindow
 from Views.SettingWindow import SettingWindow
 from Views.UserInfoWindwo import UserInfoWindow
@@ -86,18 +87,24 @@ class MainWindow(SplitFluentWindow):
         """
         处理各窗口的信号
         """
-        if signal == "start_chat":
-            # 会话的默认名字应该根据数据库读取目前的会话id数 命名 这里先用时间戳占位
-            session_name: str = "对话" + str(time.time())
-            self.chat_session_window = ChatSessionWindow()
-            self.chat_session_window.setObjectName(session_name)
-            self.addSubInterface(self.chat_session_window, FluentIcon.CHAT, session_name,
-                                 parent=self.chat_search_window)
+        print("信号：", signal)
+        match signal:
+            case "start_chat":
+                # 会话的默认名字应该根据数据库读取目前的会话id数 命名 这里先用时间戳占位
+                session_name: str = "对话" + str(time.time())
+                self.chat_session_window = ChatSessionWindow()
+                self.chat_session_window.setObjectName(session_name)
+                self.addSubInterface(self.chat_session_window, FluentIcon.CHAT, session_name,
+                                     parent=self.chat_search_window)
 
-            # 切换当前窗口到会话界面
-            self.stackedWidget.setCurrentWidget(self.chat_session_window)
-            # # 修改窗口标题 提示用户目前在哪个会话
-            # self.setWindowTitle(session_name)
+                # 切换当前窗口到会话界面
+                self.stackedWidget.setCurrentWidget(self.chat_session_window)
+                # # 修改窗口标题 提示用户目前在哪个会话
+                # self.setWindowTitle(session_name)
+            case "Login":
+                login_window = LoginWindow()
+            case _:
+                pass
 
 
 if __name__ == "__main__":
