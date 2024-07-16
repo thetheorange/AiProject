@@ -8,37 +8,15 @@ import time
 import uuid
 
 from flask import request, jsonify, Response
+from flask_jwt_extended import create_access_token, jwt_required, create_refresh_token, get_jwt_identity
 from sqlalchemy.orm import sessionmaker
 
 from Core.StatusCode import StatusCode
-from Model.model import engine, User
+from Core.Tools.generate_uuid import create_uuid
+from Core.Tools.md5_password import get_md5
+from Model.model import engine, User, Admin
+from config import config_json
 from . import auth_blu
-
-# 特殊字符串 加盐
-CODE: str = "#_#"
-
-
-def get_md5(pwd: str) -> str:
-    """
-    md5加密用户密码
-
-    :pwd: 用户密码
-    :return: 返回MD5加密后的用户密码
-    """
-    pwd += CODE
-    md5 = hashlib.md5()
-    md5.update(pwd.encode("utf-8"))
-    return md5.hexdigest()
-
-
-def create_uuid(user_name: str) -> str:
-    """
-    根据时间戳和用户名创建唯一的uuid
-
-    :return: 返回唯一的uuid
-    """
-    time_stamp: float = time.time()
-    return str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{time_stamp}{user_name}").hex)
 
 
 @auth_blu.route("/auth/register", methods=["POST"])
@@ -58,7 +36,7 @@ def register() -> Response:
         is_same_name: User = session.query(User).filter(User.UserName == user_name).first()
         # 查询注册的用户名是否重名
         if is_same_name:
-            return jsonify({"code": StatusCode.RegisterError, "msg": "用户名已存在"})
+            return jsonify({"code": StatusCode.UserNameRepeat, "msg": "用户名已存在"})
         else:
             # 加密用户密码
             pass_word = get_md5(pass_word)
@@ -70,7 +48,8 @@ def register() -> Response:
                                   UserName=user_name,
                                   PassWord=pass_word,
                                   Tokens=0,
-                                  Email=user_email)
+                                  Email=user_email,
+                                  PicTimes=0)
             session.add(new_user)
             session.commit()
             return jsonify({"code": 0, "msg": "用户注册成功"})
@@ -98,3 +77,51 @@ def login() -> Response:
                         "tokens": user_info.Tokens,
                         "picTimes": user_info.PicTimes}) if user_info \
             else jsonify({"code": StatusCode.LoginError, "msg": "用户登录失败"})
+
+
+# ================================ 后台管理界面鉴权start ================================
+
+@auth_blu.route("/admin/login", methods=["POST"])
+def admin_login() -> Response:
+    """
+    后台登录接口
+
+    :return: json
+    """
+    admin: str = request.json.get("admin")
+    password: str = request.json.get("password")
+
+    DBSession = sessionmaker(bind=engine)
+    with DBSession() as session:
+        admin_info: Admin = session.query(Admin).filter(Admin.Admin == admin,
+                                                        Admin.PassWord == password).first()
+        return jsonify({
+            "access_token": create_access_token(identity=admin),
+            "refresh_token": create_refresh_token(identity=admin),
+            "app_info": {
+                "app_id": config_json["api"].get("APPID"),
+                "api_key": config_json["api"].get("APIKEY"),
+                "api_secret": config_json["api"].get("API_SECRET")
+            },
+            "code": 0,
+            "msg": "管理员登录成功"
+        }) if admin_info else jsonify({"code": StatusCode.LoginError, "msg": "登录失败"})
+
+
+@auth_blu.route("/admin/refresh", methods=["GET"])
+@jwt_required(refresh=True)
+def refresh_jwt() -> Response:
+    """
+    刷新管理员jwt令牌
+
+    :return: json
+    """
+
+    admin: str = get_jwt_identity()
+    return jsonify({
+        "access_token": create_access_token(identity=admin),
+        "code": 0,
+        "msg": "刷新令牌成功"
+    })
+
+# ================================ 后台管理界面鉴权end ================================

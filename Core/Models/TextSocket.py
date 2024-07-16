@@ -29,7 +29,7 @@ class TextModel:
     文生文对话模型封装Socket类
     """
 
-    def __init__(self, *, APPID, APIKey, APISecret, GptUrl, Domain, isLoadExtension=False):
+    def __init__(self, *, APPID, APIKey, APISecret, GptUrl, Domain, isLoadExtension=False, config=None):
         """
         :param APPID: 应用ID
         :param APIKey: 应用Key
@@ -37,6 +37,12 @@ class TextModel:
         :param GptUrl: 文生文聊天模型接口地址
         :param Domain: 所使用的大模型领域
         """
+        if config is None:
+            config = {
+                "temperature": 0.5,
+                "max_tokens": 4096,
+                "top_k": 4
+            }
         self.APPID: str = APPID
         self.APIKey: str = APIKey
         self.APISecret: str = APISecret
@@ -59,8 +65,9 @@ class TextModel:
             "parameter": {
                 "chat": {
                     "domain": "",
-                    "temperature": 0.5,
-                    "max_tokens": 4096,
+                    "temperature": config["temperature"],
+                    "max_tokens": config["max_tokens"],
+                    "top_k": config["top_k"],
                     "auditing": "default",
                 }
             },
@@ -109,7 +116,7 @@ class TextModel:
         :param error:
         :return:
         """
-        app_logger.error("socket connect error")
+        app_logger.error(f"[TEXT MODEL] {error}")
 
     def on_close(self, ws: any) -> None:
         """
@@ -118,7 +125,7 @@ class TextModel:
         :param ws:
         :return:
         """
-        app_logger.info("socket close")
+        app_logger.info("[TEXT MODEL] close")
 
     def on_open(self, ws: any) -> None:
         """
