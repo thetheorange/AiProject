@@ -51,9 +51,12 @@ class StatusCode:
 
     # ================================ 图片识别文字大模型相关状态start ================================
 
+    # 文件格式不合法
+    FileFormatIllegal: str = "FILE_FORMAT_ILLEGAL"
+    # 获取上传文件失败
+    GetFileFail: str = "GET_FILE_FAIL"
     # 用户使用图片文字识别模型次数不足
     PicTimesNotEnough: str = "PIC_TIMES_NOT_ENOUGH"
-
     # 使用图片文字识别模型时错误
     PictureToTextError: str = "PICTURE_TO_TEXT_ERROR"
 

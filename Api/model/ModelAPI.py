@@ -14,6 +14,7 @@ from Core.Models.PictureToTextSocket import PictureToTextSocket
 from Core.Models.TextSocket import TextModel
 from Core.Models.VoiceToTextSocket import AudioToTextModel
 from Core.StatusCode import StatusCode
+from Logging import app_logger
 from Model.model import engine, User
 from config import config_json
 
@@ -57,43 +58,52 @@ def text_model_chat() -> Response:
 
     :return: 返回json字符串 包含回复消息
     """
+    try:
+       # 请求的用户id
+       query_user_uuid: int = request.json.get("uuid")
+       # 用户名
+       query_user_name: str = request.json.get("username")
+       # 发送给大模型的对话消息
+       query_msg: list[dict] = request.json.get("dialog")
 
-    # 请求的用户id
-    query_user_uuid: int = request.json.get("uuid")
-    # 用户名
-    query_user_name: str = request.json.get("username")
-    # 发送给大模型的对话消息
-    query_msg: list[dict] = request.json.get("dialog")
-
-    DBSession = sessionmaker(bind=engine)
-    with DBSession() as session:
-        # 查询用户信息
-        user_info: User = session.query(User).filter(User.Id == query_user_uuid,
-                                                     User.UserName == query_user_name).first()
-        # 如果存在则判断用户剩余token是否大于0
-        if user_info:
-            if user_info.Tokens > 0:
-                text_chat_session: TextModel = TextModel(APPID=APPID,
-                                                         APIKey=APIKEY,
-                                                         APISecret=API_SECRET,
-                                                         GptUrl=GPT_URL,
-                                                         Domain=DOMAIN)
-                consume_token, response_text = text_chat_session.chat(query_msg)
-                user_info.Tokens -= consume_token
-                session.commit()
-                return jsonify({
-                    "code": 0,
-                    "content": response_text,
-                    "consume_token": consume_token
-                })
-            else:
-                return jsonify({
-                    "code": StatusCode.TokenNotEnough
-                })
-        else:
-            return jsonify({
-                "code": StatusCode.UserNotFound
-            })
+       DBSession = sessionmaker(bind=engine)
+       with DBSession() as session:
+           # 查询用户信息
+           user_info: User = session.query(User).filter(User.Id == query_user_uuid,
+                                                        User.UserName == query_user_name).first()
+           # 如果存在则判断用户剩余token是否大于0
+           if user_info:
+               if user_info.Tokens > 0:
+                   text_chat_session: TextModel = TextModel(APPID=APPID,
+                                                            APIKey=APIKEY,
+                                                            APISecret=API_SECRET,
+                                                            GptUrl=GPT_URL,
+                                                            Domain=DOMAIN)
+                   consume_token, response_text = text_chat_session.chat(query_msg)
+                   user_info.Tokens -= consume_token
+                   session.commit()
+                   return jsonify({
+                       "code": 0,
+                       "msg": "文本大模型回复成功",
+                       "content": response_text,
+                       "consume_token": consume_token
+                   })
+               else:
+                   return jsonify({
+                       "code": StatusCode.TokenNotEnough,
+                       "msg": "用户token额度不足"
+                   })
+           else:
+               return jsonify({
+                   "code": StatusCode.UserNotFound,
+                   "msg": "找不到指定用户"
+               })
+    except Exception as e:
+        app_logger.error(f"[TEXT MODEL CHAT] {e}")
+        return jsonify({
+            "code": StatusCode.ModelError,
+            "msg": "文本大模型非流式接口错误"
+        })
 
 
 @model_blu.route("/textModel/stream", methods=["POST"])
@@ -113,38 +123,47 @@ def text_model_stream() -> Response:
     :return: 返回json字符串 包含回复消息
     """
 
-    # 请求的用户id
-    query_user_uuid: int = request.json.get("uuid")
-    # 用户名
-    query_user_name: str = request.json.get("username")
-    # 发送给大模型的对话消息
-    query_msg: list[dict] = request.json.get("dialog")
+    try:
+        # 请求的用户id
+        query_user_uuid: int = request.json.get("uuid")
+        # 用户名
+        query_user_name: str = request.json.get("username")
+        # 发送给大模型的对话消息
+        query_msg: list[dict] = request.json.get("dialog")
 
-    DBSession = sessionmaker(bind=engine)
-    with DBSession() as session:
-        # 查询用户信息
-        user_info: User = session.query(User).filter(User.Id == query_user_uuid,
-                                                     User.UserName == query_user_name).first()
-        # 如果存在则判断用户剩余token是否大于0
-        if user_info:
-            if user_info.Tokens > 0:
-                text_chat_session: TextModel = TextModel(APPID=APPID,
-                                                         APIKey=APIKEY,
-                                                         APISecret=API_SECRET,
-                                                         GptUrl=GPT_URL,
-                                                         Domain=DOMAIN)
-                text_chat_session.chat(query_msg)
-                consume_token: int = text_chat_session.total_tokens
-                user_info.Tokens -= consume_token
-                return Response(stream_with_context(text_chat_session.stream()))
+        DBSession = sessionmaker(bind=engine)
+        with DBSession() as session:
+            # 查询用户信息
+            user_info: User = session.query(User).filter(User.Id == query_user_uuid,
+                                                         User.UserName == query_user_name).first()
+            # 如果存在则判断用户剩余token是否大于0
+            if user_info:
+                if user_info.Tokens > 0:
+                    text_chat_session: TextModel = TextModel(APPID=APPID,
+                                                             APIKey=APIKEY,
+                                                             APISecret=API_SECRET,
+                                                             GptUrl=GPT_URL,
+                                                             Domain=DOMAIN)
+                    text_chat_session.chat(query_msg)
+                    consume_token: int = text_chat_session.total_tokens
+                    user_info.Tokens -= consume_token
+                    return Response(stream_with_context(text_chat_session.stream()))
+                else:
+                    return jsonify({
+                        "code": StatusCode.TokenNotEnough,
+                        "msg": "用户token额度不足"
+                    })
             else:
                 return jsonify({
-                    "code": StatusCode.TokenNotEnough
+                    "code": StatusCode.UserNotFound,
+                    "msg": "找不到指定用户"
                 })
-        else:
-            return jsonify({
-                "code": StatusCode.UserNotFound
-            })
+    except Exception as e:
+        app_logger.error(f"[TEXT MODEL STREAM] {e}")
+        return jsonify({
+            "code": StatusCode.ModelError,
+            "msg": "文本大模型流式接口错误"
+        })
 
 
 # =============================== 文本模型接口end ================================
@@ -158,27 +177,41 @@ def voice_to_text_model() -> Response:
 
     :return: 返回json字符串，包含语音识别的内容
     """
-    # 存储音频文件的位置
-    audio_stock: str = "Temp/Audio"
-    # 获取用户上传的音频文件
-    audio_file = request.files["file"]
-    if audio_file and is_legal_file(audio_file.filename):
-        audio_file_name: str = secure_filename(audio_file.filename)
-        # 音频文件的具体存储位置
-        audio_file_position: str = os.path.join(audio_stock, audio_file_name)
-        audio_file.save(audio_file_position)
+    try:
+        # 存储音频文件的位置
+        audio_stock: str = "Temp/Audio"
+        # 获取用户上传的音频文件
+        audio_file = request.files["file"]
+        if not is_legal_file(audio_file.filename):
+            return jsonify({
+                "code": StatusCode.FileFormatIllegal,
+                "msg": "文件格式不合法"
+            })
+        if audio_file:
+            audio_file_name: str = secure_filename(audio_file.filename)
+            # 音频文件的具体存储位置
+            audio_file_position: str = os.path.join(audio_stock, audio_file_name)
+            audio_file.save(audio_file_position)
 
-        audio_to_text_session: AudioToTextModel = AudioToTextModel(APPID=APPID, APISecret=API_SECRET, APIKey=APIKEY)
-        ret: str = audio_to_text_session.transform_voice(audio_file_position)
-        # 释放音频文件
-        os.remove(audio_file_position)
+            audio_to_text_session: AudioToTextModel = AudioToTextModel(APPID=APPID, APISecret=API_SECRET, APIKey=APIKEY)
+            ret: str = audio_to_text_session.transform_voice(audio_file_position)
+            # 释放音频文件
+            os.remove(audio_file_position)
+            return jsonify({
+                "code": 0,
+                "msg": "请求成功",
+                "content": ret
+            })
+        else:
+            return jsonify({
+                "code": StatusCode.GetFileFail,
+                "msg": "获取上传文件失败"
+            })
+    except Exception as e:
+        app_logger.error(f"[VOICE MODEL] {e}")
         return jsonify({
-            "code": 0,
-            "content": ret
-        })
-    else:
-        return jsonify({
-            "code": StatusCode.AudioToTextError
+            "code": StatusCode.AudioToTextError,
+            "msg": "请求失败"
         })
 
 
@@ -194,26 +227,37 @@ def character_recognition() -> Response:
     :return: 返回json
     """
 
-    # 请求的用户id
-    query_user_uuid: str = request.headers.get("uuid")
-    # 用户名
-    query_user_name: str = request.headers.get("username")
-    # 获取用户上传的图片文件
-    picture = request.files["file"]
+    try:
+        # 请求的用户id
+        query_user_uuid: str = request.headers.get("uuid")
+        # 用户名
+        query_user_name: str = request.headers.get("username")
+        # 获取用户上传的图片文件
+        picture = request.files["file"]
 
-    # 存储图片的位置
-    picture_stock: str = "Temp/Picture"
+        # 存储图片的位置
+        picture_stock: str = "Temp/Picture"
 
-    DBSession = sessionmaker(bind=engine)
-    with DBSession() as session:
-        # 查询用户信息
-        user_info: User = session.query(User).filter(User.Id == query_user_uuid,
-                                                     User.UserName == query_user_name).first()
+        DBSession = sessionmaker(bind=engine)
+        with DBSession() as session:
+            # 查询用户信息
+            user_info: User = session.query(User).filter(User.Id == query_user_uuid,
+                                                         User.UserName == query_user_name).first()
 
-        # 如果存在则判断用户剩余使用次数是否大于0
-        if user_info:
+            # 如果存在则判断用户剩余使用次数是否大于0
+            if not user_info:
+                return jsonify({
+                    "code": StatusCode.UserNotFound,
+                    "msg": "找不到指定用户"
+                })
+
             if user_info.PicTimes > 0:
-                if picture and is_legal_file(picture.filename):
+                if not is_legal_file(picture.filename):
+                    return jsonify({
+                        "code": StatusCode.FileFormatIllegal,
+                        "msg": "文件格式不合法"
+                    })
+                if picture:
                     picture_file_name: str = secure_filename(picture.filename)
                     # 图片文件的具体存放位置
                     picture_file_position: str = os.path.join(picture_stock, picture_file_name)
@@ -225,19 +269,25 @@ def character_recognition() -> Response:
                     ret: str = picture_to_text_session.translate_picture(picture_file_position)
                     return jsonify({
                         "code": 0,
+                        "msg": "请求成功",
                         "content": ret
                     })
                 else:
                     return jsonify({
-                        "code": StatusCode.PictureToTextError
+                        "code": StatusCode.GetFileFail,
+                        "msg": "获取上传文件失败"
                     })
             else:
                 return jsonify({
-                    "code": StatusCode.PicTimesNotEnough
+                    "code": StatusCode.PicTimesNotEnough,
+                    "msg": "用户文字识别可用额度不足"
                 })
-        else:
-            return jsonify({
-                "code": StatusCode.UserNotFound
-            })
+    except Exception as e:
+        app_logger.error(f"[PICTURE MODEL] {e}")
+        return jsonify({
+            "code": StatusCode.PictureToTextError,
+            "msg": "文字识别接口请求错误"
+        })
+
 
 # ================================ 图片识别文字接口end ================================
