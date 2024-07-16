@@ -1,5 +1,5 @@
 <template>
-    <div style="width: 100%;">
+    <div class="table-container">
         <!-- 控制面板 -->
         <div class="control-panner">
             <div class="search">
@@ -16,18 +16,18 @@
                     <el-row :gutter="5">
                         <el-col :md="12">
                             <el-form-item prop="TokenName" :rules="[
-                                { required: true, message: '令牌名不能为空'}
+                                { required: true, message: '令牌名不能为空' }
                             ]">
-                                <el-input v-model="newTokenData.TokenName" placeholder="令牌名" suffix-icon="el-icon-school"
-                                    size="small"></el-input>
+                                <el-input v-model="newTokenData.TokenName" placeholder="令牌名"
+                                    suffix-icon="el-icon-school" size="small"></el-input>
                             </el-form-item>
                         </el-col>
                         <el-col :md="12">
                             <el-form-item prop="TokenLimit" :rules="[
-                                { required: true, message: '令牌额度不能为空'}
+                                { required: true, message: '令牌额度不能为空' }
                             ]">
-                                <el-input v-model="newTokenData.TokenLimit" placeholder="令牌额度" suffix-icon="el-icon-school"
-                                    size="small"></el-input>
+                                <el-input v-model="newTokenData.TokenLimit" placeholder="令牌额度"
+                                    suffix-icon="el-icon-school" size="small"></el-input>
                             </el-form-item>
                         </el-col>
                     </el-row>
@@ -35,10 +35,10 @@
                     <el-row>
                         <el-col>
                             <el-form-item prop="TokenRange" :rules="[
-                                { required: true, message: '令牌使用范围不能为空'}
+                                { required: true, message: '令牌使用范围不能为空' }
                             ]">
-                                <el-input v-model="newTokenData.TokenRange" placeholder="令牌使用范围" suffix-icon="el-icon-school"
-                                    size="small"></el-input>
+                                <el-input v-model="newTokenData.TokenRange" placeholder="令牌使用范围"
+                                    suffix-icon="el-icon-school" size="small"></el-input>
                             </el-form-item>
                         </el-col>
                     </el-row>
@@ -57,18 +57,18 @@
                     <el-row :gutter="5">
                         <el-col :md="12">
                             <el-form-item prop="TokenName" :rules="[
-                                { required: true, message: '令牌名不能为空'}
+                                { required: true, message: '令牌名不能为空' }
                             ]">
-                                <el-input v-model="currentTokenData.TokenName" placeholder="令牌名" suffix-icon="el-icon-school"
-                                    size="small"></el-input>
+                                <el-input v-model="currentTokenData.TokenName" placeholder="令牌名"
+                                    suffix-icon="el-icon-school" size="small"></el-input>
                             </el-form-item>
                         </el-col>
                         <el-col :md="12">
                             <el-form-item prop="TokenLimit" :rules="[
-                                { required: true, message: '令牌额度不能为空'}
+                                { required: true, message: '令牌额度不能为空' }
                             ]">
-                                <el-input v-model="currentTokenData.TokenLimit" placeholder="令牌额度" suffix-icon="el-icon-school"
-                                    size="small"></el-input>
+                                <el-input v-model="currentTokenData.TokenLimit" placeholder="令牌额度"
+                                    suffix-icon="el-icon-school" size="small"></el-input>
                             </el-form-item>
                         </el-col>
                     </el-row>
@@ -76,10 +76,10 @@
                     <el-row>
                         <el-col>
                             <el-form-item prop="TokenRange" :rules="[
-                                { required: true, message: '令牌使用范围不能为空'}
+                                { required: true, message: '令牌使用范围不能为空' }
                             ]">
-                                <el-input v-model="newTokenData.TokenRange" placeholder="令牌使用范围" suffix-icon="el-icon-school"
-                                    size="small"></el-input>
+                                <el-input v-model="newTokenData.TokenRange" placeholder="令牌使用范围"
+                                    suffix-icon="el-icon-school" size="small"></el-input>
                             </el-form-item>
                         </el-col>
                     </el-row>
@@ -94,10 +94,12 @@
         <!-- 令牌展示列表 -->
         <el-table :data="tokenData" class="table" stripe>
             <el-table-column label="Id" prop="Id"></el-table-column>
+            <el-table-column label="令牌名" prop="TokenName"></el-table-column>
             <el-table-column label="状态" prop="Status">
             </el-table-column>
-            <el-table-column label="令牌名" prop="TokenName"></el-table-column>
             <el-table-column label="范围" prop="TokenRange"></el-table-column>
+            <el-table-column label="tokens" prop="Tokens"></el-table-column>
+            <el-table-column label="PicTimes" prop="PicTimes"></el-table-column>
             <el-table-column label="操作">
                 <template slot-scope="scope">
                     <el-button @click="modifyTokenInfo(scope.row)" size=small type="primary">修改</el-button>
@@ -105,6 +107,8 @@
                 </template>
             </el-table-column>
         </el-table>
+        <el-pagination class="container" background layout="prev, pager, next" :total="1000">
+        </el-pagination>
     </div>
 </template>
 
@@ -119,21 +123,24 @@ export default {
                     Id: "001",
                     Status: "available",
                     TokenName: "test",
-                    TokenLimit: 1000,
+                    Tokens: 1000,
+                    PicTimes: 2,
                     TokenRange: "none"
                 },
                 {
                     Id: "002",
                     Status: "available",
                     TokenName: "test1",
-                    TokenLimit: 1000,
+                    Tokens: 1000,
+                    PicTimes: 2,
                     TokenRange: "none"
                 },
                 {
                     Id: "003",
                     Status: "available",
                     TokenName: "test2",
-                    TokenLimit: 1000,
+                    Tokens: 1000,
+                    PicTimes: 2,
                     TokenRange: "none"
                 },
             ],
@@ -165,7 +172,7 @@ export default {
                 .catch(_ => { })
         },
         modifyTokenInfo(tokenInfo) {
-            this.currentTokenData = {...tokenInfo};
+            this.currentTokenData = { ...tokenInfo };
             this.modifyTokenDrawerShow = true;
         }
     }
@@ -179,9 +186,10 @@ export default {
     justify-content: end;
     align-items: center;
 }
+
 /* 添加令牌子界面 */
 .add-token-view,
-.modify-token-view{
+.modify-token-view {
     width: 100%;
     height: 100%;
     padding: 1em;

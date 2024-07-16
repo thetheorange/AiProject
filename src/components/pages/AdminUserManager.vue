@@ -1,5 +1,5 @@
 <template>
-    <div style="width: 100%;">
+    <div class="table-container">
         <!-- 控制面板 -->
         <div class="control-panner">
             <div class="search">
@@ -17,26 +17,26 @@
                     <el-row :gutter="5" type="flex" justify="space-between" align="middle">
                         <el-col>
                             <el-form-item prop="AdminName" :rules="[
-                                { required: true, message: '管理员名字不能为空'}
+                                { required: true, message: '管理员名字不能为空' }
                             ]">
-                                <el-input v-model="newAdminData.AdminName" placeholder="管理员姓名" suffix-icon="el-icon-school"
-                                    size="small"></el-input>
+                                <el-input v-model="newAdminData.AdminName" placeholder="管理员姓名"
+                                    suffix-icon="el-icon-school" size="small"></el-input>
                             </el-form-item>
                         </el-col>
                         <el-col>
                             <el-form-item prop="Auth" :rules="[
-                                { required: true, message: '权限设置不能为空'}
+                                { required: true, message: '权限设置不能为空' }
                             ]">
                                 <el-input v-model="newAdminData.Auth" placeholder="权限设置" suffix-icon="el-icon-message"
                                     size="small"></el-input>
                             </el-form-item>
                         </el-col>
-                    </el-row>               
+                    </el-row>
                     <div class="gap-vertical"></div>
                     <el-row :gutter="5" type="flex" justify="space-between" align="middle">
                         <el-col>
                             <el-form-item prop="PassWord" :rules="[
-                                { required: true, message: '密码不能为空'}
+                                { required: true, message: '密码不能为空' }
                             ]">
                                 <el-input v-model="newAdminData.PassWord" placeholder="管理员密码" show-password
                                     size="small"></el-input>
@@ -59,26 +59,26 @@
                     <el-row :gutter="5" type="flex" justify="space-between" align="middle">
                         <el-col>
                             <el-form-item prop="AdminName" :rules="[
-                                { required: true, message: '管理员名字不能为空'}
+                                { required: true, message: '管理员名字不能为空' }
                             ]">
-                                <el-input v-model="currentAdminData.AdminName" placeholder="管理员姓名" suffix-icon="el-icon-school"
-                                    size="small"></el-input>
+                                <el-input v-model="currentAdminData.AdminName" placeholder="管理员姓名"
+                                    suffix-icon="el-icon-school" size="small"></el-input>
                             </el-form-item>
                         </el-col>
                         <el-col>
                             <el-form-item prop="Auth" :rules="[
-                                { required: true, message: '权限设置不能为空'}
+                                { required: true, message: '权限设置不能为空' }
                             ]">
-                                <el-input v-model="currentAdminData.Auth" placeholder="权限设置" suffix-icon="el-icon-message"
-                                    size="small"></el-input>
+                                <el-input v-model="currentAdminData.Auth" placeholder="权限设置"
+                                    suffix-icon="el-icon-message" size="small"></el-input>
                             </el-form-item>
                         </el-col>
-                    </el-row>               
+                    </el-row>
                     <div class="gap-vertical"></div>
                     <el-row :gutter="5" type="flex" justify="space-between" align="middle">
                         <el-col>
                             <el-form-item prop="PassWord" :rules="[
-                                { required: true, message: '密码不能为空'}
+                                { required: true, message: '密码不能为空' }
                             ]">
                                 <el-input v-model="currentAdminData.PassWord" placeholder="管理员密码" show-password
                                     size="small"></el-input>
@@ -96,6 +96,7 @@
         <!-- 管理员信息展示列表 -->
         <el-table :data="adminData" class="table" stripe>
             <el-table-column label="Id" prop="Id"></el-table-column>
+            <el-table-column label="管理员" prop="AdminName"></el-table-column>
             <el-table-column label="权限" prop="Auth">
                 <template slot-scope="scope">
                     <el-tag :type="scope.row.Auth === 0 ? 'success' : 'danger'">
@@ -103,7 +104,6 @@
                     </el-tag>
                 </template>
             </el-table-column>
-            <el-table-column label="管理员" prop="AdminName"></el-table-column>
             <el-table-column label="密码" prop="PassWord"></el-table-column>
             <el-table-column label="操作">
                 <template slot-scope="scope">
@@ -112,6 +112,8 @@
                 </template>
             </el-table-column>
         </el-table>
+        <el-pagination class="container" background layout="prev, pager, next" :total="1000">
+        </el-pagination>
     </div>
 </template>
 
@@ -168,16 +170,16 @@ export default {
         handleDrawerClose(done) {
             MessageBox.confirm("已填入的数据不会保存 确认关闭？")
                 // eslint-disable-next-line
-                .then(_=> done())
+                .then(_ => done())
                 // eslint-disable-next-line
-                .catch(_=> { })
+                .catch(_ => { })
         },
-        Authorization(SingleAdminData){
+        Authorization(SingleAdminData) {
             return SingleAdminData.Auth === 0 ? "普通管理员" : "超级管理员";
         },
         modifyAdminData(adminData) {
             this.modifyAdminDrawerShow = true;
-            this.currentAdminData = {...adminData};
+            this.currentAdminData = { ...adminData };
         }
     }
 }
@@ -190,6 +192,7 @@ export default {
     justify-content: end;
     align-items: center;
 }
+
 .modify-admin-view {
     width: 100%;
     height: 100%;

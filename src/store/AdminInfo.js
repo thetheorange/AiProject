@@ -1,14 +1,16 @@
 export default {
     namespaced: true,
     state: {
-        adminName: "test",
-        historyTokens: 1000,
-        historyRequestTimes: 10,
+        adminName: "",
+        historyTokens: 0,
+        historyRequestTimes: 0,
     },
     actions: {
 
     },
     mutations: {
-
+        ADMIN_NAME(state, value) {
+            state.adminName = value;
+        }
     }
 }

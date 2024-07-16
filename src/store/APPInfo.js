@@ -7,15 +7,14 @@ export default {
         API_SECRET: ""
     },
     actions: {
-        app_id({ commit }) {
-            console.log(1111)
-            commit("APPID", "60361ac3");
+        app_id({ commit }, payload) {
+            commit("APPID", payload.app_id);
         },
-        api_key({ commit }) {
-            commit("APIKEY", "7f8ff2dba8d566abb46791589ba9fed7");
+        api_key({ commit }, payload) {
+            commit("APIKEY", payload.api_key);
         },
-        api_secret({ commit }) {
-            commit("API_SECRET", "NTM1ZGY3MjM0ODQxMDBhY2NjMDIyM2E5");
+        api_secret({ commit }, payload) {
+            commit("API_SECRET", payload.api_secret);
         }
     },
     mutations: {

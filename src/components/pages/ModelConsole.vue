@@ -83,12 +83,8 @@ export default {
             },
             modelOptions: [
                 {
-                    value: "星火文本大模型流式传输Api",
-                    label: "星火文本大模型 流式传输"
-                },
-                {
-                    value: "星火文本大模型非流式传输Api",
-                    label: "星火文本大模型 非流式传输"
+                    value: "星火文本大模型Api",
+                    label: "星火文本大模型"
                 }
             ],
             choseModel: "", // 选择的模型

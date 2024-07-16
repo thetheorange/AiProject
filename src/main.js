@@ -15,17 +15,23 @@ import {
   Slider,
   Option,
   Drawer,
-  Divider
+  Divider,
+  Pagination,
+  Dialog
 } from 'element-ui'
 
 import App from './App.vue'
 import router from './router'
 import VueRouter from 'vue-router'
 import store from './store'
+import axios from 'axios'
 
-Vue.config.productionTip = false
+// 引入axios
+Vue.prototype.$axios = axios;
 
-Vue.use(VueRouter)
+Vue.config.productionTip = false;
+
+Vue.use(VueRouter);
 
 // =============== 引入element-ui控件 START ===============
 // 布局相关控件
@@ -64,6 +70,12 @@ Vue.use(Divider);
 
 // 滑块
 Vue.use(Slider);
+
+// 分页
+Vue.use(Pagination);
+
+// 对话框
+Vue.use(Dialog);
 // =============== 引入element-ui控件 END ===============
 
 // =============== 引入font awesome START ===============

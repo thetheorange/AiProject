@@ -1,5 +1,5 @@
 <template>
-    <div style="width: 100%;">
+    <div class="table-container">
         <!-- 控制面板 -->
         <div class="control-panner">
             <div class="search">
@@ -20,14 +20,14 @@
                         <el-col>
                             <el-form-item prop="UserName" :rules="[
                                 { required: true, message: '用户名不能为空' }
-                                ]">
+                            ]">
                                 <el-input v-model="newUserData.UserName" placeholder="用户名" suffix-icon="el-icon-edit"
                                     size="small"></el-input>
                             </el-form-item>
                         </el-col>
                         <el-col>
                             <el-form-item prop="PassWord" :rules="[
-                                { required: true, message: '密码不能为空'}
+                                { required: true, message: '密码不能为空' }
                             ]">
                                 <el-input v-model="newUserData.PassWord" placeholder="用户密码" show-password
                                     size="small"></el-input>
@@ -38,7 +38,7 @@
                     <el-row :gutter="5" type="flex" justify="space-between" align="middle">
                         <el-col>
                             <el-form-item prop="Academy" :rules="[
-                                { required: true, message: '学院不能为空'}
+                                { required: true, message: '学院不能为空' }
                             ]">
                                 <el-input v-model="newUserData.Academy" placeholder="所属学院" suffix-icon="el-icon-school"
                                     size="small"></el-input>
@@ -46,7 +46,7 @@
                         </el-col>
                         <el-col>
                             <el-form-item prop="Email" :rules="[
-                                { required: true, message: '邮箱不能为空'}
+                                { required: true, message: '邮箱不能为空' }
                             ]">
                                 <el-input v-model="newUserData.Email" placeholder="邮箱" suffix-icon="el-icon-message"
                                     size="small"></el-input>
@@ -84,14 +84,14 @@
                         <el-col>
                             <el-form-item prop="UserName" :rules="[
                                 { required: true, message: '用户名不能为空' }
-                                ]">
-                                <el-input v-model="currentUserData.UserName" placeholder="用户名" suffix-icon="el-icon-edit"
-                                    size="small"></el-input>
+                            ]">
+                                <el-input v-model="currentUserData.UserName" placeholder="用户名"
+                                    suffix-icon="el-icon-edit" size="small"></el-input>
                             </el-form-item>
                         </el-col>
                         <el-col>
                             <el-form-item prop="PassWord" :rules="[
-                                { required: true, message: '密码不能为空'}
+                                { required: true, message: '密码不能为空' }
                             ]">
                                 <el-input v-model="currentUserData.PassWord" placeholder="用户密码" show-password
                                     size="small"></el-input>
@@ -102,15 +102,15 @@
                     <el-row :gutter="5" type="flex" justify="space-between" align="middle">
                         <el-col>
                             <el-form-item prop="Academy" :rules="[
-                                { required: true, message: '学院不能为空'}
+                                { required: true, message: '学院不能为空' }
                             ]">
-                                <el-input v-model="currentUserData.Academy" placeholder="所属学院" suffix-icon="el-icon-school"
-                                    size="small"></el-input>
+                                <el-input v-model="currentUserData.Academy" placeholder="所属学院"
+                                    suffix-icon="el-icon-school" size="small"></el-input>
                             </el-form-item>
                         </el-col>
                         <el-col>
                             <el-form-item prop="Email" :rules="[
-                                { required: true, message: '邮箱不能为空'}
+                                { required: true, message: '邮箱不能为空' }
                             ]">
                                 <el-input v-model="currentUserData.Email" placeholder="邮箱" suffix-icon="el-icon-message"
                                     size="small"></el-input>
@@ -163,6 +163,8 @@
                 </template>
             </el-table-column>
         </el-table>
+        <el-pagination class="container" background layout="prev, pager, next" :total="1000">
+        </el-pagination>
     </div>
 </template>
 
@@ -233,13 +235,13 @@ export default {
         handleDrawerClose(done) {
             MessageBox.confirm("已填入的数据不会保存 确认关闭？")
                 // eslint-disable-next-line
-                .then(_=> done())
+                .then(_ => done())
                 // eslint-disable-next-line
-                .catch(_=> { })
+                .catch(_ => { })
         },
         modifyUserData(userData) {
             this.modifyUserDrawerShow = true;
-            this.currentUserData = {...userData};
+            this.currentUserData = { ...userData };
         }
     }
 }
