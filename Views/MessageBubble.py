@@ -161,7 +161,7 @@ class MessageBubble(QWidget):
         """
         # print(audio_path)
         audio_path = audio_path[:-4]
-        audio_path=audio_path+'.wav'
+        audio_path = audio_path+'.wav'
         print(audio_path)
 
         try:

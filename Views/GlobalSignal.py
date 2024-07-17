@@ -16,6 +16,8 @@ class GlobalSignal(QObject):
     mask_submitted = pyqtSignal(dict)
     # 提示错误信息的信号
     error_msg = pyqtSignal(list)
+    # 录音成功信息传递
+    audio_submitted = pyqtSignal(str)
 
 
 # 全局信号

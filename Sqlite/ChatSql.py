@@ -354,6 +354,7 @@ class ChatSql:
             result = []
             if account_id == -1:
                 account_id = static.sql_account_id
+            print("find account ",account_id)
             with self.DB_session() as session:
                 dialogues = session.query(Dialogue).filter_by(account_id=account_id).all()
                 for dialogue in dialogues:

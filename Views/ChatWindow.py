@@ -4,13 +4,15 @@ Des 聊天相关界面
 Time 2024/6/14
 Misaka-xxw: 记得改打开文件的路径为Aiproject！
 """
+import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QWidget, QAction, QLabel, QHBoxLayout, QListWidgetItem, QFrame
+from PyQt5.QtWidgets import QWidget, QAction, QLabel, QHBoxLayout, QListWidgetItem, QFrame, QApplication
 from PyQt5.uic import loadUi
 from qfluentwidgets import ToolTipFilter, PushButton, Icon, FluentIcon, ToolTipPosition, CommandBar, MessageBoxBase, \
     SubtitleLabel, ListWidget, PlainTextEdit, SearchLineEdit, MessageBox
 
+from Core.Tools.AudioRecorder import AudioRecorder
 from Views.FileWindow import FileWindow
 from Views.GlobalSignal import global_signal
 from Views.MessageBubble import MessageBubble
@@ -364,4 +366,73 @@ class ChatSessionWindow(QWidget):
 
         :return:
         """
-        ...
+        global_signal.audio_submitted.connect(self.send_audio_message)
+        AudioChoiceWindow(self).exec()
+
+    def send_audio_message(self, audio_path: str) -> None:
+        print("send_audio")
+        print(audio_path)
+        is_sender = True  # 假设总是发送者
+        avatar_path = "../Assets/image/logo.png"  # 发送者头像路径
+        bubble = MessageBubble(audio_path, avatar_path, is_sender=is_sender, variety="audio")
+        # 创建一个 QListWidgetItem 并设置其大小提示
+        item = QListWidgetItem(self.ListWidget)
+        item.setSizeHint(bubble.sizeHint())
+        # 将 MessageBubble 设置为 QListWidgetItem 的 widget
+        self.ListWidget.setItemWidget(item, bubble)
+        # 滚动到底部以显示最新消息（可选）
+        self.ListWidget.scrollToBottom()
+
+
+class AudioChoiceWindow(MessageBoxBase):
+    """
+    录音按钮弹出选择界面
+    """
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.AudioWindow = AudioRecorder()
+        # 标题
+        self.sub_title = SubtitleLabel("请录音")
+        self.sub_title.setAlignment(Qt.AlignCenter)
+        # ’录音开始‘和’录音结束‘按钮
+        self.start_recording_btn = PushButton()
+        self.start_recording_btn.setText("开始录音")
+        self.start_recording_btn.setIcon(Icon(FluentIcon.MICROPHONE))
+        self.start_recording_btn.clicked.connect(self.AudioWindow.start_recording)
+
+        self.stop_recording_btn = PushButton()
+        self.stop_recording_btn.setText("结束录音")
+        self.stop_recording_btn.setIcon(Icon(FluentIcon.MUTE))
+        self.stop_recording_btn.clicked.connect(self.AudioWindow.stop_recording)
+
+        self.hbox_layout_top = QHBoxLayout()
+        self.hbox_layout_top.addWidget(self.sub_title)
+
+        self.hbox_layout_bottom = QHBoxLayout()
+        self.hbox_layout_bottom.addWidget(self.start_recording_btn)
+        self.hbox_layout_bottom.addWidget(self.stop_recording_btn)
+
+        # 将控件添加到布局中
+        self.viewLayout.addLayout(self.hbox_layout_top)
+        self.viewLayout.addLayout(self.hbox_layout_bottom)
+
+        self.yesButton.setText("确认")
+        self.yesButton.clicked.connect(self.send_message)
+        self.cancelButton.setText("取消")
+
+    def send_message(self):
+        if self.AudioWindow.path is not None:
+            print("yes选中了")
+            global_signal.audio_submitted.emit(self.AudioWindow.path)
+
+
+if __name__ == "__main__":
+    QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
+
+    app = QApplication(sys.argv)
+    w = ChatSessionWindow()
+    w.show()
+    sys.exit(app.exec_())
