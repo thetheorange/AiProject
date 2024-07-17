@@ -148,9 +148,10 @@ class ChatSql:
                         existing_account.password = password
                     else:
                         existing_account.password = ""
-                    static.sql_account_id = existing_account.id
                     existing_account.auto_fill = auto_fill
                     session.commit()
+                    existing_account = session.query(LoginAccount).filter_by(username=username).first()
+                    static.sql_account_id = existing_account.id
                     return
 
                 # 没在本机登录过的
