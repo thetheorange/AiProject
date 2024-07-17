@@ -1,3 +1,6 @@
+"""
+备注：最好是打开名为Aiproject的项目，不是Aiproject2！！！
+"""
 from PyQt5.QtWidgets import QHBoxLayout, QFrame, QSizePolicy, QSpacerItem
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QListWidget, QListWidgetItem
 from PyQt5.QtGui import QPixmap, QFont
@@ -6,7 +9,7 @@ from PyQt5.QtWidgets import QLabel
 from PyQt5.QtGui import QPixmap, QRegion
 from PyQt5.QtCore import Qt, QUrl
 from qfluentwidgets import AvatarWidget, ImageLabel, PushButton, FluentIcon, MessageBoxBase, Icon
-from AiProject2.AiProject.Core.Tools.Play_Audio import AudioPlayer
+from Core.Tools.Play_Audio import AudioPlayer
 
 
 class AvatarContainer(QFrame):
