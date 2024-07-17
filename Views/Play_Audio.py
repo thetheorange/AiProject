@@ -3,21 +3,21 @@ from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtCore import QUrl
 
-
 class AudioPlayer(QWidget):
     def __init__(self, path: str):
         super().__init__()
-
+        self.path=path
         # 初始化播放器
         self.player = QMediaPlayer(None)
         # 设置音频文件
         self.player.setMedia(QMediaContent(QUrl.fromLocalFile(path)))
-        self.init_ui()
-
+        # self.init_ui()
         # 设置音量
         self.player.setVolume(50)
         # 初始化时播放音频（如果你不想在初始化时播放，可以注释掉这一行）
-        # self.play_audio_begin()
+        self.on_state_changes(self.player.state())
+        self.play_audio_begin()
+        self.on_state_changes(self.player.state())
 
     def init_ui(self):
         # 创建播放和停止按钮
@@ -50,8 +50,8 @@ class AudioPlayer(QWidget):
 
     def stop_audio(self):
         self.player.stop()
-        # 更新状态（可选，因为stop()后状态会自动更新）  
-        self.on_state_changes(self.player.state())
+        # 更新状态（可选，因为stop()后状态会自动更新）
+        # self.on_state_changes(self.player.state())
 
 
 if __name__ == '__main__':

@@ -2,12 +2,11 @@ from PyQt5.QtWidgets import QHBoxLayout, QFrame, QSizePolicy, QSpacerItem
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QListWidget, QListWidgetItem
 from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget
-from PyQt5.QtGui import QPixmap, QRegion
-from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtGui import QPixmap, QRegion
-from PyQt5.QtCore import Qt
-from qfluentwidgets import AvatarWidget, ImageLabel, PushButton, FluentIcon
+from PyQt5.QtCore import Qt, QUrl
+from qfluentwidgets import AvatarWidget, ImageLabel, PushButton, FluentIcon, MessageBoxBase, Icon
+from Views.Play_Audio import AudioPlayer
 
 
 class AvatarContainer(QFrame):
@@ -157,7 +156,18 @@ class MessageBubble(QWidget):
         """"
         播放按钮
         """
+        # print(audio_path)
+        audio_path = audio_path[:-4]
+        audio_path=audio_path+'.wav'
         print(audio_path)
+
+        try:
+            #AudioPlayer(self).exe()
+            self.player = AudioPlayer(audio_path)
+            print("音频播放成功")
+
+        except Exception as e:
+            print(f"播放音频时发生错误: {e}")
 
 
 class MessageBubbleWindow(QListWidget):
