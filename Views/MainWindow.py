@@ -12,13 +12,13 @@ from PyQt5.QtWidgets import QApplication, QWidget
 from qfluentwidgets import FluentIcon, SplitFluentWindow, \
     NavigationAvatarWidget, NavigationItemPosition
 
+from Sqlite.Static import static
 from Views.ChatWindow import ChatSearchWindow, ChatSessionWindow
 from Views.GlobalSignal import global_signal
 from Views.LoginWindow import LoginWindow
 from Views.MaskWindow import MaskSettingWindow
 from Views.SettingWindow import SettingWindow
 from Views.UserInfoWindwo import UserInfoWindow
-from Sqlite.ChatSql import ChatSql
 
 
 class MainWindow(SplitFluentWindow):
@@ -39,8 +39,17 @@ class MainWindow(SplitFluentWindow):
         self.__init_navigation()
 
         self.login_window: QWidget | None = None
-
+        self.login_history()
         # =============================================基础设置end=============================================
+
+    def login_history(self):
+        """
+        根据历史登录信息，直接登录。此处为测试占位
+        """
+        static.uuid = "xxx"
+        static.username = "xxx"
+        static.sql_account_id = 1
+        global_signal.ChatOperation.emit("close_login_success")
 
     def __init_navigation(self) -> None:
         """
