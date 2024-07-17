@@ -14,6 +14,7 @@ from sqlalchemy.orm import sessionmaker
 from Core.StatusCode import StatusCode
 from Core.Tools.generate_uuid import create_uuid
 from Core.Tools.md5_password import get_md5
+from Logging import app_logger
 from Model.model import engine, User, Admin
 from config import config_json
 from . import auth_blu
@@ -88,24 +89,32 @@ def admin_login() -> Response:
 
     :return: json
     """
-    admin: str = request.json.get("admin")
-    password: str = request.json.get("password")
+    try:
+        admin: str = request.json.get("admin")
+        password: str = request.json.get("password")
+        password = get_md5(password)
 
-    DBSession = sessionmaker(bind=engine)
-    with DBSession() as session:
-        admin_info: Admin = session.query(Admin).filter(Admin.Admin == admin,
-                                                        Admin.PassWord == password).first()
+        DBSession = sessionmaker(bind=engine)
+        with DBSession() as session:
+            admin_info: Admin = session.query(Admin).filter(Admin.Admin == admin,
+                                                            Admin.PassWord == password).first()
+            return jsonify({
+                "access_token": create_access_token(identity=admin),
+                "refresh_token": create_refresh_token(identity=admin),
+                "app_info": {
+                    "app_id": config_json["api"].get("APPID"),
+                    "api_key": config_json["api"].get("APIKEY"),
+                    "api_secret": config_json["api"].get("API_SECRET")
+                },
+                "code": 0,
+                "msg": "管理员登录成功"
+            }) if admin_info else jsonify({"code": StatusCode.LoginError, "msg": "登录失败"})
+    except Exception as e:
+        app_logger.error(f"[ADMIN LOGIN] {e}")
         return jsonify({
-            "access_token": create_access_token(identity=admin),
-            "refresh_token": create_refresh_token(identity=admin),
-            "app_info": {
-                "app_id": config_json["api"].get("APPID"),
-                "api_key": config_json["api"].get("APIKEY"),
-                "api_secret": config_json["api"].get("API_SECRET")
-            },
-            "code": 0,
-            "msg": "管理员登录成功"
-        }) if admin_info else jsonify({"code": StatusCode.LoginError, "msg": "登录失败"})
+            "code": StatusCode.LoginError,
+            "msg": "管理员登录错误"
+        })
 
 
 @auth_blu.route("/admin/refresh", methods=["GET"])

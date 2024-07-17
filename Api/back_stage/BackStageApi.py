@@ -271,25 +271,26 @@ def modify_admin() -> Response:
                     "code": StatusCode.UserNotFound,
                     "msg": "找不到目标用户"
                 })
+            # 查看新的用户名是否重名
+            is_same_user: Admin = session.query(Admin).filter(Admin.Admin == new_name).first()
+            if is_same_user:
+                return jsonify({
+                    "code": StatusCode.UserNameRepeat,
+                    "msg": "用户名已存在"
+                })
             else:
-                # 查看新的用户名是否重名
-                is_same_user: Admin = session.query(Admin).filter(Admin.Admin == new_name).first()
-                if is_same_user:
-                    return jsonify({
-                        "code": StatusCode.UserNameRepeat,
-                        "msg": "用户名已存在"
-                    })
-                else:
+                if new_name:
                     target_admin_info.Admin = new_name
                     target_admin_info.Id = create_uuid(new_name)
+                if new_password:
                     target_admin_info.PassWord = get_md5(new_password)
 
-                    session.commit()
+                session.commit()
 
-                    return jsonify({
-                        "code": 0,
-                        "msg": "修改用户信息成功"
-                    })
+                return jsonify({
+                    "code": 0,
+                    "msg": "修改用户信息成功"
+                })
     except Exception as e:
         app_logger.error(f"[MODIFY ADMIN] {e}")
         return jsonify({"code": StatusCode.ModifyAdminError, "msg": "修改管理员信息错误"})
@@ -469,7 +470,7 @@ def query_user_table() -> Response:
                         {
                             "Id": user.Id,
                             "UserName": user.UserName,
-                            "Password": user.PassWord,
+                            "PassWord": user.PassWord,
                             "Tokens": user.Tokens,
                             "Email": user.Email,
                             "PicTimes": user.PicTimes,
@@ -516,6 +517,76 @@ def query_user_table() -> Response:
         app_logger.error(f"[QUERY TABLE] {e}")
         return jsonify({
             "code": StatusCode.QueryTableError,
+            "msg": "查询时遇到错误"
+        })
+
+
+@back_stage_blu.route("/admin/query_table_data", methods=["GET"])
+@jwt_required()
+def query_table_data() -> Response:
+    """
+    查询指定表中的指定数据
+
+    :return: json
+    """
+
+    try:
+        table: str = request.args["table"]
+        target_name: str = request.args["target_name"]
+
+        DBSession = sessionmaker(bind=engine)
+        with DBSession() as session:
+            if table == "user":
+                query_ret: User = session.query(User).filter(User.UserName == target_name).first()
+                return jsonify({
+                    "code": 0,
+                    "msg": f"查询{query_ret.UserName}成功",
+                    "data": {
+                            "Id": query_ret.Id,
+                            "UserName": query_ret.UserName,
+                            "PassWord": query_ret.PassWord,
+                            "Tokens": query_ret.Tokens,
+                            "Email": query_ret.Email,
+                            "PicTimes": query_ret.PicTimes,
+                            "Academy": query_ret.Academy
+                        }
+                })
+            elif table == "admin":
+                query_ret: Admin = session.query(Admin).filter(Admin.Admin == target_name).first()
+                return jsonify({
+                    "code": 0,
+                    "msg": f"查询{query_ret.Admin}成功",
+                    "data": {
+                            "Id": query_ret.Id,
+                            "Auth": query_ret.Auth,
+                            "Admin": query_ret.Admin,
+                            "PassWord": query_ret.PassWord
+                        }
+                })
+            elif table == "token":
+                query_ret: Token = session.query(Token).filter(Token.Name == target_name).first()
+                return jsonify({
+                    "code": 0,
+                    "msg": f"查询{query_ret.Name}成功",
+                    "data": {
+                            "Id": query_ret.Id,
+                            "Tokens": query_ret.Tokens,
+                            "PicTimes": query_ret.PicTimes,
+                            "TokenRange": query_ret.TokenRange,
+                            "Name": query_ret.Name,
+                            "Available": query_ret.Available
+                        }
+                })
+            else:
+                return jsonify({
+                    "code": StatusCode.TableNotFound,
+                    "msg": "未查询到指定表"
+                })
+
+    except Exception as e:
+        app_logger.error(f"[QUERY TABLE SPECIFY DATA] {e}")
+        return jsonify({
+            "code": StatusCode.QueryTableDataError,
             "msg": "查询时遇到错误"
         })
 

@@ -37,6 +37,8 @@ class User(Base):
     PicTimes = Column(BigInteger)
     Academy = Column(String(100))
 
+    user_token_relation = relationship("UserToken", backref="user", cascade="all, delete-orphan", passive_deletes=True)
+
 
 class Admin(Base):
     """
@@ -65,6 +67,8 @@ class Token(Base):
     Name = Column(String(100), nullable=False)
     Available = Column(INTEGER, nullable=False)
 
+    token_user_relation = relationship("UserToken", backref="token", cascade="all, delete-orphan", passive_deletes=True)
+
 
 class UserToken(Base):
     """
@@ -75,6 +79,3 @@ class UserToken(Base):
 
     UserId = Column(String(50), ForeignKey('user.Id'), primary_key=True)
     TokenId = Column(String(50), ForeignKey('token.Id'), primary_key=True)
-
-    user = relationship("User", backref="user_tokens")
-    token = relationship("Token", backref="user_tokens")
