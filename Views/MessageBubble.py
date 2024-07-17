@@ -1,13 +1,15 @@
+"""
+备注：最好是打开名为Aiproject的项目，不是Aiproject2！！！
+"""
 from PyQt5.QtWidgets import QHBoxLayout, QFrame, QSizePolicy, QSpacerItem
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QListWidget, QListWidgetItem
 from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget
-from PyQt5.QtGui import QPixmap, QRegion
-from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtGui import QPixmap, QRegion
-from PyQt5.QtCore import Qt
-from qfluentwidgets import AvatarWidget, ImageLabel
+from PyQt5.QtCore import Qt, QUrl
+from qfluentwidgets import AvatarWidget, ImageLabel, PushButton, FluentIcon, MessageBoxBase, Icon
+from Core.Tools.Play_Audio import AudioPlayer
 
 
 class AvatarContainer(QFrame):
@@ -93,6 +95,16 @@ class MessageBubble(QWidget):
             image.scaledToHeight(200)
             image.setBorderRadius(8, 8, 8, 8)
             text_layout.addWidget(image)
+        elif variety == "audio":
+            # audio_button播放按钮
+            audio_button = PushButton(FluentIcon.VOLUME, "播放")
+            audio_button.clicked.connect(lambda: self.play_audio(text))
+            text_layout.addWidget(audio_button)  # 使用stretch参数来分配多余的空间给时长标签
+            # 转文字按钮
+            play_button = PushButton(FluentIcon.LANGUAGE, "转文字")
+            play_button.clicked.connect(lambda: self.audio_to_text(text))
+            text_layout.addWidget(play_button)
+            # 一个耳机的图标:FluentIcon.HEADPHONE
 
         # 头像QLabel
         self.avatar_container = AvatarContainer(avatar_path)
@@ -137,6 +149,29 @@ class MessageBubble(QWidget):
             lines.append(s[i:i + limit])
         return '\n'.join(lines)
 
+    def audio_to_text(self, audio_path: str):
+        """
+        语音转文字
+        """
+        ...
+
+    def play_audio(self, audio_path: str):
+        """"
+        播放按钮
+        """
+        # print(audio_path)
+        audio_path = audio_path[:-4]
+        audio_path=audio_path+'.wav'
+        print(audio_path)
+
+        try:
+            #AudioPlayer(self).exe()
+            self.player = AudioPlayer(audio_path)
+            print("音频播放成功")
+
+        except Exception as e:
+            print(f"播放音频时发生错误: {e}")
+
 
 class MessageBubbleWindow(QListWidget):
     """测试用"""
@@ -151,7 +186,7 @@ class MessageBubbleWindow(QListWidget):
         text = "Hellohhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
         is_sender = True  # 假设总是发送者
         avatar_path = "../Assets/image/logo.png"  # 发送者头像路径
-        bubble = MessageBubble(text, avatar_path, is_sender=is_sender)
+        bubble = MessageBubble(avatar_path, avatar_path, is_sender=is_sender, variety="audio")
 
         item = QListWidgetItem(self)
         item.setSizeHint(bubble.sizeHint())
