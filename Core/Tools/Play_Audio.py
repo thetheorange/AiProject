@@ -56,6 +56,6 @@ class AudioPlayer(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    player = AudioPlayer('../Temp/1.wav')
+    player = AudioPlayer('../../Temp/1.wav')
     player.show()  # 显示窗口
     sys.exit(app.exec_())
