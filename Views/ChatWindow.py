@@ -2,22 +2,57 @@
 Des 聊天相关界面
 @Author thetheOrange
 Time 2024/6/14
+Misaka-xxw: 记得改打开文件的路径为Aiproject！
 """
-from PyQt5.QtCore import QTimer, Qt, QObject, pyqtSignal
-from PyQt5.QtWidgets import QWidget, QAction, QLabel, QVBoxLayout, QHBoxLayout, QSpacerItem, QSizePolicy, \
-    QListWidgetItem, QFrame,QListWidget
+import json
+import sys
+
+import requests
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QWidget, QAction, QLabel, QHBoxLayout, QListWidgetItem, QFrame, QApplication
 from PyQt5.uic import loadUi
 from qfluentwidgets import ToolTipFilter, PushButton, Icon, FluentIcon, ToolTipPosition, CommandBar, MessageBoxBase, \
-    SubtitleLabel, ListWidget, PlainTextEdit
+    SubtitleLabel, ListWidget, PlainTextEdit, SearchLineEdit, MessageBox, InfoBar, InfoBarPosition
 
+from Core.Tools.AudioRecorder import AudioRecorder
+from Core.Tools.AudiotoText import AudiotoText
+from Core.Tools.ImageToText import ImageToText
+from Sqlite.ChatSql import ChatSql
+from Sqlite.ChatSql import SenderType, SendType
+from Sqlite.Static import static
+from Views.FileWindow import FileWindow
 from Views.GlobalSignal import global_signal
-from PyQt5.QtGui import QPixmap
+from Views.MessageBubble import MessageBubble
 
+
+class ChatLineWidget(QWidget):
+    """
+    每行聊天按钮样式
+    """
+
+    def __init__(self, text, icon, parent=None):
+        super(ChatLineWidget, self).__init__(parent)
+        # 创建一个水平布局
+        layout = QHBoxLayout()
+        # 创建一个标签和一个按钮
+        # self.label = QLabel()
+        print(text, icon)
+        self.button = PushButton(icon, text)
+        layout.addWidget(self.button)
+        self.setLayout(layout)
+        self.button.clicked.connect(self.start_chat)
+
+    def start_chat(self) -> None:
+        """
+        点击面具按钮直接开始会话
+        """
+        global_signal.ChatOperation_Mask.emit("start_chat")
 
 
 class ChatSearchWindow(QWidget):
     """
-    聊天会话搜索界面
+    聊天会话搜索界面，会被加到主页面里
     """
 
     def __init__(self):
@@ -34,6 +69,82 @@ class ChatSearchWindow(QWidget):
         self.add_session_btn.clicked.connect(lambda x: ChatChoiceWindow(self).exec())
 
         # =============================================基础设置end=============================================
+        # =============================================搜索设置start=============================================
+        self.SearchLineEdit: SearchLineEdit
+        self.SearchLineEdit.searchSignal.connect(self.search)
+        # =============================================搜索设置end=============================================
+
+        # =============================================添加聊天按钮行start=============================================
+        # 原来的会话示例
+        # self.ListWidget: ListWidget
+        # datadict = [
+        #     {'name': '你好，新用户', 'icon': FluentIcon.CHAT},
+        #     {'name': '这题怎么做', 'icon': FluentIcon.CALENDAR},
+        #     {'name': '以“星期天为题”写一篇作文', 'icon': FluentIcon.BOOK_SHELF},
+        # ]
+        # for data in datadict:
+        #     self.add_chat_list(data)
+        self.update_dialogues()
+
+    def update_dialogues(self):
+        """根据本地数据库加载对话"""
+        # 接入本地数据库
+        self.ListWidget: ListWidget
+        sql = ChatSql()
+        datadict = sql.get_dialogues()
+        for data in datadict:
+            self.add_chat_list({'name': data['name'], 'icon': eval(f"FluentIcon.{data['icon']}")})
+
+        # =============================================添加聊天按钮行end=============================================
+
+    def search(self):
+        """
+        点击搜索框触发函数
+        """
+        cur_text = self.SearchLineEdit.text()
+        print(cur_text)
+        self.show_dialog(True, cur_text)
+
+    def show_dialog(self, flag: bool, name: str):
+        """
+        搜索时弹出消息框
+        """
+        if flag:
+            title = '"' + name + '"' + '对话存在，开始对话？'
+            content = """"""
+            w = MessageBox(title, content, self)
+            if w.exec():
+                self.start_chat()
+            else:
+                print('Cancel button is pressed')
+        else:
+            title = '"' + name + '"' + '对话不存在，请重新搜索'
+            content = """"""
+            w2 = MessageBox(title, content, self)
+            if w2.exec():
+                print('Yes')
+            else:
+                print('Cancel button is pressed')
+
+    def start_chat(self) -> None:
+        """
+        点击面具按钮直接开始会话
+        """
+        global_signal.ChatOperation_Mask.emit("start_chat")
+
+    def add_chat_list(self, data):
+        name = data.get('name')
+        icon = data.get('icon')
+        item = QListWidgetItem(self.ListWidget)
+        # self.dialog_and_icons.append((name,icon))
+        # 创建CustomWidget实例，这里我们传递文本和一个模拟的图标名（实际实现可能需要调整）
+        custom_widget = ChatLineWidget(name, icon)
+
+        # 设置item的大小提示为custom_widget的大小提示
+        item.setSizeHint(custom_widget.sizeHint())
+
+        # 将custom_widget设置为item的widget
+        self.ListWidget.setItemWidget(item, custom_widget)
 
 
 class ChatChoiceWindow(MessageBoxBase):
@@ -78,7 +189,9 @@ class ChatChoiceWindow(MessageBoxBase):
 
         :return:
         """
-        ChatChoiceMaskWindow(self).exec()
+        # print("?")
+        global_signal.mask_chatOperation.emit("choice_mask")
+        # ChatChoiceMaskWindow(self).exec()
         self.close()
 
     def start_chat(self) -> None:
@@ -108,10 +221,11 @@ class ChatChoiceMaskWindow(MessageBoxBase):
         self.cancelButton.setText("取消")
 
 
-from PyQt5.QtCore import Qt, pyqtSlot
-
 class AvatarContainer(QFrame):
-    '''聊天图像样式'''
+    """
+    聊天图像样式
+    """
+
     def __init__(self, avatar_path, parent=None):
         super(AvatarContainer, self).__init__(parent, frameShape=QFrame.NoFrame)  # 无边框
         self.initUI(avatar_path)
@@ -131,84 +245,6 @@ class AvatarContainer(QFrame):
 
         # 如果需要，可以设置头像容器的边框和背景
         # self.setStyleSheet("QFrame { border: 1px solid #ccc; background-color: #f0f0f0; }")
-
-class MessageBubble(QWidget):
-    '''消息气泡'''
-    def __init__(self, text, avatar_path, is_sender=True, parent=None):
-        super(MessageBubble, self).__init__(parent)
-        self.initUI(text, avatar_path, is_sender)
-
-    def initUI(self, text, avatar_path, is_sender):
-        self.bubble_container = QWidget(self)  # 气泡容器
-        bubble_layout = QHBoxLayout(self.bubble_container)  # 气泡内部水平布局
-        # 文本容器QWidget
-        self.text_container = QWidget(self.bubble_container)
-        text_layout = QVBoxLayout(self.text_container)
-        text_layout.setContentsMargins(0, 0, 0, 0)  # 设置文本容器的边距
-        self.text_label = QLabel(text, self.text_container)
-        self.text_label.setWordWrap(True)
-        text_layout.addWidget(self.text_label)
-        # 为文本容器设置背景色
-        self.text_container.setStyleSheet("""  
-            QWidget {  
-                background-color:#e6e6fa;             /* 背景色 */  
-                border-radius: 10px;                   /* 圆角 */  
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 阴影 */  
-            }  
-            QLabel {                                  /* 假设文本容器中包含QLabel */  
-                font-size: 14px;                       /* 字体大小 */  
-                color: #333;                           /* 字体颜色 */  
-            }  
-            QWidget:hover {                            /* 鼠标悬停效果 */  
-                background-color: #dbc6e0;             /* 悬停时背景色变化 */  
-            }  
-
-            /* 背景色 */  
-            #ffe4e1粉色，#e5f9e7绿色，#e0f2ff蓝色
-            }  
-        """)
-        # 头像QLabel
-        self.avatar_container = AvatarContainer(avatar_path, self)
-
-        # self.avatar_label = QLabel(self.bubble_container)
-        # avatar_pixmap = QPixmap(avatar_path).scaled(50, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        # self.avatar_label.setPixmap(avatar_pixmap)
-        # 设置头像背景（如果需要的话，通常是透明的，因为直接使用QPixmap）
-        # self.avatar_label.setStyleSheet("QLabel { background-color: transparent; border: none; }")
-
-        # 设置气泡容器的样式
-        if is_sender:
-            bubble_layout.addWidget(self.text_container, stretch=1)
-            bubble_layout.addWidget(self.avatar_container)
-
-            bubble_style = """  
-                QWidget {  
-                    background-color:rgba(255, 255, 255, 0);  
-                    border-radius: 10px 10px 10px 0;  
-                    padding: 10px;  
-                }  
-            """
-        else:
-            bubble_layout.addWidget(self.avatar_container)
-            bubble_layout.addWidget(self.text_container, stretch=1)
-            bubble_style = """  
-                QWidget {  
-                    background-color: rgba(255, 255, 255, 0);  
-                    border-radius: 10px 10px 0 10px;  
-                    padding: 10px;  
-                }  
-            """
-        self.bubble_container.setStyleSheet(bubble_style)
-
-        # 主布局（可以是垂直布局，用于堆叠多个气泡）
-        main_layout = QVBoxLayout(self)
-
-        # 根据发送者或接收者设置气泡容器的位置
-        if is_sender:
-            main_layout.addWidget(self.bubble_container, alignment=Qt.AlignRight)
-        else:
-            main_layout.addWidget(self.bubble_container, alignment=Qt.AlignLeft)
-
 
 
 class ChatSessionWindow(QWidget):
@@ -260,7 +296,6 @@ class ChatSessionWindow(QWidget):
         self.chat_frame: QFrame
         self.chat_frame.setFixedHeight(100)
 
-
         self.chat_input: PlainTextEdit
         self.chat_input.setFixedHeight(80)
 
@@ -271,21 +306,37 @@ class ChatSessionWindow(QWidget):
         self.send_btn: PushButton
         self.send_btn.setIcon(Icon(FluentIcon.SEND))
         self.send_btn.clicked.connect(self.send_button_clicked)
-        #self.chat_input.returnPressed.connect(self.send_button_clicked)
+        self.dialog: list = []
+        self.update_mask_and_data()
+        # self.chat_input.returnPressed.connect(self.send_button_clicked)
 
-        # =============================================发送按钮设置start=============================================
+        # =============================================发送按钮设置end=============================================
 
+    def update_mask_and_data(self):
+        """
+        更新面具
+        """
+        self.dialog = [{"role": "system", "content": static.mark_describe}]
 
+    def init_message(self):
+        """
+        对话刚开始时，从本地数据库调取信息
+        """
+        sql = ChatSql()
+        messages = sql.get_messages()
+        for msg in messages:
+            self.show_bubble(msg['info'], is_sender=msg['sender'], variety=msg['type'])
 
-    def send_button_clicked(self):
-        '''
-            获取 PlainTextEdit 控件中的文本并发送聊天气泡
-        '''
-        text = self.chat_input.toPlainText()
-        print(text)
-        is_sender =True  # 假设总是发送者
-        avatar_path = "../Assets/image/logo.png"  # 发送者头像路径
-        bubble = MessageBubble(text, avatar_path, is_sender=is_sender)
+    def show_bubble(self, text: str = "", avatar_path: str = "../Assets/image/logo.png", is_sender: bool = True,
+                    variety: str = "text"):
+        """
+        气泡的发送
+        :param text:发送文本
+        :param avatar_path:发送者头像路径
+        :param is_sender:发送者是用户/ai
+        :param variety:text/image
+        """
+        bubble = MessageBubble(text, avatar_path, is_sender=is_sender, variety=variety)
 
         # 创建一个 QListWidgetItem 并设置其大小提示
         item = QListWidgetItem(self.ListWidget)
@@ -296,7 +347,84 @@ class ChatSessionWindow(QWidget):
 
         # 滚动到底部以显示最新消息（可选）
         self.ListWidget.scrollToBottom()
+        # return bubble
 
+    def send_button_clicked(self):
+        """
+        获取 PlainTextEdit 控件中的文本并发送聊天气泡
+        """
+        text = self.chat_input.toPlainText()
+        if not text:
+            InfoBar.error(
+                title="输入状态",
+                content="输入不能为空",
+                orient=Qt.Vertical,
+                isClosable=True,
+                position=InfoBarPosition.BOTTOM_RIGHT,
+                duration=1000,
+                parent=self
+            )
+            return
+        self.show_bubble(text)
+        sql = ChatSql()
+        sql.add_message(SenderType.GPT, SendType.TEXT, text, True)
+        # sleep(1)
+        self.dialog += [{"role": "user", "content": text}]
+        print(self.dialog)
+        url = r'http://47.121.115.252:8193/textModel/stream'
+        headers = {
+            "Content-Type": "application/json"
+        }
+        data = json.dumps({
+            "uuid": static.uuid,
+            "username": static.username,
+            "dialog": [{"role": "system", "content": ""},
+                       {"role": "user", "content": text}]
+        })
+        # ai_bubble = self.text_bubble("", is_sender=False)
+        with requests.post(url, headers=headers, data=data, stream=True) as r:
+            buffer = ""
+            all_text = ""
+            for chunk in r.iter_content(chunk_size=2048):
+                if chunk:
+                    buffer += chunk.decode('utf-8')
+                    try:
+                        # 尝试在缓冲区中找到完整的 JSON 对象
+                        start_index = buffer.find('{')
+                        end_index = buffer.rfind('}') + 1
+                        if start_index != -1 and end_index != -1:
+                            json_str = buffer[start_index:end_index]
+                            json_data = json.loads(json_str)
+                            for text_item in json_data["payload"]["choices"]["text"]:
+                                all_text += text_item["content"]
+                                print(text_item["content"])
+                                # ai_bubble.update_text(text_item["content"],is_add=True)
+                            if json_data["header"]["code"] != 0:
+                                InfoBar.error(
+                                    title="错误",
+                                    content=json_data["header"]["message"],
+                                    orient=Qt.Vertical,
+                                    isClosable=True,
+                                    position=InfoBarPosition.BOTTOM_RIGHT,
+                                    duration=1000,
+                                    parent=self
+                                )
+                            # 结束
+                            if json_data["header"]["status"] == 2:
+                                token_info = json_data["payload"]["usage"]["text"]
+                                print(f"'question_tokens': {token_info['question_tokens']}")
+                                print(f"prompt_tokens': {token_info['prompt_tokens']}")
+                                print(f"completion_tokens: {token_info['completion_tokens']}")
+                                print(f"total_tokens: {token_info['total_tokens']}")
+                                static.tokens -= token_info['total_tokens']
+                            # 更新缓冲区，去掉已处理的部分
+                            buffer = buffer[end_index:]
+                    except json.JSONDecodeError:
+                        pass
+                    except Exception as e:
+                        print(str(e))
+            self.show_bubble(all_text, is_sender=False)
+            sql.add_message(SenderType.GPT, SendType.TEXT, all_text, True)
 
     def clear_history(self) -> None:
         """
@@ -304,7 +432,7 @@ class ChatSessionWindow(QWidget):
 
         :return:
         """
-        ...
+        self.ListWidget.clear()
 
     def change_model(self) -> None:
         """
@@ -312,7 +440,6 @@ class ChatSessionWindow(QWidget):
 
         :return:
         """
-        ...
 
     def upload_img(self) -> None:
         """
@@ -320,7 +447,20 @@ class ChatSessionWindow(QWidget):
 
         :return:
         """
-        ...
+        file_window = FileWindow()
+        img_path = file_window.open_file_dialog()
+        if img_path is None or "":
+            print("未选中图片")
+        else:
+            print("yes选中了", img_path)
+            is_sender = True  # 假设总是发送者
+            try:
+                self.show_bubble(img_path, is_sender=is_sender, variety="image")
+                self.img_text(img_path)
+                # 滚动到底部以显示最新消息（可选）
+                self.ListWidget.scrollToBottom()
+            except Exception as e:
+                print(str(e))
 
     def upload_audio(self) -> None:
         """
@@ -328,4 +468,87 @@ class ChatSessionWindow(QWidget):
 
         :return:
         """
-        ...
+        global_signal.audio_submitted.connect(self.send_audio_message)
+        AudioChoiceWindow(self).exec()
+
+    def send_audio_message(self, audio_path: str) -> None:
+        # print("send_audio")
+        self.show_bubble(audio_path, variety="audio")
+        # 语音转文字函数
+        self.audio_text(audio_path)
+
+    def img_text(self, path: str):
+        """
+        图片转文字
+        """
+        image_to_text = ImageToText(self)
+        text = image_to_text.img_text(path)
+        # print('接口封装测试',text)
+        self.show_bubble(text, is_sender=False)
+
+    def audio_text(self, path: str):
+        audio_to_text = AudiotoText()
+        text = audio_to_text.audio_text(path)
+        # print('接口封装测试', text)
+        ai_avatar_path = '../Assets/image/logo.png'
+        is_sender = False
+        bubble = MessageBubble(text, ai_avatar_path, is_sender=is_sender, variety="text")
+        # 创建一个 QListWidgetItem 并设置其大小提示
+        item = QListWidgetItem(self.ListWidget)
+        item.setSizeHint(bubble.sizeHint())
+        # 将 MessageBubble 设置为 QListWidgetItem 的 widget
+        self.ListWidget.setItemWidget(item, bubble)
+
+
+class AudioChoiceWindow(MessageBoxBase):
+    """
+    录音按钮弹出选择界面
+    """
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.AudioWindow = AudioRecorder()
+        # 标题
+        self.sub_title = SubtitleLabel("请录音")
+        self.sub_title.setAlignment(Qt.AlignCenter)
+        # ’录音开始‘和’录音结束‘按钮
+        self.start_recording_btn = PushButton()
+        self.start_recording_btn.setText("开始录音")
+        self.start_recording_btn.setIcon(Icon(FluentIcon.MICROPHONE))
+        self.start_recording_btn.clicked.connect(self.AudioWindow.start_recording)
+
+        self.stop_recording_btn = PushButton()
+        self.stop_recording_btn.setText("结束录音")
+        self.stop_recording_btn.setIcon(Icon(FluentIcon.MUTE))
+        self.stop_recording_btn.clicked.connect(self.AudioWindow.stop_recording)
+
+        self.hbox_layout_top = QHBoxLayout()
+        self.hbox_layout_top.addWidget(self.sub_title)
+
+        self.hbox_layout_bottom = QHBoxLayout()
+        self.hbox_layout_bottom.addWidget(self.start_recording_btn)
+        self.hbox_layout_bottom.addWidget(self.stop_recording_btn)
+
+        # 将控件添加到布局中
+        self.viewLayout.addLayout(self.hbox_layout_top)
+        self.viewLayout.addLayout(self.hbox_layout_bottom)
+
+        self.yesButton.setText("确认")
+        self.yesButton.clicked.connect(self.send_message)
+        self.cancelButton.setText("取消")
+
+    def send_message(self):
+        if self.AudioWindow.path is not None:
+            # print("yes选中了")
+            global_signal.audio_submitted.emit(self.AudioWindow.path)
+
+
+if __name__ == "__main__":
+    QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
+
+    app = QApplication(sys.argv)
+    w = ChatSessionWindow()
+    w.show()
+    sys.exit(app.exec_())

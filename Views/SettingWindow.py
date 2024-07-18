@@ -3,20 +3,26 @@ Des 设置界面
 @Author thetheOrange
 Time 2024/6/16
 """
+from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QWidget
 from PyQt5.uic import loadUi
 from qfluentwidgets import ComboBox, SpinBox, DoubleSpinBox
+from GlobalSignal import global_signal
+from Views.LoginWindow import LoginWindow
 
 
 class SettingWindow(QWidget):
     """
     设置界面
     """
+    signal = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
         loadUi("../Templates/setting.ui", self)
-
+        # =============================================用户设置start=============================================
+        self.login_button.clicked.connect(self.login)
+        # =============================================用户设置start=============================================
         # =============================================视觉设置start=============================================
 
         # 主题选择下拉框
@@ -27,7 +33,6 @@ class SettingWindow(QWidget):
         self.font_size_setting.setRange(12, 20)
 
         # =============================================视觉设置end=============================================
-
         # =============================================大模型参数设置start=============================================
 
         # 回复长度限制
@@ -48,4 +53,11 @@ class SettingWindow(QWidget):
 
         # =============================================大模型参数设置end=============================================
 
-
+    def login(self):
+        """
+        登录按钮
+        """
+        self.signal.emit("start_login")
+        global_signal.ChatOperation.emit("start_login")
+        print("print: start_login")
+        # login_window=LoginWindow()
