@@ -1,3 +1,9 @@
+"""
+Des 生成特殊的MD5
+@Author thetheOrange
+Time 2024/7/16
+"""
+
 # 特殊字符串 加盐
 import hashlib
 

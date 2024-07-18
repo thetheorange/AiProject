@@ -1,3 +1,9 @@
+"""
+Des 根据用户名生成uuid
+@Author thetheOrange
+Time 2024/7/16
+"""
+
 import time
 import uuid
 
