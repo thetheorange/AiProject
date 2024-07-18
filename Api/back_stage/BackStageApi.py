@@ -233,7 +233,7 @@ def add_admin() -> Response:
                 # 存储注册的用户信息
                 new_admin: Admin = Admin(
                     Id=admin_uuid,
-                    Auth=1,
+                    Auth=0,
                     Admin=admin,
                     PassWord=pass_word
                 )
@@ -314,7 +314,7 @@ def delete_admin() -> Response:
             if not session.query(Admin).filter(Admin.Admin == current_admin).first().Auth:
                 return jsonify({"code": StatusCode.PermissionNotAllow, "msg": "权限不足"})
             # 查看目标用户是否存在
-            is_user_exit: Admin = session.query(Admin).filter(Admin.Admin == target_admin).first()
+            is_user_exit: Admin = session.query(Admin).filter(Admin.Admin == target_admin, Admin.Auth != 1).first()
             if is_user_exit:
                 session.query(Admin).filter(Admin.Admin == target_admin).delete()
                 session.commit()
@@ -326,7 +326,7 @@ def delete_admin() -> Response:
             else:
                 return jsonify({
                     "code": StatusCode.UserNotFound,
-                    "msg": "目标用户不存在"
+                    "msg": "目标用户不存在或权限不足"
                 })
     except Exception as e:
         app_logger.error(f"[DELETE ADMIN] {e}")
@@ -413,7 +413,48 @@ def modify_token() -> Response:
         return jsonify({"code": StatusCode.ModifyTokenError, "msg": "修改令牌错误"})
 
 
-@back_stage_blu.route("/admip/control_token", methods=["GET"])
+@back_stage_blu.route("/admin/delete_token", methods=["POST"])
+@jwt_required()
+def delete_token() -> Response:
+    """
+    删除令牌
+
+    :return: json
+    """
+
+    try:
+        current_admin: str = get_jwt_identity()
+        target_token: str = request.json["target_token"]
+
+        DBSession = sessionmaker(bind=engine)
+        with DBSession() as session:
+            # 检查是否为超级管理员
+            if not session.query(Admin).filter(Admin.Admin == current_admin).first().Auth:
+                return jsonify({"code": StatusCode.PermissionNotAllow, "msg": "权限不足"})
+            # 查看目标用户是否存在
+            is_user_exit: Token = session.query(Token).filter(Token.Name == target_token).first()
+            if is_user_exit:
+                session.query(Token).filter(Token.Name == target_token).delete()
+                session.commit()
+
+                return jsonify({
+                    "code": 0,
+                    "msg": f"{target_token} 删除成功"
+                })
+            else:
+                return jsonify({
+                    "code": StatusCode.TokenNotFound,
+                    "msg": "目标令牌不存在或权限不足"
+                })
+    except Exception as e:
+        app_logger.error(f"[DELETE TOKEN] {e}")
+        return jsonify({
+            "code": StatusCode.DeleteTokenError,
+            "msg": "删除令牌时出现错误"
+        })
+
+
+@back_stage_blu.route("/admin/control_token", methods=["GET"])
 @jwt_required()
 def control_token() -> Response:
     """
@@ -488,7 +529,7 @@ def query_user_table() -> Response:
                             "Id": admin.Id,
                             "Auth": admin.Auth,
                             "Admin": admin.Admin,
-                            "Password": admin.PassWord
+                            "PassWord": admin.PassWord
                         } for admin in query_ret
                     ]
                 })
@@ -521,6 +562,54 @@ def query_user_table() -> Response:
         })
 
 
+@back_stage_blu.route("/admin/query_table_count", methods=["GET"])
+@jwt_required()
+def query_user_table_count() -> Response:
+    """
+    根据指定范围查询表中数据的总数
+
+    :return: json
+    """
+
+    try:
+        table: str = request.args["table"].strip().lower()
+
+        DBSession = sessionmaker(bind=engine)
+        with DBSession() as session:
+            if table == "user":
+                total_count = session.query(User).count()
+                return jsonify({
+                    "code": 0,
+                    "msg": f"查询{total_count}条信息成功",
+                    "total_count": total_count
+                })
+            elif table == "admin":
+                total_count = session.query(Admin).count()
+                return jsonify({
+                    "code": 0,
+                    "msg": f"查询{total_count}条信息成功",
+                    "total_count": total_count
+                })
+            elif table == "token":
+                total_count = session.query(Token).count()
+                return jsonify({
+                    "code": 0,
+                    "msg": f"查询{total_count}条信息成功",
+                    "total_count": total_count
+                })
+            else:
+                return jsonify({
+                    "code": StatusCode.TableNotFound,
+                    "msg": "未查询到指定表"
+                })
+    except Exception as e:
+        app_logger.error(f"[QUERY TABLE COUNT] {e}")
+        return jsonify({
+            "code": StatusCode.QueryTableDataError,
+            "msg": "查询表中数据总数失败"
+        })
+
+
 @back_stage_blu.route("/admin/query_table_data", methods=["GET"])
 @jwt_required()
 def query_table_data() -> Response:
@@ -542,14 +631,14 @@ def query_table_data() -> Response:
                     "code": 0,
                     "msg": f"查询{query_ret.UserName}成功",
                     "data": {
-                            "Id": query_ret.Id,
-                            "UserName": query_ret.UserName,
-                            "PassWord": query_ret.PassWord,
-                            "Tokens": query_ret.Tokens,
-                            "Email": query_ret.Email,
-                            "PicTimes": query_ret.PicTimes,
-                            "Academy": query_ret.Academy
-                        }
+                        "Id": query_ret.Id,
+                        "UserName": query_ret.UserName,
+                        "PassWord": query_ret.PassWord,
+                        "Tokens": query_ret.Tokens,
+                        "Email": query_ret.Email,
+                        "PicTimes": query_ret.PicTimes,
+                        "Academy": query_ret.Academy
+                    }
                 })
             elif table == "admin":
                 query_ret: Admin = session.query(Admin).filter(Admin.Admin == target_name).first()
@@ -557,11 +646,11 @@ def query_table_data() -> Response:
                     "code": 0,
                     "msg": f"查询{query_ret.Admin}成功",
                     "data": {
-                            "Id": query_ret.Id,
-                            "Auth": query_ret.Auth,
-                            "Admin": query_ret.Admin,
-                            "PassWord": query_ret.PassWord
-                        }
+                        "Id": query_ret.Id,
+                        "Auth": query_ret.Auth,
+                        "Admin": query_ret.Admin,
+                        "PassWord": query_ret.PassWord
+                    }
                 })
             elif table == "token":
                 query_ret: Token = session.query(Token).filter(Token.Name == target_name).first()
@@ -569,13 +658,13 @@ def query_table_data() -> Response:
                     "code": 0,
                     "msg": f"查询{query_ret.Name}成功",
                     "data": {
-                            "Id": query_ret.Id,
-                            "Tokens": query_ret.Tokens,
-                            "PicTimes": query_ret.PicTimes,
-                            "TokenRange": query_ret.TokenRange,
-                            "Name": query_ret.Name,
-                            "Available": query_ret.Available
-                        }
+                        "Id": query_ret.Id,
+                        "Tokens": query_ret.Tokens,
+                        "PicTimes": query_ret.PicTimes,
+                        "TokenRange": query_ret.TokenRange,
+                        "Name": query_ret.Name,
+                        "Available": query_ret.Available
+                    }
                 })
             else:
                 return jsonify({

@@ -101,5 +101,7 @@ class StatusCode:
     TableNotFound: str = "TABLE_NOT_FOUND"
     # 查询表时出现错误
     QueryTableError: str = "QUERY_TABLE_ERROR"
+    # 查询表中数据出现错误
+    QueryTableDataError: str = "QUERY_TABLE_DATA_ERROR"
 
     # ================================ 后台管理界面相关Api状态end ================================

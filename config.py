@@ -16,7 +16,7 @@ config_json: dict = {
     # 配置flask服务器
     "flask": {
         "server": "0.0.0.0",
-        "port": 5120,
+        "port": 5000,
         "jwt_secret": "S34d.}8Tkj63}B@"
     },
     # 讯飞平台api相关秘钥和必须参数
