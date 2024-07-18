@@ -5,6 +5,7 @@ COPY . /home/AiProjectFlask
 WORKDIR /home/AiProjectFlask
 
 RUN apt-get upgrade -y \
+    && apt-get install vim -y \
 	&& pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple \
 	&& pip install gevent gunicorn
 
