@@ -134,7 +134,8 @@ def modify_normal_user() -> Response:
             else:
                 # 查看新的用户名是否重名
                 is_same_user: User = session.query(User).filter(
-                    User.UserName == new_user_info.get("new_username")).first()
+                    User.UserName == new_user_info.get("new_username"),
+                    User.Id != target_user_info.Id).first()
                 if is_same_user:
                     return jsonify({
                         "code": StatusCode.UserNameRepeat,
@@ -272,7 +273,8 @@ def modify_admin() -> Response:
                     "msg": "找不到目标用户"
                 })
             # 查看新的用户名是否重名
-            is_same_user: Admin = session.query(Admin).filter(Admin.Admin == new_name).first()
+            is_same_user: Admin = session.query(Admin).filter(Admin.Admin == new_name,
+                                                              Admin.Id != target_admin_info.Id).first()
             if is_same_user:
                 return jsonify({
                     "code": StatusCode.UserNameRepeat,

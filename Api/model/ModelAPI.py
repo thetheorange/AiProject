@@ -126,7 +126,7 @@ def text_model_stream() -> Response:
 
     try:
         # 请求的用户id
-        query_user_uuid: int = request.json.get("uuid")
+        query_user_uuid: str = request.json.get("uuid")
         # 用户名
         query_user_name: str = request.json.get("username")
         # 发送给大模型的对话消息

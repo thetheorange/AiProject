@@ -31,6 +31,7 @@ def register() -> Response:
     user_name: str = request.json.get("username").strip()
     pass_word: str = request.json.get("password").strip()
     user_email: str = request.json.get("email").strip()
+    academy: str = request.json.get("academy").strip()
 
     DBSession = sessionmaker(bind=engine)
     with DBSession() as session:
@@ -50,7 +51,8 @@ def register() -> Response:
                                   PassWord=pass_word,
                                   Tokens=0,
                                   Email=user_email,
-                                  PicTimes=0)
+                                  PicTimes=0,
+                                  Academy=academy)
             session.add(new_user)
             session.commit()
             return jsonify({"code": 0, "msg": "用户注册成功"})
