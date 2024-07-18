@@ -1,5 +1,5 @@
 <div align="center">
-<h1>飞星智慧云平台 后端flask部分</h1>
+<h1>流星智慧云平台 后端flask部分</h1>
 <p>
 <img alt="Static Badge" src="https://img.shields.io/badge/language-python_3.11-blue">
 <img alt="Static Badge" src="https://img.shields.io/badge/flask-3.0.3-orange">
