@@ -4,19 +4,24 @@ Des 聊天相关界面
 Time 2024/6/14
 Misaka-xxw: 记得改打开文件的路径为Aiproject！
 """
+import json
 import sys
+
+import requests
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QWidget, QAction, QLabel, QHBoxLayout, QListWidgetItem, QFrame, QApplication
 from PyQt5.uic import loadUi
 from qfluentwidgets import ToolTipFilter, PushButton, Icon, FluentIcon, ToolTipPosition, CommandBar, MessageBoxBase, \
-    SubtitleLabel, ListWidget, PlainTextEdit, SearchLineEdit, MessageBox
+    SubtitleLabel, ListWidget, PlainTextEdit, SearchLineEdit, MessageBox, InfoBar, InfoBarPosition
 
 from Core.Tools.AudioRecorder import AudioRecorder
+from Sqlite.ChatSql import ChatSql
+from Sqlite.Static import static
 from Views.FileWindow import FileWindow
 from Views.GlobalSignal import global_signal
 from Views.MessageBubble import MessageBubble
-from Sqlite.ChatSql import ChatSql
+
 
 class ChatLineWidget(QWidget):
     """
@@ -128,7 +133,7 @@ class ChatSearchWindow(QWidget):
         name = data.get('name')
         icon = data.get('icon')
         item = QListWidgetItem(self.ListWidget)
-        # self.data_and_icons.append((name,icon))
+        # self.dialog_and_icons.append((name,icon))
         # 创建CustomWidget实例，这里我们传递文本和一个模拟的图标名（实际实现可能需要调整）
         custom_widget = ChatLineWidget(name, icon)
 
@@ -298,19 +303,25 @@ class ChatSessionWindow(QWidget):
         self.send_btn: PushButton
         self.send_btn.setIcon(Icon(FluentIcon.SEND))
         self.send_btn.clicked.connect(self.send_button_clicked)
+        self.dialog:list=[]
+        self.update_mask_and_data()
         # self.chat_input.returnPressed.connect(self.send_button_clicked)
 
         # =============================================发送按钮设置end=============================================
+    def update_mask_and_data(self):
+        """
+        更新面具
+        """
+        self.dialog = [{"role": "system", "content": static.mark_describe}]
 
-    def send_button_clicked(self):
+    def text_bubble(self, text: str, avatar_path: str = "../Assets/image/logo.png", is_sender: bool = True):
         """
-            获取 PlainTextEdit 控件中的文本并发送聊天气泡
+        气泡的发送
+        :param text:发送文本
+        :param avatar_path:发送者头像路径
+        :param is_sender:发送者是用户/ai
         """
-        text = self.chat_input.toPlainText()
-        print(text)
-        is_sender = True  # 假设总是发送者
-        avatar_path = "../Assets/image/logo.png"  # 发送者头像路径
-        bubble = MessageBubble(text, avatar_path, is_sender=is_sender)
+        bubble = MessageBubble(text, avatar_path, is_sender=True)
 
         # 创建一个 QListWidgetItem 并设置其大小提示
         item = QListWidgetItem(self.ListWidget)
@@ -321,6 +332,78 @@ class ChatSessionWindow(QWidget):
 
         # 滚动到底部以显示最新消息（可选）
         self.ListWidget.scrollToBottom()
+
+    def send_button_clicked(self):
+        """
+        获取 PlainTextEdit 控件中的文本并发送聊天气泡
+        """
+        text = self.chat_input.toPlainText()
+        if not text:
+            InfoBar.error(
+                title="输入状态",
+                content="输入不能为空",
+                orient=Qt.Vertical,
+                isClosable=True,
+                position=InfoBarPosition.BOTTOM_RIGHT,
+                duration=1000,
+                parent=self
+            )
+            return
+        self.text_bubble(text)
+        try:
+            r = None
+            self.dialog += [{"role": "user", "content": text}]
+            print(self.dialog)
+            for i in range(2):
+                r = requests.post(url=r'http://47.121.115.252:8193/textModel/stream',
+                                  headers={
+                                      "Content-Type": "application/json"
+                                  },
+                                  data=json.dumps({
+                                      "uuid": static.uuid,
+                                      "username": static.username,
+                                      "dialog": self.dialog
+                                  }))
+                print("试图解码")
+                print(r.json()["content"])
+
+                if r.status_code == 200:
+                    # 检查是否登录成功
+                    code = r.json()["code"]
+                    if code != 0:
+                        if code == 'TOKEN_NOT_ENOUGH':
+                            code = "token不足，请兑换或者充值"
+                        InfoBar.error(
+                            title="错误",
+                            content=code,
+                            orient=Qt.Vertical,
+                            isClosable=True,
+                            position=InfoBarPosition.BOTTOM_RIGHT,
+                            duration=1000,
+                            parent=self
+                        )
+                    else:
+                        # 成功状态
+                        print("json是这样的", r.json())
+
+                        # 更新本地数据库
+                        sql = ChatSql()
+                        ...
+                        # global_signal.ChatOperation.emit("close_login_success")
+                    break
+                # time.sleep(0.1)
+            if r.status_code != 200:
+                InfoBar.error(
+                    title="登录状态",
+                    content=f"网络异常 {r.status_code}",
+                    orient=Qt.Vertical,
+                    isClosable=True,
+                    position=InfoBarPosition.BOTTOM_RIGHT,
+                    duration=1000,
+                    parent=self
+                )
+        except Exception as e:
+            print(str(e))
 
     def clear_history(self) -> None:
         """
