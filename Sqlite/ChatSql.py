@@ -164,6 +164,10 @@ class ChatSql:
                 self.create_dialogue('你好，新用户', icon='CHAT')
                 self.create_dialogue('这题怎么做', icon='CALENDAR')
                 self.create_dialogue('以“星期天为题”写一篇作文', icon='BOOK_SHELF')
+                masks_and_icons = [("机器学习", "", "ROBOT"), ("英语写作", "", "CHAT"),
+                                   ("小红书写手", "", "BOOK_SHELF"), ("数学物理", "", "CALENDAR")]
+                for name, des, icon in masks_and_icons:
+                    self.add_mask(name, mask_describe=des, icon=icon)
                 session.commit()
         except Exception as e:
             app_logger.info(str(e))
@@ -354,7 +358,7 @@ class ChatSql:
             result = []
             if account_id == -1:
                 account_id = static.sql_account_id
-            print("find account ",account_id)
+            print("find account ", account_id)
             with self.DB_session() as session:
                 dialogues = session.query(Dialogue).filter_by(account_id=account_id).all()
                 for dialogue in dialogues:
@@ -447,7 +451,7 @@ class ChatSql:
             app_logger.info(str(e))
 
     # =============================================消息end=============================================
-    def add_mask(self, mask_name: str, mask_describe: str = "", account_id=-1, icon: str = "CHAT"):
+    def add_mask(self, mask_name: str, mask_describe: str = "", icon: str = "CHAT"):
         """
         增加新的面具
         :param mask_name: 面具名称
@@ -455,7 +459,7 @@ class ChatSql:
         """
         try:
             with self.DB_session() as session:
-                new_mask = Mask(mask_name=mask_name, mask_describe=mask_describe, account_id=account_id, icon=icon)
+                new_mask = Mask(mask_name=mask_name, mask_describe=mask_describe, account_id=static.sql_account_id, icon=icon)
                 session.add(new_mask)
                 session.commit()
         except Exception as e:
@@ -472,6 +476,31 @@ class ChatSql:
                 return session.query(Mask).filter_by(mask_name=mask_name).first()
         except Exception as e:
             app_logger.info(str(e))
+
+    def get_masks(self, account_id=-1) -> list:
+        """
+        :param account_id: id
+        :return: 列表
+        """
+        try:
+            result = []
+            if account_id == -1:
+                account_id = static.sql_account_id
+            print("find account ", account_id)
+            with self.DB_session() as session:
+                masks = session.query(Mask).filter_by(account_id=account_id).all()
+                for mask in masks:
+                    result.append({
+                        'name': mask.mask_name,
+                        'des':mask.mask_describe,
+                        'icon': mask.icon
+                    })
+            print("mask list", account_id, result)
+            return result
+        except Exception as e:
+            app_logger.info(str(e))
+            print(str(e))
+            return []
 
     def delete_mask(self, mask_name: str):
         """

@@ -4,16 +4,18 @@ Des 面具相关界面
 Time 2024/6/14
 """
 import sys
+
 from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtWidgets import QHBoxLayout, QListWidgetItem
-from PyQt5.uic import loadUi
-from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QHBoxLayout, QListWidgetItem
+from PyQt5.QtWidgets import QWidget
+from PyQt5.uic import loadUi
+from qfluentwidgets import FluentIcon
 from qfluentwidgets import PushButton, ToolTipFilter, ToolTipPosition, MessageBoxBase, \
     LineEdit, PlainTextEdit, ListWidget, SearchLineEdit, MessageBox, ToolButton
-from qfluentwidgets import FluentIcon
-from Views.GlobalSignal import global_signal
+
 from Sqlite.ChatSql import ChatSql
+from Views.GlobalSignal import global_signal
 
 
 class MaskSubSettingWindow(MessageBoxBase):
@@ -134,20 +136,8 @@ class MaskSettingWindow(QWidget):
         self.mask_info: ListWidget
         # =============================================基础设置end=============================================
         # =============================================每行mask设置begin=============================================
-        self.data_and_icons = [("机器学习", FluentIcon.ROBOT), ("英语写作", FluentIcon.CHAT),
-                               ("小红书写手", FluentIcon.BOOK_SHELF), ("数学物理", FluentIcon.CALENDAR)]
         # 更新本地数据库
         self.sql = ChatSql()
-
-        for text, icon_name in self.data_and_icons:
-            data = {
-                'name': text,
-                'icon': icon_name,
-                'des': '',
-                'signal': 'add'
-            }
-            self.add_or_delete_mask_list(data)
-
         global_signal.mask_submitted.connect(self.add_or_delete_mask_list)
 
         # global_signal.ChatOperation.connect(self.test)
@@ -159,8 +149,7 @@ class MaskSettingWindow(QWidget):
 
     def find_text_in_list(self, text):
         """
-        在给定的数据列表中查找文本。
-
+        在给定的数据列表中查找文本。暂时不用
         :param text: 要查找的文本。
         :return: 如果找到文本，则返回1；否则返回0。
         """
@@ -205,17 +194,24 @@ class MaskSettingWindow(QWidget):
         """
         global_signal.ChatOperation_Mask.emit("start_chat")
 
+    def update_masks(self):
+        sql = ChatSql()
+        datadict = sql.get_masks()
+        for data in datadict:
+            self.add_or_delete_mask_list(
+                {'signal': 'add', 'name': data['name'], 'des': data['des'], 'icon': eval(f"FluentIcon.{data['icon']}")})
+
     def add_or_delete_mask_list(self, data):
         signal = data.get('signal')
         name = data.get('name')
         icon = data.get('icon')
         des = data.get('des')
         if signal == 'add':
-            # print(name, icon, des)
+            print(name, icon, des)
             # 更新本地数据库
-            self.sql.add_mask(name, des, icon)
+            self.sql.add_mask(name, mask_describe=des, icon=icon)
             # 发送全局信号
-            global_signal.ChatOperation.emit("close_login_success")
+            # global_signal.ChatOperation.emit("close_login_success")
             item = QListWidgetItem(self.mask_info)
             # self.data_and_icons.append((name,icon))
             # 创建CustomWidget实例，这里我们传递文本和一个模拟的图标名（实际实现可能需要调整）

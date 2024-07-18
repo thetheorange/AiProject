@@ -37,9 +37,8 @@ class MainWindow(SplitFluentWindow):
         self.resize(800, 600)
 
         self.__init_navigation()
-
         self.login_window: QWidget | None = None
-        self.login_history()
+        # self.login_history()
         # =============================================基础设置end=============================================
 
     def login_history(self):
@@ -54,7 +53,6 @@ class MainWindow(SplitFluentWindow):
     def __init_navigation(self) -> None:
         """
         初始化导航栏
-
         :return:
         """
         # 添加子界面
@@ -138,6 +136,7 @@ class MainWindow(SplitFluentWindow):
                 if self.login_window:
                     self.login_window.close()
                 self.chat_search_window.update_dialogues()
+                self.mask_info_window.update_masks()
 
             case _:
                 pass
