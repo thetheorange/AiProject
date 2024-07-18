@@ -29,29 +29,40 @@
 │      └──register.qss
 │   ├── icons
 │   ├── image
-│   ├── Core/Tools
-│       ├──AudioRecorder.py
+│── Core
+│   ├── Tools
 │       ├──__init__.py
+│       ├──AudiotoText.py
+│       ├──AudioRecorder.py
+│       ├──Play_Audio.py
+│       ├──ImagetoText.py
 │       ├──config.py
 │       ├──generate_captcha.py
 │       └──readQss.py
-│   ├── Templates
-│       ├──chat_search.ui
-│       ├──chat_session.ui
-│       ├──login.ui
-│       ├──register.ui
-│       ├──setting.ui
-│       └──user_info.ui
-│   ├── Views
-│       ├──BaseWindow.py
-│       ├──ChatWindow.py
-│       ├──GlobalSignal.py
-│       ├──MainWindow.py
-│       ├──MaskWindow.py
-│       ├──MessageBubble.py
-│       ├──RegisterWindow.py
-│       ├──SettingWindow.py
-│       └──UserInfoWindow.py
+│── Sqlite
+│   ├── ChatSql.py
+│   ├── Static.py
+├── Templates
+│   ├──chat_search.ui
+│   ├──chat_session.ui
+│   ├──login.ui
+│   ├──register.ui
+│   ├──setting.ui
+│   └──user_info.ui
+├── Views
+│   ├──BaseWindow.py
+│   ├──ChatWindow.py
+│   ├──FileWindow.py
+│   ├──GlobalSignal.py
+│   ├──LoginWindow.py
+│   ├──MainWindow.py
+│   ├──MaskWidget.py
+│   ├──MaskWindow.py
+│   ├──MessageBubble.py
+│   ├──RegisterWindow.py
+│   ├──SettingWindow.py
+│   ├──chat.db
+│   └──UserInfoWindow.py
 ├── .gitignore
 ├── BackgroundPhoto.jpg
 ├── Logging.py
@@ -66,7 +77,6 @@
 - 提供自定义的设置功能，设计个性化的智慧系统助手
 
 ## 开始使用 :arrow_forward:
-- 准备好你的 OpenAIProject API Key;
 - 下载并解压文件
 - 添加新面具
 - 选择直接开始对话或选择面具即可开始与Ai对话
@@ -75,8 +85,8 @@
 - [x] 设计主要的登录、注册页面和开启对话的主页面
 - [x] 部署后端大模型接口，支持部署的大语言模型：讯飞星火
 - [x] 部署本地数据库
-- [ ] 前后端联调
-- [ ] 后台管理界面
+- [x] 前后端联调
+- [x] 后台管理界面
 
 
 
