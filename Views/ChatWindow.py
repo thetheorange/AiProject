@@ -4,25 +4,24 @@ Des 聊天相关界面
 Time 2024/6/14
 Misaka-xxw: 记得改打开文件的路径为Aiproject！
 """
+import json
 import sys
 import requests
-import json
+
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QWidget, QAction, QLabel, QHBoxLayout, QListWidgetItem, QFrame, QApplication
 from PyQt5.uic import loadUi
 from qfluentwidgets import ToolTipFilter, PushButton, Icon, FluentIcon, ToolTipPosition, CommandBar, MessageBoxBase, \
-    SubtitleLabel, ListWidget, PlainTextEdit, SearchLineEdit, MessageBox, Icon, InfoBar, InfoBarPosition
+    SubtitleLabel, ListWidget, PlainTextEdit, SearchLineEdit, MessageBox, InfoBar, InfoBarPosition
 
+from Core.Tools.AudioRecorder import AudioRecorder
+from Sqlite.ChatSql import ChatSql
+from Sqlite.Static import static
 from Views.FileWindow import FileWindow
 from Views.GlobalSignal import global_signal
 from Views.MessageBubble import MessageBubble
-from Sqlite.ChatSql import ChatSql
-from Core.Tools.AudioRecorder import AudioRecorder
-from Core.Tools.ImagetoText import ImagetoText
-from Core.Tools.AudiotoText import AudiotoText
 
-from Sqlite.Static import static
 
 
 class ChatLineWidget(QWidget):
@@ -135,7 +134,7 @@ class ChatSearchWindow(QWidget):
         name = data.get('name')
         icon = data.get('icon')
         item = QListWidgetItem(self.ListWidget)
-        # self.data_and_icons.append((name,icon))
+        # self.dialog_and_icons.append((name,icon))
         # 创建CustomWidget实例，这里我们传递文本和一个模拟的图标名（实际实现可能需要调整）
         custom_widget = ChatLineWidget(name, icon)
 
@@ -305,18 +304,25 @@ class ChatSessionWindow(QWidget):
         self.send_btn: PushButton
         self.send_btn.setIcon(Icon(FluentIcon.SEND))
         self.send_btn.clicked.connect(self.send_button_clicked)
+        self.dialog: list = []
+        self.update_mask_and_data()
         # self.chat_input.returnPressed.connect(self.send_button_clicked)
 
         # =============================================发送按钮设置end=============================================
 
-    def send_button_clicked(self):
+    def update_mask_and_data(self):
         """
-            获取 PlainTextEdit 控件中的文本并发送聊天气泡
+        更新面具
         """
-        text = self.chat_input.toPlainText()
-        print(text)
-        is_sender = True  # 假设总是发送者
-        avatar_path = "../Assets/image/logo.png"  # 发送者头像路径
+        self.dialog = [{"role": "system", "content": static.mark_describe}]
+
+    def text_bubble(self, text: str = "", avatar_path: str = "../Assets/image/logo.png", is_sender: bool = True):
+        """
+        气泡的发送
+        :param text:发送文本
+        :param avatar_path:发送者头像路径
+        :param is_sender:发送者是用户/ai
+        """
         bubble = MessageBubble(text, avatar_path, is_sender=is_sender)
 
         # 创建一个 QListWidgetItem 并设置其大小提示
@@ -328,6 +334,81 @@ class ChatSessionWindow(QWidget):
 
         # 滚动到底部以显示最新消息（可选）
         self.ListWidget.scrollToBottom()
+        return bubble
+
+    def send_button_clicked(self):
+        """
+        获取 PlainTextEdit 控件中的文本并发送聊天气泡
+        """
+        text = self.chat_input.toPlainText()
+        if not text:
+            InfoBar.error(
+                title="输入状态",
+                content="输入不能为空",
+                orient=Qt.Vertical,
+                isClosable=True,
+                position=InfoBarPosition.BOTTOM_RIGHT,
+                duration=1000,
+                parent=self
+            )
+            return
+        self.text_bubble(text)
+        # sleep(1)
+        self.dialog += [{"role": "user", "content": text}]
+        print(self.dialog)
+        url = r'http://47.121.115.252:8193/textModel/stream'
+        headers = {
+            "Content-Type": "application/json"
+        }
+        data = json.dumps({
+            "uuid": static.uuid,
+            "username": static.username,
+            "dialog": [{"role": "system", "content": ""},
+                       {"role": "user", "content": text}]
+        })
+        # ai_bubble = self.text_bubble("", is_sender=False)
+        with requests.post(url, headers=headers, data=data, stream=True) as r:
+            buffer = ""
+            all_text = ""
+            for chunk in r.iter_content(chunk_size=2048):
+                if chunk:
+                    buffer += chunk.decode('utf-8')
+                    try:
+                        # 尝试在缓冲区中找到完整的 JSON 对象
+                        start_index = buffer.find('{')
+                        end_index = buffer.rfind('}') + 1
+                        if start_index != -1 and end_index != -1:
+                            json_str = buffer[start_index:end_index]
+                            json_data = json.loads(json_str)
+                            for text_item in json_data["payload"]["choices"]["text"]:
+                                all_text += text_item["content"]
+                                print(text_item["content"])
+                                # ai_bubble.update_text(text_item["content"],is_add=True)
+                            if json_data["header"]["code"] != 0:
+                                InfoBar.error(
+                                    title="错误",
+                                    content=json_data["header"]["message"],
+                                    orient=Qt.Vertical,
+                                    isClosable=True,
+                                    position=InfoBarPosition.BOTTOM_RIGHT,
+                                    duration=1000,
+                                    parent=self
+                                )
+                            # 结束
+                            if json_data["header"]["status"] == 2:
+                                token_info = json_data["payload"]["usage"]["text"]
+                                print(f"'question_tokens': {token_info['question_tokens']}")
+                                print(f"prompt_tokens': {token_info['prompt_tokens']}")
+                                print(f"completion_tokens: {token_info['completion_tokens']}")
+                                print(f"total_tokens: {token_info['total_tokens']}")
+                                static.tokens -= token_info['total_tokens']
+                            # 更新缓冲区，去掉已处理的部分
+                            buffer = buffer[end_index:]
+                    except json.JSONDecodeError:
+                        pass
+                    except Exception as e:
+                        print(str(e))
+            self.text_bubble(all_text, is_sender=False)
 
     def clear_history(self) -> None:
         """

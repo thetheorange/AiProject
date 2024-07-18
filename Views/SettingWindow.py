@@ -21,7 +21,7 @@ class SettingWindow(QWidget):
         super().__init__()
         loadUi("../Templates/setting.ui", self)
         # =============================================用户设置start=============================================
-        self.login_button.clicked.connect(self.test_button)
+        self.login_button.clicked.connect(self.login)
         # =============================================用户设置start=============================================
         # =============================================视觉设置start=============================================
 
@@ -53,7 +53,10 @@ class SettingWindow(QWidget):
 
         # =============================================大模型参数设置end=============================================
 
-    def test_button(self):
+    def login(self):
+        """
+        登录按钮
+        """
         self.signal.emit("start_login")
         global_signal.ChatOperation.emit("start_login")
         print("print: start_login")

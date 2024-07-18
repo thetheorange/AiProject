@@ -451,7 +451,7 @@ class ChatSql:
             app_logger.info(str(e))
 
     # =============================================消息end=============================================
-    def add_mask(self, mask_name: str, mask_describe: str = "", icon: str = "CHAT"):
+    def add_mask(self, mask_name: str, mask_describe: str = "", account_id = -1, icon: str = "CHAT"):
         """
         增加新的面具
         :param mask_name: 面具名称
@@ -459,7 +459,9 @@ class ChatSql:
         """
         try:
             with self.DB_session() as session:
-                new_mask = Mask(mask_name=mask_name, mask_describe=mask_describe, account_id=static.sql_account_id, icon=icon)
+                if account_id == -1:
+                    account_id = static.sql_account_id
+                new_mask = Mask(mask_name=mask_name, mask_describe=mask_describe, account_id=account_id, icon=icon)
                 session.add(new_mask)
                 session.commit()
         except Exception as e:
