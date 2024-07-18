@@ -1,14 +1,17 @@
 """
 备注：最好是打开名为Aiproject的项目，不是Aiproject2！！！
 """
-from PyQt5.QtWidgets import QHBoxLayout, QFrame, QSizePolicy, QSpacerItem
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QListWidget, QListWidgetItem
-from PyQt5.QtGui import QPixmap, QFont
-from PyQt5.QtWidgets import QApplication, QLabel, QWidget
+import textwrap
+
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QApplication, QWidget
+from PyQt5.QtWidgets import QHBoxLayout, QFrame
 from PyQt5.QtWidgets import QLabel
-from PyQt5.QtGui import QPixmap, QRegion
-from PyQt5.QtCore import Qt, QUrl
-from qfluentwidgets import AvatarWidget, ImageLabel, PushButton, FluentIcon, MessageBoxBase, Icon
+from PyQt5.QtWidgets import QVBoxLayout, QListWidget, QListWidgetItem
+from qfluentwidgets import AvatarWidget, ImageLabel, PushButton, FluentIcon
+
 from Core.Tools.Play_Audio import AudioPlayer
 
 
@@ -49,9 +52,10 @@ class MessageBubble(QWidget):
         :param variety:种类，分text、image、audio三种吧
         """
         super(MessageBubble, self).__init__(parent)
+        self.text = text
         self.initUI(text, avatar_path, is_sender, variety)
 
-    def initUI(self, text: str, avatar_path: str, is_sender: bool, variety):
+    def initUI(self, text, avatar_path: str, is_sender: bool, variety):
         self.bubble_container = QWidget(self)  # 气泡容器
         bubble_layout = QHBoxLayout(self.bubble_container)  # 气泡内部水平布局
 
@@ -142,12 +146,24 @@ class MessageBubble(QWidget):
         else:
             main_layout.addWidget(self.bubble_container, alignment=Qt.AlignLeft)
 
+    def update_text(self, text, is_add: bool = False):
+        if is_add:
+            self.text += text
+        else:
+            self.text = text
+        self.text_label.setText(self.text_line_break(self.text))
+
     @staticmethod
-    def text_line_break(s: str, limit: int = 15) -> str:
-        lines = []
-        for i in range(0, len(s), limit):
-            lines.append(s[i:i + limit])
-        return '\n'.join(lines)
+    def text_line_break(s: str, limit: int = 30) -> str:
+        """
+        手动自动换行，保留原始字符串中的换行符
+        """
+        paragraphs = s.split('\n')
+        wrapped_paragraphs = []
+        for paragraph in paragraphs:
+            wrapped_paragraph = textwrap.wrap(paragraph, width=limit)
+            wrapped_paragraphs.extend(wrapped_paragraph)
+        return '\n'.join(wrapped_paragraphs)
 
     def audio_to_text(self, audio_path: str):
         """
@@ -161,11 +177,11 @@ class MessageBubble(QWidget):
         """
         # print(audio_path)
         audio_path = audio_path[:-4]
-        audio_path = audio_path+'.wav'
+        audio_path = audio_path + '.wav'
         print(audio_path)
 
         try:
-            #AudioPlayer(self).exe()
+            # AudioPlayer(self).exe()
             self.player = AudioPlayer(audio_path)
             print("音频播放成功")
 
