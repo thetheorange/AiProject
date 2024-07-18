@@ -1,5 +1,5 @@
 <div align="center">   
-<img  alt="logo" src="https://github.com/joana123123/AiProject/blob/main/Assets/image/logo.jpg?raw=true" />
+<img  alt="logo" src="https://github.com/thetheorange/AiProject/blob/main/Assets/image/logo.jpg" />
 </div>
 
 <h1 align="center">AiProject</h1>
@@ -14,7 +14,7 @@
 </div>
 
 
-![show_photo](https://github.com/joana123123/AiProject/blob/main/Assets/image/show.jpg?raw=true)
+![show_photo](https://github.com/thetheorange/AiProject/blob/main/Assets/image/show.jpg)
 
 ## 特别鸣谢
 
