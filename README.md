@@ -783,7 +783,7 @@
 
 ```
 
-#### 删除令牌接口 /admin/delete_token
+#### 用户兑换令牌接口 /user/get_token
 
 ---
 
