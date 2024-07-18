@@ -558,40 +558,6 @@
 
 ```
 
-#### 修改管理员用户信息接口 /admin/modify_admin
-
----
-
-请求方式 POST
-
-请求头
-
-> Content-Type: application/json, <br>
-  Authorization: Bearer your access_token
-
-请求体 json
-
-```json
-
-{
-  "target_admin": "xxx",
-  "new_name": "xxx",
-  "new_password": "xxx"
-}
-
-```
-
-响应体 json
-
-```json
-
-{
-  "code": 0,
-  "msg": "修改用户信息成功"
-}
-
-```
-
 #### 删除管理员接口 /admin/delete_admin
 
 ---
