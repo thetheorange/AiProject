@@ -1,5 +1,5 @@
 <div align="center">
-<h1>代号：AiProject 后端flask部分</h1>
+<h1>飞星智慧云平台 后端flask部分</h1>
 <p>
 <img alt="Static Badge" src="https://img.shields.io/badge/language-python_3.11-blue">
 <img alt="Static Badge" src="https://img.shields.io/badge/flask-3.0.3-orange">
@@ -12,389 +12,841 @@
 ```text
 
 .
-├── Api
-│   ├── auth
-│   │   ├── Authentication.py
-│   │   └── __init__.py
-│   ├── __init__.py
-│   └── model
-│       ├── __init__.py
-│       └── ModelAPI.py
-├── app.py
-├── Core
-│   ├── __init__.py
-│   ├── Models
-│   │   ├── __init__.py
-│   │   ├── PictureToTextSocket.py
-│   │   ├── TextSocket.py
-│   │   └── VoiceToTextSocket.py
-│   ├── StatusCode.py
-│   └── Tools
-│       ├── extension_base_params.py
-│       ├── generate_url.py
-│       └── __init__.py
+├── Api 后端Api
+│ ├── auth 鉴权相关接口
+│ │ ├── Authentication.py
+│ │ └── __init__.py
+│ ├── back_stage 后台管理相关接口
+│ │ ├── BackStageApi.py
+│ │ └── __init__.py
+│ ├── __init__.py
+│ └── model 大模型相关接口
+│     ├── __init__.py
+│     └── ModelAPI.py
+├── app.py 主程序入口
+├── config.py 配置文件
+├── Core 核心文件
+│ ├── __init__.py
+│ ├── Models 大模型Socket类
+│ │ ├── __init__.py
+│ │ ├── PictureToTextSocket.py
+│ │ ├── TextSocket.py
+│ │ └── VoiceToTextSocket.py
+│ ├── StatusCode.py 错误状态码
+│ └── Tools 辅助函数
+│     ├── extension_base_params.py
+│     ├── generate_url.py
+│     ├── generate_uuid.py
+│     ├── __init__.py
+│     └── md5_password.py
+├── DockerFile
 ├── Logging.py
-├── Model
-│   ├── __init__.py
-│   └── model.py
-├── config.py
+├── Model 数据库orm映射表
+│ ├── __init__.py
+│ └── model.py
 ├── README.md
 └── requirements.txt
 
 
 ```
 
-## 部署方式 :writing_hand:
-
-### docker部署
-
-1.将下列文本写入到requirements.txt文件中，同时放在代码主目录下
-
-```text
-blinker==1.8.2
-certifi==2024.2.2
-cffi==1.16.0
-charset-normalizer==3.3.2
-click==8.1.7
-colorama==0.4.6
-Flask==3.0.3
-gevent==24.2.1
-greenlet==3.0.3
-idna==3.7
-itsdangerous==2.2.0
-Jinja2==3.1.4
-jsonpath==0.82.2
-MarkupSafe==2.1.5
-mysql-connector-python==8.4.0
-mysqlclient==2.2.4
-pycparser==2.22
-PyMySQL==1.1.0
-requests==2.32.2
-SQLAlchemy==2.0.30
-typing_extensions==4.11.0
-urllib3==2.2.1
-websocket-client==1.8.0
-Werkzeug==3.0.3
-zope.event==5.0
-zope.interface==6.4.post2
-```
-
-2.构建镜像，**请确保Dockerfile**在当前目录下，然后执行如下命令
-
-```shell
-docker build -t ai_project_flask:0.0.1 -f Dockerfile .
-```
-
-注意，请确保容器中的端口同DockerFile中暴露的端口一致，同时，**尤其检查Dockerfile中的`CMD`，查看其中的端口是否一致**
-
-3.运行容器
-
-可以使用`docker images`检查镜像是否成功构建。接着，执行如下命令，运行容器。
-
-```shell
-docker run -p 8080:8080 --name=ai_project_flask -d ai_project_flask:0.0.1
-```
-
-这里的`-p`为端口映射，参数左边宿主机端口，右边容器端口，容器端口**和用户构建镜像时设置的暴露端口一致**
-
-4.运行数据库依赖
-
-首先拉取mysql的镜像 版本latest即可
-
-```shell
-docker pull mysql
-```
-
-接着运行mysql容器
-
-```shell
-docker run -p 8081:3306 \
--e MYSQL_ROOT_PASSWORD=123456 \
---name=db \
---restart=always \
--d mysql:latest
-```
-
-5.配置数据库表
-
-推荐使用`dbeaver`远程连接数据库，或者在交互模式中，创建数据库`User`，按照下面的`sql`语句在其中新建一个user表
-
-```sql
-CREATE TABLE user (
-    Id VARCHAR(50) PRIMARY KEY NOT NULL ,
-    UserName VARCHAR(50) NOT NULL ,
-    PassWord VARCHAR(50) NOT NULL ,
-    Tokens INTEGER ,
-    Email VARCHAR(50) NOT NULL ,
-    PicTimes INTEGER DEFAULT 0
-);
-```
-
 ## 接口说明 :mag_right:
 
-### 用户鉴权相关
+### 公共返回值
 
----
+| 参数名  | 类型            | 描述          |
+|------|---------------|-------------|
+| code | string/number | 状态码         |
+| msg  | string        | 接口状态的具体描述信息 |
 
-参数说明
+### 请求参数一览
 
-| 参数名      | 类型          | 描述                |
-|----------|-------------|-------------------|
-| username | string      | 用户名               |
-| password | string      | 用户密码              |
-| email    | string      | 用户邮箱              |
-| code     | int, string | 状态码               |
-| msg      | string      | 描述状态的具体信息         |
-| uuid     | string      | 用户唯一id标识          |
-| tokens   | int         | 用户可用的token        |
-| picTimes | int         | 用户可调用的图片识别文字模型的次数 |
----
+| 参数名      | 类型           | 描述      |
+|----------|--------------|---------|
+| username | string       | 用户名     |
+| password | string       | 用户密码    |
+| email    | string       | 用户邮箱    |
+| academy  | string       | 用户所属学院  |
+| admin    | string       | 管理员名称   |
+| dialog   | List[object] | 发送的消息对话 |
 
-#### 注册接口
+### 返回参数一览
 
-*请求地址* 
+| 参数名           | 类型     | 描述             |
+|---------------|--------|----------------|
+| uuid          | string | 用户id           |
+| content       | string | 大模型回复消息        |
+| tokens        | number | 用户剩余token数     |
+| picTimes      | number | 用户剩余文字识别模型使用次数 |
+| access_token  | string | 管理员jwt令牌       |
+| refresh_token | string | 管理员刷新jwt令牌     |
+| api_id        | string | 实例id           |
+| api_key       | string | 实例秘钥           |
+| api_secret    | string | 实例秘钥           |
 
-    http://host:port/auth/register
+### 鉴权相关接口
 
-*请求方式* 
-        
-    POST
+#### 用户注册接口 /auth/register
 
-*请求头* 
+请求方式 POST
 
-    无要求
+请求头
 
-*请求体* 格式为json
+> Content-type: application/json
+
+请求体 json
+
 ```json
+
 {
   "username": "xxx",
   "password": "xxx",
-  "email": "xxx"
+  "email": "xxx",
+  "academy": "xxx"
 }
+
 ```
 
-*响应体* 格式为json
+响应体 json
+
 ```json
+
 {
-  "code": 0,
-  "msg": "xxx"
+  "code": 0, 
+  "msg": "用户注册成功"
 }
+
 ```
+
+#### 用户登录接口 /auth/login
 
 ---
 
-#### 登录接口
+请求方式 POST
 
-*请求地址* 
+请求头
 
-    http://host:port/auth/login
+> Content-type: application/json
 
-*请求方式* 
+请求体 json
 
-    POST
-
-*请求头*
-
-    无要求
-
-*请求体* 格式为json
 ```json
+
 {
   "username": "xxx",
   "password": "xxx"
 }
+
 ```
 
-*响应体* 格式为json
-
-登录成功会返回用户的所有信息(包括用户id和uuid等信息) **登录失败则不返回**
+响应体 json
 
 ```json
+
 {
   "code": 0,
   "msg": "xxx",
   "uuid": "xxx",
-  "tokens": 0,
-  "picTimes": 0
+  "username": "xxx",
+  "tokens": 0, # any number
+  "picTimes": 0 # any number
 }
+
 ```
 
----
-
-### 大模型调用相关
+#### 管理员登录接口 /admin/login
 
 ---
 
-参数说明
+请求方式 POST
 
-| 参数名           | 类型     | 描述                       |
-|---------------|--------|--------------------------|
-| dialog        | array  | 文本大模型的历史对话消息，严格按示例中的格式发送 |
-| content       | string | 接口识别成功时返回处理消息            |
-| consume_token | int    | 单次会话所消耗的token数           |
+请求头
+
+> Content-type: application/json
+
+请求体 json
+
+```json
+
+{
+  "admin": "xxx",
+  "password": "xxx"
+}
+
+```
+
+响应体 json
+
+```json
+
+{
+  "access_token": "xxx",
+  "refresh_token": "xxx",
+  "app_info": {
+    "app_id": "xxx",
+    "api_key": "xxx",
+    "api_secret": "xxx"
+  },
+  "code": 0,
+  "msg": "管理员登录成功"
+}
+
+```
+
+#### 刷新令牌接口 /admin/refresh
 
 ---
 
-#### 文本模型接口 (非流式)
+请求方式 GET
 
-*请求地址*
+请求头
 
-    http://host:port/textModel/chat
+> Content-Type: application/json, <br>
+  Authorization: Bearer your access_token
 
-*请求方式*
+响应体 json
 
-    POST
+```json
 
-*请求头*
+{
+  "access_token": "xxx",
+  "code": 0,
+  "msg": "刷新令牌成功"
+}
 
-    无要求
+```
 
-*请求体* 格式为json
+### 大模型相关接口
 
-```text
+#### 文本大模型非流式接口 /textModel/chat
+
+---
+
+请求方式 POST
+
+请求头
+
+> Content-Type: application/json,
+
+请求体 json
+
+```json
 
 {
   "uuid": "xxx",
   "username": "xxx",
-  "dialog": [{"role": "system", "content": "query text"},
+  "dialog": [
+    {"role": "system", "content": "query text"},
     {"role": "user", "content": "query text"},
-    {"role": "assistant", "content": "response text"},
-    ...]
+    {"role": "assistant", "content": "response text"}
+  ]
 }
 
 ```
 
-*响应体* 格式为json
+响应体 json
+
+```json
+
+{
+  "code": 0,
+  "msg": "文本大模型回复成功",
+  "content": "xxx",
+  "consume_token": 0 # any number
+}
+
+```
+
+#### 文本大模型流式接口 /textModel/stream
+
+---
+
+请求方式 POST
+
+请求头 
+
+> Content-Type: application/json,
+
+请求体 json
+
+```json
+
+{
+    "uuid": 0,
+    "username": "xxx",
+    "dialog": [
+      {"role": "system", "content": "query text"},
+      {"role": "user", "content": "query text"},
+      {"role": "assistant", "content": "response text"}
+    ]
+}
+
+```
+
+响应体 
+
+> 参考 [讯飞大模型流式接口](https://www.xfyun.cn/doc/spark/Web.html#_1-接口说明)
+
+#### 语言识别模型接口 /voiceModel/chat
+
+---
+
+请求方式 POST
+
+请求体 二进制文件 格式为pcm
+
+响应体 json
 
 ```json
 
 {
     "code": 0,
-    "consume_token": 43,
-    "content": "您好，我是科大讯飞研发的认知智能大模型，我的名字叫讯飞星火认知大模型。我可以和人类进行自然交流，解答问题，高效完成各领域认知智能需求。"
+    "msg": "请求成功",
+    "content": "xxx"
 }
 
 ```
-    
+
+#### 图片识别文字接口 /PictureToTextModel/chat
+
 ---
 
-#### 文本模型接口 (流式 推荐)
+请求方式 POST
 
-*请求地址*
+请求头 
 
-    http://host:port/textModel/stream
+> uuid: xxx,<br>
+  username: xxx
 
-*请求头*
+响应体 json
 
-    无要求
+```json
 
-*请求体* 格式为json
-
-    内容同非流式接口一致
-
-*响应体* 格式为json
-
-内容同讯飞星火文本大模型流式接口一致 具体可看 [星火文本大模型流式返回数据示例](https://www.xfyun.cn/doc/spark/Web.html#_1-4-%E6%8E%A5%E5%8F%A3%E5%93%8D%E5%BA%94)
-
-```text
-
-# 接口为流式返回，此示例为最后一次返回结果，开发者需要将接口多次返回的结果进行拼接展示
 {
-    "header":{
-        "code":0,
-        "message":"Success",
-        "sid":"cht000cb087@dx18793cd421fb894542",
-        "status":2
+  "code": 0,
+  "msg": "请求成功",
+  "content": "xxx"
+}
+
+```
+
+### 后台管理相关接口
+
+#### 控制台测试接口 /admin/console_test
+
+---
+
+请求方式 POST
+
+请求头
+
+> Content-Type: application/json, <br>
+  Authorization: Bearer your access_token
+
+请求体
+
+```json
+
+{
+  "dialog": [
+    {
+      "role": "system",
+      "content": "query text"
     },
-    "payload":{
-        "choices":{
-            "status":2,
-            "seq":0,
-            "text":[
-                {
-                    "content":"我可以帮助你的吗？",
-                    "role":"assistant",
-                    "index":0
-                }
-            ]
-        },
-        "usage":{
-            "text":{
-                "question_tokens":4,
-                "prompt_tokens":5,
-                "completion_tokens":9,
-                "total_tokens":14
-            }
-        }
+    {
+      "role": "user",
+      "content": "query text"
+    },
+    {
+      "role": "assistant",
+      "content": "response text"
     }
+  ],
+  "limit": 100,
+  "top_k": 2,
+  "temperature": 1
 }
 
 ```
+
+响应体 json
+
+```json
+
+{
+  "content": "xxx",
+  "consume_token": 0,
+  "code": 0,
+  "msg": "文本模型回复成功"
+}
+
+```
+
+#### 添加普通用户接口 /admin/add_normal_user
 
 ---
 
-#### 语音识别模型接口
+请求方式 POST
 
-*请求地址*
+请求头
 
-    http://host:port/voiceModel/chat
+> Content-Type: application/json, <br>
+  Authorization: Bearer your access_token
 
-*请求方式*
+请求体 json
 
-    POST
+```json
 
-*请求头*
+{
+  "username": "xxx",
+  "password": "xxx",
+  "tokens": 0,
+  "email": "xxx",
+  "pictimes": 0,
+  "academy": "xxx"
+}
 
-    无要求
+```
 
-*请求体* 
-
-    二进制pcm文件
-
-*响应体* 格式为json 
-
-识别成功返回content **失败则不返回content**
+响应体 json
 
 ```json
 
 {
   "code": 0,
-  "content": "xxx"
+  "msg": "添加用户成功"
 }
 
 ```
-    
 
-#### 图片识别文字接口
+#### 修改用户信息接口 /admin/modify_normal_user
 
-*请求地址*
+---
 
-    http://host:port/PictureToTextModel/chat
+请求方式 POST
 
-*请求方式*
+请求头
 
-    POST
+> Content-Type: application/json, <br>
+  Authorization: Bearer your access_token
 
-*请求头* 必须包含以下参数 否则**无法获取到接口返回的内容**
-
-```text
-
-"uuid": "xxx"
-"username": "xxx"
-
-```
-
-*请求体*
-
-    二进制jpg或者jpeg文件
-
-*响应体* 格式为json
-
-识别成功返回content **失败则不返回content**
+请求体 json
 
 ```json
+
+{
+  "target_user": "xxx",
+  "new_user_info": {
+    "new_username": "xxx",
+    "new_tokens": 1,
+    "new_password": "xxx",
+    "new_email": "xxx",
+    "new_pictimes": 1,
+    "new_academy": "xxx"
+  }
+}
+
+```
+
+响应体 json
+
+```json
+
 {
   "code": 0,
-  "content": "xxx"
+  "msg": "修改用户信息成功"
 }
+
 ```
+
+#### 删除用户接口 /admin/delete_normal_user
+
+---
+
+请求方式 POST
+
+请求头
+
+> Content-Type: application/json, <br>
+  Authorization: Bearer your access_token
+
+请求体 json
+
+```json
+
+{
+  "target_username": "xxx"
+}
+
+```
+
+响应体 json
+
+```json
+
+{
+  "code": 0,
+  "msg": "xxx用户删除成功"
+}
+
+```
+
+#### 添加管理员用户接口 /admin/add_admin
+
+---
+
+请求方式 POST
+
+请求头
+
+> Content-Type: application/json, <br>
+  Authorization: Bearer your access_token
+
+请求体 json
+
+```json
+
+{
+  "admin": "xxx",
+  "password": "xxx"
+}
+
+```
+
+响应体 json
+
+```json
+
+{
+  "code": 0,
+  "msg": "添加管理员成功"
+}
+
+```
+
+#### 修改管理员用户信息接口 /admin/modify_admin
+
+---
+
+请求方式 POST
+
+请求头
+
+> Content-Type: application/json, <br>
+  Authorization: Bearer your access_token
+
+请求体 json
+
+```json
+
+{
+  "target_admin": "xxx",
+  "new_name": "xxx",
+  "new_password": "xxx"
+}
+
+```
+
+响应体 json
+
+```json
+
+{
+  "code": 0,
+  "msg": "修改用户信息成功"
+}
+
+```
+
+#### 修改管理员用户信息接口 /admin/modify_admin
+
+---
+
+请求方式 POST
+
+请求头
+
+> Content-Type: application/json, <br>
+  Authorization: Bearer your access_token
+
+请求体 json
+
+```json
+
+{
+  "target_admin": "xxx",
+  "new_name": "xxx",
+  "new_password": "xxx"
+}
+
+```
+
+响应体 json
+
+```json
+
+{
+  "code": 0,
+  "msg": "修改用户信息成功"
+}
+
+```
+
+#### 删除管理员接口 /admin/delete_admin
+
+---
+
+请求方式 POST
+
+请求头
+
+> Content-Type: application/json, <br>
+  Authorization: Bearer your access_token
+
+请求体 json
+
+```json
+
+{
+  "target_admin": "xxx"
+}
+
+```
+
+响应体 json
+
+```json
+
+{
+  "code": 0,
+  "msg": "xxx 删除成功"
+}
+
+```
+
+#### 添加令牌接口 /admin/add_token
+
+---
+
+请求方式 POST
+
+请求头
+
+> Content-Type: application/json, <br>
+  Authorization: Bearer your access_token
+
+请求体 json
+
+```json
+
+{
+  "token_name": "xxx",
+  "token_limit": "xxx",
+  "token_range": "xxx"
+}
+
+```
+
+响应体 json
+
+```json
+
+{
+  "code": 0,
+  "msg": "创建令牌成功"
+}
+
+```
+
+#### 修改令牌消息接口 /admin/modify_token
+
+---
+
+请求方式 POST
+
+请求头
+
+> Content-Type: application/json, <br>
+  Authorization: Bearer your access_token
+
+请求体 json
+
+```json
+
+{
+  "target_token": "xxx",
+  "new_token_limit": {
+    "new_token_range": "xxx",
+    "new_token_is_available": 1
+  }
+}
+
+```
+
+响应体 json
+
+```json
+
+{
+  "code": 0,
+  "msg": "令牌修改成功"
+}
+
+```
+
+#### 删除令牌接口 /admin/delete_token
+
+---
+
+请求方式 POST
+
+请求头
+
+> Content-Type: application/json, <br>
+  Authorization: Bearer your access_token
+
+请求体 json
+
+```json
+
+{
+  "target_token": "xxx"
+}
+
+```
+
+响应体 json
+
+```json
+
+{
+  "code": 0,
+  "msg": "xxx 删除成功"
+}
+
+```
+
+#### 禁用/启用令牌接口 /admin/control_token?is_available=1&token_name=xxx
+
+---
+
+请求方式 GET
+
+请求头
+
+> Content-Type: application/json, <br>
+  Authorization: Bearer your access_token
+
+响应体 json
+
+```json
+
+{
+  "code": 0,
+  "msg": "xxx 启用/禁用成功"
+}
+
+```
+
+#### 根据指定范围查询表接口 /admin/query_table?table=xxx&query_range=1&start=0
+
+---
+
+请求方式 GET
+
+请求头
+
+> Content-Type: application/json, <br>
+  Authorization: Bearer your access_token
+
+响应体 json
+
+```json
+
+{
+  "code": 0,
+  "msg": "查询 xxx 条信息成功",
+  "data": [] # List[object]
+}
+
+```
+
+#### 根据指定范围查询表中数据的总数接口 /admin/query_table_count?table=xxx
+
+---
+
+请求方式 GET
+
+请求头
+
+> Content-Type: application/json, <br>
+  Authorization: Bearer your access_token
+
+响应体 json
+
+```json
+
+{
+  "code": 0,
+  "msg": "查询 xxx 条信息成功",
+  "total_count": 0
+}
+
+```
+
+#### 查询指定表中的指定数据接口 /admin/query_table_data?table=xxx&target_name=xxx
+
+---
+
+请求方式 GET
+
+请求头
+
+> Content-Type: application/json, <br>
+  Authorization: Bearer your access_token
+
+响应体 json
+
+```json
+
+{
+  "code": 0,
+  "msg": "查询 xxx 成功",
+  "data": {...}
+}
+
+```
+
+#### 删除令牌接口 /admin/delete_token
+
+---
+
+请求方式 POST
+
+请求头
+
+> Content-Type: application/json
+
+请求体 json
+
+```json
+
+{
+  "token_id": "xxx", # 令牌id
+  "user_id": "xxx", # 用户id
+  "user_academy": "xxx" # 用户所属学院
+}
+
+```
+
+响应体 json
+
+```json
+
+{
+  "code": 0,
+  "msg": "兑换令牌成功"
+}
+
+```
+
