@@ -18,7 +18,7 @@
 
 ## 特别鸣谢
 
-[![](https://github.com/joana123123/AiProject/blob/main/Assets/image/xunfei_logo.png?raw=true)](https://xinghuo.xfyun.cn/)
+[![](https://github.com/thetheorange/AiProject/blob/main/Assets/image/xunfei_logo.png)](https://xinghuo.xfyun.cn/)
 
 
 ## 项目架构  :bookmark_tabs:
@@ -177,8 +177,8 @@
 
 
 ##  使用剪影 :sparkler: 
- <img alt="using_cut_photo" src="https://github.com/joana123123/AiProject/blob/main/Assets/image/using_cut_photo.jpg?raw=true">
-<img alt="using_cut_photo" src="https://github.com/joana123123/AiProject/blob/main/Assets/image/using_cut_photo2.jpg?raw=true">
+ <img alt="using_cut_photo" src="https://github.com/thetheorange/AiProject/blob/main/Assets/image/using_cut_photo.jpg">
+<img alt="using_cut_photo" src="https://github.com/thetheorange/AiProject/blob/main/Assets/image/using_cut_photo2.jpg">
 
 ## Contributor :bow:
 [@thetheorange](https://github.com/thetheorange)
