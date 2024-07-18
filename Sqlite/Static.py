@@ -13,6 +13,7 @@ class Static:
     logining: bool = False
     sql_account_id: int = -1
     sql_dialogue_id: int = -1
+    mark_describe: str = ""
 
 
 static = Static()
