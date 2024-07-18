@@ -6,8 +6,8 @@ Misaka-xxw: 记得改打开文件的路径为Aiproject！
 """
 import json
 import sys
-import requests
 
+import requests
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QWidget, QAction, QLabel, QHBoxLayout, QListWidgetItem, QFrame, QApplication
@@ -16,12 +16,14 @@ from qfluentwidgets import ToolTipFilter, PushButton, Icon, FluentIcon, ToolTipP
     SubtitleLabel, ListWidget, PlainTextEdit, SearchLineEdit, MessageBox, InfoBar, InfoBarPosition
 
 from Core.Tools.AudioRecorder import AudioRecorder
+from Core.Tools.AudiotoText import AudiotoText
+from Core.Tools.ImageToText import ImageToText
 from Sqlite.ChatSql import ChatSql
+from Sqlite.ChatSql import SenderType, SendType
 from Sqlite.Static import static
 from Views.FileWindow import FileWindow
 from Views.GlobalSignal import global_signal
 from Views.MessageBubble import MessageBubble
-
 
 
 class ChatLineWidget(QWidget):
@@ -316,14 +318,25 @@ class ChatSessionWindow(QWidget):
         """
         self.dialog = [{"role": "system", "content": static.mark_describe}]
 
-    def text_bubble(self, text: str = "", avatar_path: str = "../Assets/image/logo.png", is_sender: bool = True):
+    def init_message(self):
+        """
+        对话刚开始时，从本地数据库调取信息
+        """
+        sql = ChatSql()
+        messages = sql.get_messages()
+        for msg in messages:
+            self.show_bubble(msg['info'], is_sender=msg['sender'], variety=msg['type'])
+
+    def show_bubble(self, text: str = "", avatar_path: str = "../Assets/image/logo.png", is_sender: bool = True,
+                    variety: str = "text"):
         """
         气泡的发送
         :param text:发送文本
         :param avatar_path:发送者头像路径
         :param is_sender:发送者是用户/ai
+        :param variety:text/image
         """
-        bubble = MessageBubble(text, avatar_path, is_sender=is_sender)
+        bubble = MessageBubble(text, avatar_path, is_sender=is_sender, variety=variety)
 
         # 创建一个 QListWidgetItem 并设置其大小提示
         item = QListWidgetItem(self.ListWidget)
@@ -334,7 +347,7 @@ class ChatSessionWindow(QWidget):
 
         # 滚动到底部以显示最新消息（可选）
         self.ListWidget.scrollToBottom()
-        return bubble
+        # return bubble
 
     def send_button_clicked(self):
         """
@@ -352,7 +365,9 @@ class ChatSessionWindow(QWidget):
                 parent=self
             )
             return
-        self.text_bubble(text)
+        self.show_bubble(text)
+        sql = ChatSql()
+        sql.add_message(SenderType.GPT, SendType.TEXT, text, True)
         # sleep(1)
         self.dialog += [{"role": "user", "content": text}]
         print(self.dialog)
@@ -408,7 +423,8 @@ class ChatSessionWindow(QWidget):
                         pass
                     except Exception as e:
                         print(str(e))
-            self.text_bubble(all_text, is_sender=False)
+            self.show_bubble(all_text, is_sender=False)
+            sql.add_message(SenderType.GPT, SendType.TEXT, all_text, True)
 
     def clear_history(self) -> None:
         """
@@ -438,17 +454,13 @@ class ChatSessionWindow(QWidget):
         else:
             print("yes选中了", img_path)
             is_sender = True  # 假设总是发送者
-            avatar_path = "../Assets/image/logo.png"  # 发送者头像路径
-            bubble = MessageBubble(img_path, avatar_path, is_sender=is_sender, variety="image")
-            # 创建一个 QListWidgetItem 并设置其大小提示
-            item = QListWidgetItem(self.ListWidget)
-            item.setSizeHint(bubble.sizeHint())
-            # 将 MessageBubble 设置为 QListWidgetItem 的 widget
-            self.ListWidget.setItemWidget(item, bubble)
-            # 接口函数实现图片转文字
-            self.img_text(img_path)
-            # 滚动到底部以显示最新消息（可选）
-            self.ListWidget.scrollToBottom()
+            try:
+                self.show_bubble(img_path, is_sender=is_sender, variety="image")
+                self.img_text(img_path)
+                # 滚动到底部以显示最新消息（可选）
+                self.ListWidget.scrollToBottom()
+            except Exception as e:
+                print(str(e))
 
     def upload_audio(self) -> None:
         """
@@ -460,18 +472,8 @@ class ChatSessionWindow(QWidget):
         AudioChoiceWindow(self).exec()
 
     def send_audio_message(self, audio_path: str) -> None:
-        print("send_audio")
-        print(audio_path)
-        is_sender = True  # 假设总是发送者
-        avatar_path = "../Assets/image/logo.png"  # 发送者头像路径
-        bubble = MessageBubble(audio_path, avatar_path, is_sender=is_sender, variety="audio")
-        # 创建一个 QListWidgetItem 并设置其大小提示
-        item = QListWidgetItem(self.ListWidget)
-        item.setSizeHint(bubble.sizeHint())
-        # 将 MessageBubble 设置为 QListWidgetItem 的 widget
-        self.ListWidget.setItemWidget(item, bubble)
-        # 滚动到底部以显示最新消息（可选）
-        self.ListWidget.scrollToBottom()
+        # print("send_audio")
+        self.show_bubble(audio_path, variety="audio")
         # 语音转文字函数
         self.audio_text(audio_path)
 
@@ -479,17 +481,10 @@ class ChatSessionWindow(QWidget):
         """
         图片转文字
         """
-        image_to_text = ImagetoText()
+        image_to_text = ImageToText(self)
         text = image_to_text.img_text(path)
         # print('接口封装测试',text)
-        ai_avatar_path = '../Assets/image/logo.png'
-        is_sender = False
-        bubble = MessageBubble(text, ai_avatar_path, is_sender=is_sender, variety="text")
-        # 创建一个 QListWidgetItem 并设置其大小提示
-        item = QListWidgetItem(self.ListWidget)
-        item.setSizeHint(bubble.sizeHint())
-        # 将 MessageBubble 设置为 QListWidgetItem 的 widget
-        self.ListWidget.setItemWidget(item, bubble)
+        self.show_bubble(text, is_sender=False)
 
     def audio_text(self, path: str):
         audio_to_text = AudiotoText()
@@ -544,7 +539,7 @@ class AudioChoiceWindow(MessageBoxBase):
 
     def send_message(self):
         if self.AudioWindow.path is not None:
-            print("yes选中了")
+            # print("yes选中了")
             global_signal.audio_submitted.emit(self.AudioWindow.path)
 
 

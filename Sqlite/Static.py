@@ -14,6 +14,6 @@ class Static:
     sql_account_id: int = -1
     sql_dialogue_id: int = -1
     mark_describe: str = ""
-
+    avatar_path:str = "../Assets/image/logo.png"
 
 static = Static()

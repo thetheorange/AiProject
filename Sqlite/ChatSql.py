@@ -92,6 +92,13 @@ class Dialogue(Base):
 class Message(Base):
     """
     聊天信息
+    message_id
+    sender
+    send_time
+    send_type
+    send_info
+    send_succeed
+    dialogue_id
     """
     __tablename__ = 'message'
     message_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -387,9 +394,9 @@ class ChatSql:
         :param send_succeed: 发送是否成功
         """
         try:
-            if static.sql_dialogue_id == -1 or static.sql_account_id == -1:
-                print("未登录")
-                return
+            # if static.sql_dialogue_id == -1 or static.sql_account_id == -1:
+            #     print("未登录")
+            #     return
             with self.DB_session() as session:
                 dialogue = session.query(Dialogue).filter_by(dialogue_id=static.sql_dialogue_id).first()
                 if not dialogue:
@@ -435,23 +442,8 @@ class ChatSql:
         except Exception as e:
             app_logger.info(str(e))
 
-    def get_messages(self) -> list:
-        """
-        根据对话id获取消息
-        :return: 消息列表，如果未找到相关对话则返回空列表
-        """
-        try:
-            with self.DB_session() as session:
-                dialogue = session.query(Dialogue).filter_by(dialogue_id=static.sql_dialogue_id).first()
-                if dialogue:
-                    return dialogue.messages
-                else:
-                    return []
-        except Exception as e:
-            app_logger.info(str(e))
-
     # =============================================消息end=============================================
-    def add_mask(self, mask_name: str, mask_describe: str = "", account_id = -1, icon: str = "CHAT"):
+    def add_mask(self, mask_name: str, mask_describe: str = "", account_id=-1, icon: str = "CHAT"):
         """
         增加新的面具
         :param mask_name: 面具名称
@@ -479,25 +471,21 @@ class ChatSql:
         except Exception as e:
             app_logger.info(str(e))
 
-    def get_masks(self, account_id=-1) -> list:
+    def get_masks(self) -> list:
         """
-        :param account_id: id
         :return: 列表
         """
         try:
             result = []
-            if account_id == -1:
-                account_id = static.sql_account_id
-            print("find account ", account_id)
             with self.DB_session() as session:
-                masks = session.query(Mask).filter_by(account_id=account_id).all()
+                masks = session.query(Mask).filter_by(account_id=static.sql_account_id).all()
                 for mask in masks:
                     result.append({
                         'name': mask.mask_name,
-                        'des':mask.mask_describe,
+                        'des': mask.mask_describe,
                         'icon': mask.icon
                     })
-            print("mask list", account_id, result)
+            print("mask list", static.sql_account_id, result)
             return result
         except Exception as e:
             app_logger.info(str(e))
@@ -519,6 +507,31 @@ class ChatSql:
                     print(f"Mask with name {mask_name} not found")
         except Exception as e:
             app_logger.info(str(e))
+
+    def get_messages(self) -> list:
+        """
+        :return: 列表
+        """
+        try:
+            result = []
+            sender_dict = {SenderType.GPT: False, SenderType.USER: True}
+            send_dict = {SendType.TEXT: "text", SendType.IMAGE: "image", SendType.AUDIO: "audio"}
+            with self.DB_session() as session:
+                messages = session.query(Message).filter_by(account_id=static.sql_account_id).all()
+                for msg in messages:
+                    result.append({
+                        "sender": sender_dict[msg.sender],
+                        "time": msg.send_time,
+                        "type": send_dict[msg.send_type],
+                        "info": msg.send_info,
+                        "succeed": msg.send_succeed,
+                    })
+            print("message list", static.sql_account_id, result)
+            return result
+        except Exception as e:
+            app_logger.info(str(e))
+            print(str(e))
+            return []
 
     # =============================================对话与面具end=============================================
     def __format__(self, format_spec: str) -> str:

@@ -1,12 +1,14 @@
 import requests
 from PyQt5.QtCore import Qt
 from qfluentwidgets import InfoBar, InfoBarPosition
+
 from Sqlite.Static import static
 
 
-class ImagetoText(object):
-    def __init__(self):
+class ImageToText(object):
+    def __init__(self, parent):
         super().__init__()
+        self.parent = parent
 
     def img_text(self, path: str):
         """
@@ -25,7 +27,7 @@ class ImagetoText(object):
                 isClosable=True,
                 position=InfoBarPosition.BOTTOM_RIGHT,
                 duration=1000,
-                parent=self
+                parent=self.parent
             )
         else:
             for i in range(2):
@@ -43,19 +45,20 @@ class ImagetoText(object):
                     # print(requests.json())
                     if r.status_code == 200:
                         response_data = r.json()
+                        print(r.json())
                         code = response_data.get("code", None)
                         text = response_data.get("content", None)
                         print(code, text)
 
                         if code != 0:
                             InfoBar.error(
-                                title="图转文",
-                                content="识别失败",
+                                title="识别失败",
+                                content=r.json()['msg'],
                                 orient=Qt.Vertical,
                                 isClosable=True,
                                 position=InfoBarPosition.BOTTOM_RIGHT,
                                 duration=1000,
-                                parent=self
+                                parent=self.parent
                             )
                         else:
                             print(text)
@@ -69,10 +72,14 @@ class ImagetoText(object):
                             isClosable=True,
                             position=InfoBarPosition.BOTTOM_RIGHT,
                             duration=1000,
-                            parent=self
+                            parent=self.parent
                         )
                 except requests.RequestException as e:
                     print(f"请求错误: {e}")
                     if i == 1:  # 如果第二次也失败了，可以考虑抛出异常或进行其他处理
-                        raise
+                        pass
+                        # raise
         return None
+
+
+convert2jpg(r"C:\Users\xwwy\Desktop\5b6635a4-7a2c-4dbc-a08e-58be8adf2b95.png")
