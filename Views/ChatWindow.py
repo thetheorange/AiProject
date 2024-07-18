@@ -6,8 +6,8 @@ Misaka-xxw: 记得改打开文件的路径为Aiproject！
 """
 import json
 import sys
-
 import requests
+
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QWidget, QAction, QLabel, QHBoxLayout, QListWidgetItem, QFrame, QApplication
@@ -21,6 +21,7 @@ from Sqlite.Static import static
 from Views.FileWindow import FileWindow
 from Views.GlobalSignal import global_signal
 from Views.MessageBubble import MessageBubble
+
 
 
 class ChatLineWidget(QWidget):
@@ -444,6 +445,8 @@ class ChatSessionWindow(QWidget):
             item.setSizeHint(bubble.sizeHint())
             # 将 MessageBubble 设置为 QListWidgetItem 的 widget
             self.ListWidget.setItemWidget(item, bubble)
+            # 接口函数实现图片转文字
+            self.img_text(img_path)
             # 滚动到底部以显示最新消息（可选）
             self.ListWidget.scrollToBottom()
 
@@ -469,6 +472,37 @@ class ChatSessionWindow(QWidget):
         self.ListWidget.setItemWidget(item, bubble)
         # 滚动到底部以显示最新消息（可选）
         self.ListWidget.scrollToBottom()
+        # 语音转文字函数
+        self.audio_text(audio_path)
+
+    def img_text(self, path: str):
+        """
+        图片转文字
+        """
+        image_to_text = ImagetoText()
+        text = image_to_text.img_text(path)
+        # print('接口封装测试',text)
+        ai_avatar_path = '../Assets/image/logo.png'
+        is_sender = False
+        bubble = MessageBubble(text, ai_avatar_path, is_sender=is_sender, variety="text")
+        # 创建一个 QListWidgetItem 并设置其大小提示
+        item = QListWidgetItem(self.ListWidget)
+        item.setSizeHint(bubble.sizeHint())
+        # 将 MessageBubble 设置为 QListWidgetItem 的 widget
+        self.ListWidget.setItemWidget(item, bubble)
+
+    def audio_text(self, path: str):
+        audio_to_text = AudiotoText()
+        text = audio_to_text.audio_text(path)
+        # print('接口封装测试', text)
+        ai_avatar_path = '../Assets/image/logo.png'
+        is_sender = False
+        bubble = MessageBubble(text, ai_avatar_path, is_sender=is_sender, variety="text")
+        # 创建一个 QListWidgetItem 并设置其大小提示
+        item = QListWidgetItem(self.ListWidget)
+        item.setSizeHint(bubble.sizeHint())
+        # 将 MessageBubble 设置为 QListWidgetItem 的 widget
+        self.ListWidget.setItemWidget(item, bubble)
 
 
 class AudioChoiceWindow(MessageBoxBase):

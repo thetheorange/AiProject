@@ -4,14 +4,17 @@ Des 面具相关界面
 Time 2024/6/14
 """
 import sys
+
 from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtWidgets import QHBoxLayout, QListWidgetItem
-from PyQt5.uic import loadUi
-from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QApplication
-from qfluentwidgets import PushButton, ToolTipFilter, ToolTipPosition, MessageBoxBase, \
-    LineEdit, PlainTextEdit, ListWidget, SearchLineEdit, MessageBox
+from PyQt5.QtWidgets import QHBoxLayout, QListWidgetItem
+from PyQt5.QtWidgets import QWidget
+from PyQt5.uic import loadUi
 from qfluentwidgets import FluentIcon
+from qfluentwidgets import PushButton, ToolTipFilter, ToolTipPosition, MessageBoxBase, \
+    LineEdit, PlainTextEdit, ListWidget, SearchLineEdit, MessageBox, ToolButton
+
+from Sqlite.ChatSql import ChatSql
 from Views.GlobalSignal import global_signal
 
 
@@ -50,7 +53,9 @@ class MaskSubSettingWindow(MessageBoxBase):
         mask_des = self.mask_des_input.toPlainText()
         data = {
             'name': mask_name,
-            'icon': icon
+            'icon': icon,
+            'des': mask_des,
+            'signal': 'add'
         }
         print(data)
         # 发射全局信号
@@ -58,24 +63,39 @@ class MaskSubSettingWindow(MessageBoxBase):
 
 
 class MaskWidget(QWidget):
-    '''
+    """
     每行面具样式
-    '''
+    """
 
     def __init__(self, text, icon, parent=None):
         super(MaskWidget, self).__init__(parent)
         # 创建一个水平布局
         layout = QHBoxLayout()
-        # 创建一个标签和一个按钮
-        # self.label = QLabel()
-        self.button = PushButton(icon, text)
-        self.button.clicked.connect(self.start_chat)
+        # 点击即开始聊天
+        self.mask_name = text
+        self.mask_icon = icon
+        self.chat_button = PushButton(icon, self.mask_name)
+        self.chat_button.clicked.connect(self.start_chat)
         global_signal.ChatOperation_Mask.connect(self.__handle_chat_signal2)
+        # 创建一个删除按钮
+        self.delete_button = ToolButton(FluentIcon.DELETE)
+        self.delete_button.clicked.connect(self.delete_mask)
         # 将标签和按钮添加到布局中
         # layout.addWidget(self.label)
-        layout.addWidget(self.button)
+        layout.addWidget(self.chat_button)
+        layout.addWidget(self.delete_button)
+
         # 设置自定义小部件的布局
         self.setLayout(layout)
+
+    def delete_mask(self) -> None:
+        data = {
+            'name': self.mask_name,
+            'icon': self.mask_icon,
+            'des': '',
+            'signal': 'delete'
+        }
+        global_signal.mask_submitted.emit(data)
 
     def start_chat(self) -> None:
         """
@@ -116,16 +136,10 @@ class MaskSettingWindow(QWidget):
         self.mask_info: ListWidget
         # =============================================基础设置end=============================================
         # =============================================每行mask设置begin=============================================
-        self.data_and_icons = [("机器学习", FluentIcon.ROBOT), ("英语写作", FluentIcon.CHAT),
-                               ("小红书写手", FluentIcon.BOOK_SHELF), ("数学物理", FluentIcon.CALENDAR)]
-        for text, icon_name in self.data_and_icons:
-            data = {
-                'name': text,
-                'icon': icon_name
-            }
-            self.add_mask_list(data)
+        # 更新本地数据库
+        self.sql = ChatSql()
+        global_signal.mask_submitted.connect(self.add_or_delete_mask_list)
 
-        global_signal.mask_submitted.connect(self.add_mask_list)
         # global_signal.ChatOperation.connect(self.test)
         # =============================================每行mask设置end=============================================
         # =============================================搜索设置begin=============================================
@@ -135,8 +149,7 @@ class MaskSettingWindow(QWidget):
 
     def find_text_in_list(self, text):
         """
-        在给定的数据列表中查找文本。
-
+        在给定的数据列表中查找文本。暂时不用
         :param text: 要查找的文本。
         :return: 如果找到文本，则返回1；否则返回0。
         """
@@ -151,13 +164,14 @@ class MaskSettingWindow(QWidget):
         """
         点击搜索框触发函数
         """
+
         cur_text = self.search_mask.text()
         print(cur_text)
-        flag = self.find_text_in_list(cur_text)
+        flag = self.sql.get_mask(cur_text)
         self.show_dialog(flag, cur_text)
 
     def show_dialog(self, flag: bool, name: str):
-        if flag:
+        if flag is not None:
             title = '"' + name + '"' + '面具存在，开始对话？'
             content = """"""
             w = MessageBox(title, content, self)
@@ -180,19 +194,43 @@ class MaskSettingWindow(QWidget):
         """
         global_signal.ChatOperation_Mask.emit("start_chat")
 
-    def add_mask_list(self, data):
+    def update_masks(self):
+        sql = ChatSql()
+        datadict = sql.get_masks()
+        for data in datadict:
+            self.add_or_delete_mask_list(
+                {'signal': 'add', 'name': data['name'], 'des': data['des'], 'icon': eval(f"FluentIcon.{data['icon']}")})
+
+    def add_or_delete_mask_list(self, data):
+        signal = data.get('signal')
         name = data.get('name')
         icon = data.get('icon')
-        item = QListWidgetItem(self.mask_info)
-        # self.data_and_icons.append((name,icon))
-        # 创建CustomWidget实例，这里我们传递文本和一个模拟的图标名（实际实现可能需要调整）
-        custom_widget = MaskWidget(name, icon)
+        des = data.get('des')
+        if signal == 'add':
+            print(name, icon, des)
+            # 更新本地数据库
+            self.sql.add_mask(name, mask_describe=des, icon=icon)
+            # 发送全局信号
+            # global_signal.ChatOperation.emit("close_login_success")
+            item = QListWidgetItem(self.mask_info)
+            # self.data_and_icons.append((name,icon))
+            # 创建CustomWidget实例，这里我们传递文本和一个模拟的图标名（实际实现可能需要调整）
+            custom_widget = MaskWidget(name, icon)
 
-        # 设置item的大小提示为custom_widget的大小提示
-        item.setSizeHint(custom_widget.sizeHint())
+            # 设置item的大小提示为custom_widget的大小提示
+            item.setSizeHint(custom_widget.sizeHint())
 
-        # 将custom_widget设置为item的widget
-        self.mask_info.setItemWidget(item, custom_widget)
+            # 将custom_widget设置为item的widget
+            self.mask_info.setItemWidget(item, custom_widget)
+        else:
+            print('delete')
+            item = self.mask_info.currentItem()
+            if item:
+                # print(item)
+                row = self.mask_info.row(item)
+                # print(row)
+                self.mask_info.takeItem(row)
+            self.sql.delete_mask(name)
 
 
 if __name__ == "__main__":
