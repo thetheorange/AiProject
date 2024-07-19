@@ -5,7 +5,6 @@ Time 2024/6/14
 """
 import sys
 import time
-
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QWidget

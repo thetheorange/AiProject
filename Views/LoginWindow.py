@@ -204,6 +204,9 @@ class LoginWindow(BaseWindow):
                     sql = ChatSql()
                     sql.add_account(user_name, user_pwd, auto_fill=self.remember_password_button.isChecked())
                     sleep(0.5)
+                    account = sql.get_account(user_name)
+                    if account:
+                        static.academy = account.academy
                     global_signal.ChatOperation.emit("close_login_success")
                 break
             # time.sleep(0.1)

@@ -19,6 +19,7 @@ from qfluentwidgets import Dialog, InfoBar, InfoBarPosition
 
 from Core.Tools.generate_captcha import Captcha
 from Core.Tools.readQss import ReadQss
+from Sqlite.ChatSql import ChatSql
 
 
 class RegisterWindow(QWidget):
@@ -170,6 +171,8 @@ class RegisterWindow(QWidget):
                         duration=1000,
                         parent=self
                     )
+                    sql=ChatSql()
+                    sql.add_account(user_name, user_pwd, auto_fill=False,academy=user_academy,email=user_email)
             else:
                 InfoBar.error(
                     title="注册状态",

@@ -223,7 +223,18 @@ class ChatSql:
             app_logger.info(str(e))
             print(str(e))
             return []
-
+    def get_account(self, username: str) -> LoginAccount|None:
+        """
+        账号本地id
+        :param username: 用户名
+        """
+        try:
+            with self.DB_session() as session:
+                account = session.query(LoginAccount).filter_by(username=username).first()
+                return account
+        except Exception as e:
+            app_logger.info(str(e))
+            print(str(e))
     def get_account_id(self, username: str) -> int | None:
         """
         账号本地id
