@@ -15,8 +15,10 @@ class Static:
     logining: bool = False
     sql_account_id: int = -1
     sql_dialogue_id: int = -1
+    mask_name:str = ""
     mark_describe: str = ""
     avatar_path: str = "../Assets/image/logo.png"
+    dialogue_name:str=""
 
     def __init__(self):
         self.data: json
@@ -25,11 +27,12 @@ class Static:
             data = self.data
             self.uuid = data.get('uuid', "0")
             self.username = data.get('username', "未登录")
-            self.academy=data.get('academy',"未填写")
+            self.academy = data.get('academy',"未填写")
             self.tokens = data.get('tokens', 0)
             self.picTimes = data.get('picTimes', 0)
             # self.logining = data.get('logining', False)
             self.sql_account_id = data.get('sql_account_id', -1)
+            self.dialogue_lisi:list=[]
             # self.sql_dialogue_id = data.get('sql_dialogue_id', -1)
             # self.mark_describe = data.get('mark_describe', "")
 

@@ -15,6 +15,7 @@ from qfluentwidgets import PushButton, ToolTipFilter, ToolTipPosition, MessageBo
     LineEdit, PlainTextEdit, ListWidget, SearchLineEdit, MessageBox, ToolButton
 
 from Sqlite.ChatSql import ChatSql
+from Sqlite.Static import static
 from Views.GlobalSignal import global_signal
 
 
@@ -61,6 +62,8 @@ class MaskSubSettingWindow(MessageBoxBase):
             'signal': 'add'
         }
         print(data)
+        sql=ChatSql()
+        # sql.add_mask(data['name'],data['des'])
         # 发射全局信号
         global_signal.mask_submitted.emit(data)
 
@@ -106,6 +109,9 @@ class MaskWidget(QWidget):
         """
         点击面具按钮直接开始会话
         """
+        sql=ChatSql()
+        static.mask_name = self.mask_name
+        static.mark_describe=sql.get_mask_describe(static.mask_name)
         global_signal.ChatOperation_Mask.emit("start_chat")
 
     def __handle_chat_signal2(self, signal: str) -> None:
@@ -113,7 +119,7 @@ class MaskWidget(QWidget):
         处理窗口的信号
         """
         if signal == "start_chat":
-            global_signal.ChatOperation.emit("start_chat")
+            global_signal.ChatOperation.emit("new_chat")
 
     def sizeHint(self):
         # 返回一个建议的大小，布局管理器可能会使用它
