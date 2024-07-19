@@ -138,7 +138,8 @@ class ChatSql:
     # =============================================基础设置end=============================================
 
     # =============================================账户设置start=============================================
-    def add_account(self, username: str, password: str = "", auto_fill: bool = False):
+    def add_account(self, username: str, password: str = "", email: str = "", academy: str = "",
+                    auto_fill: bool = False):
         """
         添加账号，没问题
         :param username: 用户名
@@ -162,7 +163,8 @@ class ChatSql:
                     return
 
                 # 没在本机登录过的
-                account = LoginAccount(username=username, password=password, auto_fill=auto_fill)
+                account = LoginAccount(username=username, password=password, auto_fill=auto_fill, academy=academy,
+                                       email=email)
                 session.add(account)
                 session.commit()
                 account = session.query(LoginAccount).filter_by(username=username).first()
@@ -219,6 +221,22 @@ class ChatSql:
             app_logger.info(str(e))
             print(str(e))
             return []
+
+    def get_account_id(self, username: str) -> int | None:
+        """
+        账号本地id
+        :param username: 用户名
+        """
+        try:
+            with self.DB_session() as session:
+                account = session.query(LoginAccount).filter_by(username=username).first()
+                if account:
+                    return account.id
+                else:
+                    print(f"找不到用户：{username}")
+        except Exception as e:
+            app_logger.info(str(e))
+            print(str(e))
 
     def change_username(self, old_username: str, new_username: str):
         """

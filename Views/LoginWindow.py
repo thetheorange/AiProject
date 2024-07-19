@@ -5,7 +5,7 @@ Time 2024/6/4
 """
 import json
 import sys
-import time
+from time import sleep
 import requests
 from PyQt5.QtCore import Qt, QSize, QEventLoop, QTimer
 from PyQt5.QtGui import QPixmap, QIcon
@@ -15,11 +15,11 @@ from qfluentwidgets import FluentIcon, CommandBar, PushButton, LineEdit, Passwor
     SplashScreen, EditableComboBox, RadioButton
 from qfluentwidgets.common.icon import Icon
 
+from Sqlite.ChatSql import ChatSql
+from Sqlite.Static import static
 from Views.BaseWindow import BaseWindow
 from Views.GlobalSignal import global_signal
 from Views.RegisterWindow import RegisterWindow
-from Sqlite.Static import static
-from Sqlite.ChatSql import ChatSql
 
 
 class LoginWindow(BaseWindow):
@@ -191,9 +191,19 @@ class LoginWindow(BaseWindow):
                     static.username = r.json()['username']
                     static.tokens = r.json()['tokens']
                     static.picTimes = r.json()['picTimes']
+                    static.rewrite('uuid', static.uuid)
+                    static.rewrite('username', static.username)
+                    static.rewrite('tokens', static.tokens)
+                    static.rewrite('picTimes',static.picTimes)
+                    try:
+                        static.academy = r.json()['academy']
+                        static.email = r.json()['email']
+                    except Exception:
+                        pass
                     # 更新本地数据库
                     sql = ChatSql()
                     sql.add_account(user_name, user_pwd, auto_fill=self.remember_password_button.isChecked())
+                    sleep(0.5)
                     global_signal.ChatOperation.emit("close_login_success")
                 break
             # time.sleep(0.1)

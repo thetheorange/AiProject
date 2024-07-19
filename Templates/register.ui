@@ -63,6 +63,13 @@
            </property>
           </widget>
          </item>
+         <item>
+            <widget class="LineEdit" name="academy_input">
+             <property name="placeholderText">
+              <string>学校</string>
+             </property>
+            </widget>
+           </item>
         </layout>
        </item>
        <item>

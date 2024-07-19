@@ -311,6 +311,7 @@ class ChatSessionWindow(QWidget):
         # self.chat_input.returnPressed.connect(self.send_button_clicked)
 
         # =============================================发送按钮设置end=============================================
+        self.init_message()
 
     def update_mask_and_data(self):
         """

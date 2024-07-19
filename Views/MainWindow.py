@@ -13,6 +13,7 @@ from qfluentwidgets import FluentIcon, SplitFluentWindow, \
     NavigationAvatarWidget, NavigationItemPosition
 
 from Sqlite.Static import static
+from Sqlite.ChatSql import ChatSql
 from Views.ChatWindow import ChatSearchWindow, ChatSessionWindow
 from Views.GlobalSignal import global_signal
 from Views.LoginWindow import LoginWindow
@@ -38,6 +39,19 @@ class MainWindow(SplitFluentWindow):
 
         self.__init_navigation()
         self.login_window: QWidget | None = None
+
+        if static.username == "未登录":
+            # 应该隐藏主窗口，调出登录窗口
+            global_signal.ChatOperation.emit("start_login")
+        else:
+            sql = ChatSql()
+            id = sql.get_account_id(static.username)
+            if id is None:
+                global_signal.ChatOperation.emit("start_login")
+            else:
+                static.sql_account_id = id
+                global_signal.ChatOperation.emit("close_login_success")
+
         # self.login_history()
         # =============================================基础设置end=============================================
 
@@ -76,7 +90,7 @@ class MainWindow(SplitFluentWindow):
         # 向导航栏底部添加用户头像
         self.navigationInterface.addWidget(
             routeKey="avatar",
-            widget=NavigationAvatarWidget("thetheorange", "../Assets/image/logo_orange.png"),
+            widget=NavigationAvatarWidget("thetheorange", static.avatar_path),
             position=NavigationItemPosition.BOTTOM
         )
 
@@ -93,6 +107,7 @@ class MainWindow(SplitFluentWindow):
         match signal:
             case "start_login":
                 # 打开登录界面
+                self.hide()
                 self.login_window = LoginWindow()
 
             case "close_login_success":
@@ -129,12 +144,15 @@ class MainWindow(SplitFluentWindow):
                 # self.setWindowTitle(session_name)
             case "start_login":
                 # 打开登录界面
+                self.hide()
                 self.login_window = LoginWindow()
             case "close_login_success":
                 # 成功登录后
                 self.user_info_window.info_show()
                 if self.login_window:
                     self.login_window.close()
+                if not self.isVisible():
+                    self.show()
                 self.chat_search_window.update_dialogues()
                 self.mask_info_window.update_masks()
 
@@ -149,7 +167,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     try:
         w = MainWindow()
-        w.show()
+        # w.show()
     except Exception as e:
         print(str(e))
     sys.exit(app.exec_())

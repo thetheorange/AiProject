@@ -114,6 +114,8 @@ class RegisterWindow(QWidget):
         user_email: str = self.email_input.text()
         # 密码
         user_pwd: str = self.password_input.text()
+        # 学校
+        user_academy: str= self.academy_input.text()
         # 验证码
         input_captcha: str = self.captcha_input.text()
 
@@ -140,7 +142,8 @@ class RegisterWindow(QWidget):
                               data=json.dumps({
                                   "username": user_name,
                                   "password": user_pwd,
-                                  "email": user_email
+                                  "email": user_email,
+                                  "academy":user_academy
                               }))
             print(r.request.body)
             print(r.content.decode())
