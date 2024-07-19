@@ -15,6 +15,7 @@ from qfluentwidgets import PushButton, ToolTipFilter, ToolTipPosition, MessageBo
     LineEdit, PlainTextEdit, ListWidget, SearchLineEdit, MessageBox, ToolButton
 
 from Sqlite.ChatSql import ChatSql
+from Sqlite.Static import static
 from Views.GlobalSignal import global_signal
 
 
@@ -48,16 +49,21 @@ class MaskSubSettingWindow(MessageBoxBase):
         self.yesButton.clicked.connect(self.on_yes_button_clicked)
 
     def on_yes_button_clicked(self):
+        """
+        确认按钮
+        """
         icon = FluentIcon.ROBOT
         mask_name = self.mask_name_input.text()
         mask_des = self.mask_des_input.toPlainText()
         data = {
             'name': mask_name,
-            'icon': icon,
+            'icon': 'ROBOT',
             'des': mask_des,
             'signal': 'add'
         }
         print(data)
+        sql=ChatSql()
+        # sql.add_mask(data['name'],data['des'])
         # 发射全局信号
         global_signal.mask_submitted.emit(data)
 
@@ -73,6 +79,8 @@ class MaskWidget(QWidget):
         layout = QHBoxLayout()
         # 点击即开始聊天
         self.mask_name = text
+        if type(icon) == str:
+            icon = eval(f'FluentIcon.{icon}')
         self.mask_icon = icon
         self.chat_button = PushButton(icon, self.mask_name)
         self.chat_button.clicked.connect(self.start_chat)
@@ -101,6 +109,9 @@ class MaskWidget(QWidget):
         """
         点击面具按钮直接开始会话
         """
+        sql=ChatSql()
+        static.mask_name = self.mask_name
+        static.mark_describe=sql.get_mask_describe(static.mask_name)
         global_signal.ChatOperation_Mask.emit("start_chat")
 
     def __handle_chat_signal2(self, signal: str) -> None:
@@ -108,7 +119,7 @@ class MaskWidget(QWidget):
         处理窗口的信号
         """
         if signal == "start_chat":
-            global_signal.ChatOperation.emit("start_chat")
+            global_signal.ChatOperation.emit("new_chat")
 
     def sizeHint(self):
         # 返回一个建议的大小，布局管理器可能会使用它
@@ -123,7 +134,7 @@ class MaskSettingWindow(QWidget):
 
     def __init__(self):
         super().__init__()
-        loadUi("../Templates/mask_setting.ui", self)
+        loadUi("Templates/mask_setting.ui", self)
         # =============================================基础设置start=============================================
 
         # 新建按钮
@@ -206,6 +217,7 @@ class MaskSettingWindow(QWidget):
         name = data.get('name')
         icon = data.get('icon')
         des = data.get('des')
+        print(data)
         if signal == 'add':
             print(name, icon, des)
             # 更新本地数据库
@@ -224,12 +236,11 @@ class MaskSettingWindow(QWidget):
             self.mask_info.setItemWidget(item, custom_widget)
         else:
             print('delete')
-            item = self.mask_info.currentItem()
-            if item:
-                # print(item)
-                row = self.mask_info.row(item)
-                # print(row)
-                self.mask_info.takeItem(row)
+            for i in range(self.mask_info.count()):  # 遍历列表中的所有项
+                item = self.mask_info.item(i)
+                custom_widget = self.mask_info.itemWidget(item)  # 获取项对应的小部件
+                if custom_widget and custom_widget.mask_name == name:  # 通过小部件中的名称判断是否匹配
+                    self.mask_info.takeItem(i)  # 删除匹配的项
             self.sql.delete_mask(name)
 
 

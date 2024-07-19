@@ -81,5 +81,6 @@ class ImageToText(object):
                         # raise
         return None
 
-
-convert2jpg(r"C:\Users\xwwy\Desktop\5b6635a4-7a2c-4dbc-a08e-58be8adf2b95.png")
+if __name__=='__main__':
+    # convert2jpg(r"C:\Users\xwwy\Desktop\5b6635a4-7a2c-4dbc-a08e-58be8adf2b95.png")
+    ...

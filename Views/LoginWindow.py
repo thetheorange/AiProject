@@ -5,7 +5,7 @@ Time 2024/6/4
 """
 import json
 import sys
-import time
+from time import sleep
 import requests
 from PyQt5.QtCore import Qt, QSize, QEventLoop, QTimer
 from PyQt5.QtGui import QPixmap, QIcon
@@ -15,23 +15,23 @@ from qfluentwidgets import FluentIcon, CommandBar, PushButton, LineEdit, Passwor
     SplashScreen, EditableComboBox, RadioButton
 from qfluentwidgets.common.icon import Icon
 
+from Sqlite.ChatSql import ChatSql
+from Sqlite.Static import static
 from Views.BaseWindow import BaseWindow
 from Views.GlobalSignal import global_signal
 from Views.RegisterWindow import RegisterWindow
-from Sqlite.Static import static
-from Sqlite.ChatSql import ChatSql
 
 
 class LoginWindow(BaseWindow):
 
     def __init__(self):
         super().__init__()
-        loadUi("../Templates/login.ui", self)
+        loadUi("Templates/login.ui", self)
 
         # =============================================基础设置start=============================================
 
         self.setWindowTitle("登录")
-        self.setWindowIcon(QIcon("../Assets/Icons/sign.png"))
+        self.setWindowIcon(QIcon("Assets/Icons/sign.png"))
 
         # 设置登录和注册按钮手势
         self.login_button: PushButton
@@ -46,9 +46,9 @@ class LoginWindow(BaseWindow):
 
         # =============================================图片设置start=============================================
 
-        window_icon: str = "../Assets/Image/logo_orange.png"
-        background_img: str = "../Assets/image/background.jpg"
-        logo_img: str = "../Assets/image/logo.svg"
+        window_icon: str = "Assets/Image/logo_orange.png"
+        background_img: str = "Assets/image/background.jpg"
+        logo_img: str = "Assets/image/logo.svg"
         self.window_icon.setImage(QPixmap(window_icon).scaled(25, 25, Qt.KeepAspectRatio,
                                                               Qt.SmoothTransformation))
         self.banner.setImage(QPixmap(background_img).scaled(400, 400, Qt.KeepAspectRatio,
@@ -191,10 +191,25 @@ class LoginWindow(BaseWindow):
                     static.username = r.json()['username']
                     static.tokens = r.json()['tokens']
                     static.picTimes = r.json()['picTimes']
+                    static.rewrite('uuid', static.uuid)
+                    static.rewrite('username', static.username)
+                    static.rewrite('tokens', static.tokens)
+                    static.rewrite('picTimes',static.picTimes)
+                    try:
+                        static.academy = r.json()['academy']
+                        static.email = r.json()['email']
+                    except Exception:
+                        pass
                     # 更新本地数据库
-                    sql = ChatSql()
-                    sql.add_account(user_name, user_pwd, auto_fill=self.remember_password_button.isChecked())
-                    global_signal.ChatOperation.emit("close_login_success")
+                    try:
+                        sql = ChatSql()
+                        sql.add_account(user_name, user_pwd, auto_fill=self.remember_password_button.isChecked())
+                        sleep(0.5)
+                        print("ok1")
+                        global_signal.ChatOperation.emit("close_login_success")
+                        print("ok2")
+                    except Exception as e:
+                        print(str(e))
                 break
             # time.sleep(0.1)
         if r.status_code != 200:

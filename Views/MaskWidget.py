@@ -22,7 +22,7 @@ class MaskWidget(QWidget):
         # 添加列表项
         for stand in stands:
             item = QListWidgetItem(stand)
-            item.setIcon(QIcon('../Assets/icons/eye.png'))
+            item.setIcon(QIcon('Assets/icons/eye.png'))
             self.listWidget.addItem(item)
         self.hBoxLayout.setContentsMargins(30, 50, 0, 0)
         self.hBoxLayout.addWidget(self.listWidget)

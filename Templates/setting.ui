@@ -146,7 +146,7 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_7">
             <item>
-             <widget class="BodyLabel" name="BodyLabel_6">
+             <widget class="BodyLabel" name="auth_label">
               <property name="font">
                <font>
                 <family>微软雅黑</family>
@@ -188,7 +188,7 @@
                                                                 FluentLabelBase{color:#ff000000}</string>
               </property>
               <property name="text">
-               <string> </string>
+               <string>token兑换码</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
@@ -210,6 +210,30 @@
                </size>
               </property>
              </spacer>
+            </item>
+            <item>
+             <widget class="LineEdit" name="LineEdit">
+              <property name="text">
+               <string/>
+              </property>
+              <property name="placeholderText">
+               <string>兑换码</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="LineEdit" name="LineEdit2">
+              <property name="placeholderText">
+               <string>学校</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="PushButton" name="duihuan_PushButton">
+              <property name="text">
+               <string>兑换</string>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
@@ -774,6 +798,11 @@
   <customwidget>
    <class>BodyLabel</class>
    <extends>QLabel</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>LineEdit</class>
+   <extends>QLineEdit</extends>
    <header>qfluentwidgets</header>
   </customwidget>
   <customwidget>

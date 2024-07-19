@@ -138,7 +138,8 @@ class ChatSql:
     # =============================================基础设置end=============================================
 
     # =============================================账户设置start=============================================
-    def add_account(self, username: str, password: str = "", auto_fill: bool = False):
+    def add_account(self, username: str, password: str = "",
+                    auto_fill: bool = False):
         """
         添加账号，没问题
         :param username: 用户名
@@ -171,8 +172,10 @@ class ChatSql:
                 self.create_dialogue('你好，新用户', icon='CHAT')
                 self.create_dialogue('这题怎么做', icon='CALENDAR')
                 self.create_dialogue('以“星期天为题”写一篇作文', icon='BOOK_SHELF')
-                masks_and_icons = [("机器学习", "", "ROBOT"), ("英语写作", "", "CHAT"),
-                                   ("小红书写手", "", "BOOK_SHELF"), ("数学物理", "", "CALENDAR")]
+                masks_and_icons = [("机器学习", "你是教机器学习的老师", "ROBOT"),
+                                   ("英语写作", "你是教英语写作的老师", "CHAT"),
+                                   ("小红书写手", "你是一位小红书写手", "BOOK_SHELF"),
+                                   ("数学物理", "你是一位数学物理高手", "CALENDAR")]
                 for name, des, icon in masks_and_icons:
                     self.add_mask(name, mask_describe=des, icon=icon)
                 session.commit()
@@ -219,6 +222,33 @@ class ChatSql:
             app_logger.info(str(e))
             print(str(e))
             return []
+    def get_account(self, username: str) -> LoginAccount|None:
+        """
+        账号本地id
+        :param username: 用户名
+        """
+        try:
+            with self.DB_session() as session:
+                account = session.query(LoginAccount).filter_by(username=username).first()
+                return account
+        except Exception as e:
+            app_logger.info(str(e))
+            print(str(e))
+    def get_account_id(self, username: str) -> int | None:
+        """
+        账号本地id
+        :param username: 用户名
+        """
+        try:
+            with self.DB_session() as session:
+                account = session.query(LoginAccount).filter_by(username=username).first()
+                if account:
+                    return account.id
+                else:
+                    print(f"找不到用户：{username}")
+        except Exception as e:
+            app_logger.info(str(e))
+            print(str(e))
 
     def change_username(self, old_username: str, new_username: str):
         """
@@ -318,22 +348,33 @@ class ChatSql:
             app_logger.info(str(e))
             print(str(e))
 
-    def get_dialogue_by_account_and_name(self, dialogue_name: str,
-                                         account_id=-1) -> Dialogue | None:
+    def get_dialogue_by_account_and_name(self, dialogue_name: str) -> Dialogue | None:
         """
         根据账户 ID 和对话名称获取对话
         :param dialogue_name: 对话名称
-        :param account_id: 账户 ID
         :return: 对话对象，如果未找到则返回 None
         """
         try:
-            if account_id == -1:
-                account_id = static.sql_account_id
+            account_id = static.sql_account_id
             with self.DB_session() as session:
                 return session.query(Dialogue).filter_by(account_id=account_id, dialogue_name=dialogue_name).first()
         except Exception as e:
             app_logger.info(str(e))
             return None
+
+    def get_dialogue_id_by_account_and_name(self, dialogue_name: str):
+        """
+        根据账户 ID 和对话名称获取对话id
+        :param dialogue_name: 对话名称
+        """
+        try:
+            dialogue = self.get_dialogue_by_account_and_name(dialogue_name)
+            if dialogue is None:
+                static.sql_dialogue_id = -1
+            else:
+                static.sql_dialogue_id = dialogue.dialogue_id
+        except Exception as e:
+            app_logger.info(str(e))
 
     def update_dialogue_by_account_and_name(self, dialogue_name: str, account_id: int) -> None:
         """
@@ -467,9 +508,31 @@ class ChatSql:
         """
         try:
             with self.DB_session() as session:
-                return session.query(Mask).filter_by(mask_name=mask_name).first()
+                return session.query(Mask).filter_by(mask_name=mask_name, account_id=static.sql_account_id).first()
         except Exception as e:
             app_logger.info(str(e))
+
+    def get_mask_describe(self, mask_name: str) -> str:
+        try:
+            mask = self.get_mask(mask_name)
+            if mask:
+                return mask.mask_describe
+            else:
+                return ""
+        except Exception as e:
+            app_logger.info(str(e))
+            return ""
+
+    def get_mask_id(self, mask_name: str) -> int:
+        try:
+            mask = self.get_mask(mask_name)
+            if mask:
+                return mask.id
+            else:
+                return -1
+        except Exception as e:
+            app_logger.info(str(e))
+            return -1
 
     def get_masks(self) -> list:
         """
@@ -517,7 +580,7 @@ class ChatSql:
             sender_dict = {SenderType.GPT: False, SenderType.USER: True}
             send_dict = {SendType.TEXT: "text", SendType.IMAGE: "image", SendType.AUDIO: "audio"}
             with self.DB_session() as session:
-                messages = session.query(Message).filter_by(account_id=static.sql_account_id).all()
+                messages = session.query(Message).filter_by(dialogue_id=static.sql_dialogue_id).all()
                 for msg in messages:
                     result.append({
                         "sender": sender_dict[msg.sender],

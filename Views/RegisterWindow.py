@@ -19,27 +19,28 @@ from qfluentwidgets import Dialog, InfoBar, InfoBarPosition
 
 from Core.Tools.generate_captcha import Captcha
 from Core.Tools.readQss import ReadQss
+from Sqlite.ChatSql import ChatSql
 
 
 class RegisterWindow(QWidget):
 
     def __init__(self):
         super().__init__()
-        loadUi("../Templates/register.ui", self)
+        loadUi("Templates/register.ui", self)
 
         # =============================================基础设置start=============================================
 
-        Window_icon: str = r"../Assets/icons/add.png"
+        Window_icon: str = r"Assets/icons/add.png"
         self.setWindowTitle("注册")
         self.setWindowIcon(QIcon(Window_icon))
         # 加载qss样式
-        self.setStyleSheet(ReadQss.read("../Assets/Qss/register.qss"))
+        self.setStyleSheet(ReadQss.read("Assets/Qss/register.qss"))
 
         # =============================================基础设置end=============================================
 
         # =============================================验证码图片设置start=============================================
 
-        self.captcha_img_path: str = r"../Temp"
+        self.captcha_img_path: str = r"Temp"
         captcha: Captcha = Captcha(char_4=self.get_random_char(),
                                    captcha_path=self.captcha_img_path)
 
@@ -114,6 +115,8 @@ class RegisterWindow(QWidget):
         user_email: str = self.email_input.text()
         # 密码
         user_pwd: str = self.password_input.text()
+        # 学校
+        user_academy: str= self.academy_input.text()
         # 验证码
         input_captcha: str = self.captcha_input.text()
 
@@ -140,7 +143,8 @@ class RegisterWindow(QWidget):
                               data=json.dumps({
                                   "username": user_name,
                                   "password": user_pwd,
-                                  "email": user_email
+                                  "email": user_email,
+                                  "academy":user_academy
                               }))
             print(r.request.body)
             print(r.content.decode())
@@ -167,6 +171,8 @@ class RegisterWindow(QWidget):
                         duration=1000,
                         parent=self
                     )
+                    sql=ChatSql()
+                    # sql.add_account(user_name, user_pwd, auto_fill=False,academy=user_academy,email=user_email)
             else:
                 InfoBar.error(
                     title="注册状态",
