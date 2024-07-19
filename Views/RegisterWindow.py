@@ -26,21 +26,21 @@ class RegisterWindow(QWidget):
 
     def __init__(self):
         super().__init__()
-        loadUi("../Templates/register.ui", self)
+        loadUi("Templates/register.ui", self)
 
         # =============================================基础设置start=============================================
 
-        Window_icon: str = r"../Assets/icons/add.png"
+        Window_icon: str = r"Assets/icons/add.png"
         self.setWindowTitle("注册")
         self.setWindowIcon(QIcon(Window_icon))
         # 加载qss样式
-        self.setStyleSheet(ReadQss.read("../Assets/Qss/register.qss"))
+        self.setStyleSheet(ReadQss.read("Assets/Qss/register.qss"))
 
         # =============================================基础设置end=============================================
 
         # =============================================验证码图片设置start=============================================
 
-        self.captcha_img_path: str = r"../Temp"
+        self.captcha_img_path: str = r"Temp"
         captcha: Captcha = Captcha(char_4=self.get_random_char(),
                                    captcha_path=self.captcha_img_path)
 
@@ -172,7 +172,7 @@ class RegisterWindow(QWidget):
                         parent=self
                     )
                     sql=ChatSql()
-                    sql.add_account(user_name, user_pwd, auto_fill=False,academy=user_academy,email=user_email)
+                    # sql.add_account(user_name, user_pwd, auto_fill=False,academy=user_academy,email=user_email)
             else:
                 InfoBar.error(
                     title="注册状态",

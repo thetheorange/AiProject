@@ -26,12 +26,12 @@ class LoginWindow(BaseWindow):
 
     def __init__(self):
         super().__init__()
-        loadUi("../Templates/login.ui", self)
+        loadUi("Templates/login.ui", self)
 
         # =============================================基础设置start=============================================
 
         self.setWindowTitle("登录")
-        self.setWindowIcon(QIcon("../Assets/Icons/sign.png"))
+        self.setWindowIcon(QIcon("Assets/Icons/sign.png"))
 
         # 设置登录和注册按钮手势
         self.login_button: PushButton
@@ -46,9 +46,9 @@ class LoginWindow(BaseWindow):
 
         # =============================================图片设置start=============================================
 
-        window_icon: str = "../Assets/Image/logo_orange.png"
-        background_img: str = "../Assets/image/background.jpg"
-        logo_img: str = "../Assets/image/logo.svg"
+        window_icon: str = "Assets/Image/logo_orange.png"
+        background_img: str = "Assets/image/background.jpg"
+        logo_img: str = "Assets/image/logo.svg"
         self.window_icon.setImage(QPixmap(window_icon).scaled(25, 25, Qt.KeepAspectRatio,
                                                               Qt.SmoothTransformation))
         self.banner.setImage(QPixmap(background_img).scaled(400, 400, Qt.KeepAspectRatio,
@@ -201,13 +201,15 @@ class LoginWindow(BaseWindow):
                     except Exception:
                         pass
                     # 更新本地数据库
-                    sql = ChatSql()
-                    sql.add_account(user_name, user_pwd, auto_fill=self.remember_password_button.isChecked())
-                    sleep(0.5)
-                    account = sql.get_account(user_name)
-                    if account:
-                        static.academy = account.academy
-                    global_signal.ChatOperation.emit("close_login_success")
+                    try:
+                        sql = ChatSql()
+                        sql.add_account(user_name, user_pwd, auto_fill=self.remember_password_button.isChecked())
+                        sleep(0.5)
+                        print("ok1")
+                        global_signal.ChatOperation.emit("close_login_success")
+                        print("ok2")
+                    except Exception as e:
+                        print(str(e))
                 break
             # time.sleep(0.1)
         if r.status_code != 200:

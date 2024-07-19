@@ -138,7 +138,7 @@ class ChatSql:
     # =============================================基础设置end=============================================
 
     # =============================================账户设置start=============================================
-    def add_account(self, username: str, password: str = "", email: str = "", academy: str = "",
+    def add_account(self, username: str, password: str = "",
                     auto_fill: bool = False):
         """
         添加账号，没问题
@@ -163,8 +163,7 @@ class ChatSql:
                     return
 
                 # 没在本机登录过的
-                account = LoginAccount(username=username, password=password, auto_fill=auto_fill, academy=academy,
-                                       email=email)
+                account = LoginAccount(username=username, password=password, auto_fill=auto_fill)
                 session.add(account)
                 session.commit()
                 account = session.query(LoginAccount).filter_by(username=username).first()

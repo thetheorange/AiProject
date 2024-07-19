@@ -54,7 +54,7 @@ class ChatSearchWindow(QWidget):
 
     def __init__(self):
         super().__init__()
-        loadUi("../Templates/chat_search.ui", self)
+        loadUi("Templates/chat_search.ui", self)
 
         # =============================================基础设置start=============================================
 
@@ -247,7 +247,7 @@ class ChatSessionWindow(QWidget):
 
     def __init__(self,name:str="",id:int=-1):
         super().__init__()
-        loadUi("../Templates/chat_session.ui", self)
+        loadUi("Templates/chat_session.ui", self)
 
         # =============================================聊天选项bar设置start=============================================
         static.sql_dialogue_id=id
@@ -324,7 +324,7 @@ class ChatSessionWindow(QWidget):
             except Exception as e:
                 print(str(e))
 
-    def show_bubble(self, text: str = "", avatar_path: str = "../Assets/image/logo.png", is_sender: bool = True,
+    def show_bubble(self, text: str = "", avatar_path: str = "Assets/image/logo.png", is_sender: bool = True,
                     variety: str = "text"):
         """
         气泡的发送
@@ -505,7 +505,7 @@ class ChatSessionWindow(QWidget):
         audio_to_text = AudiotoText()
         text = audio_to_text.audio_text(path)
         # print('接口封装测试', text)
-        ai_avatar_path = '../Assets/image/logo.png'
+        ai_avatar_path = 'Assets/image/logo.png'
         is_sender = False
         bubble = MessageBubble(text, ai_avatar_path, is_sender=is_sender, variety="text")
         # 创建一个 QListWidgetItem 并设置其大小提示

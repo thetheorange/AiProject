@@ -134,7 +134,7 @@ class MaskSettingWindow(QWidget):
 
     def __init__(self):
         super().__init__()
-        loadUi("../Templates/mask_setting.ui", self)
+        loadUi("Templates/mask_setting.ui", self)
         # =============================================基础设置start=============================================
 
         # 新建按钮

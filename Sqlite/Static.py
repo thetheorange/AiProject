@@ -17,12 +17,12 @@ class Static:
     sql_dialogue_id: int = -1
     mask_name:str = ""
     mark_describe: str = ""
-    avatar_path: str = "../Assets/image/logo.png"
+    avatar_path: str = "Assets/image/logo.png"
     dialogue_name:str=""
 
     def __init__(self):
         self.data: json
-        with open("../Sqlite/userinfo.json", 'r') as f:
+        with open("Sqlite/userinfo.json", 'r') as f:
             self.data = json.load(f)
             data = self.data
             self.uuid = data.get('uuid', "0")
