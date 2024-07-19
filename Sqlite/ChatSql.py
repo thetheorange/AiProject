@@ -535,7 +535,7 @@ class ChatSql:
             sender_dict = {SenderType.GPT: False, SenderType.USER: True}
             send_dict = {SendType.TEXT: "text", SendType.IMAGE: "image", SendType.AUDIO: "audio"}
             with self.DB_session() as session:
-                messages = session.query(Message).filter_by(account_id=static.sql_account_id).all()
+                messages = session.query(Message).filter_by(dialogue_id = static.sql_dialogue_id).all()
                 for msg in messages:
                     result.append({
                         "sender": sender_dict[msg.sender],
