@@ -22,11 +22,11 @@ class UserInfoWindow(QWidget):
 
     def __init__(self):
         super().__init__()
-        loadUi("Templates/user_info.ui", self)
+        loadUi("../Templates/user_info.ui", self)
 
         # =============================================基础设置start=============================================
         # 设置用户默认头像
-        self.avatar_img: str = "Assets/image/background.jpg"
+        self.avatar_img: str = "../Assets/image/background.jpg"
         self.avatar: AvatarWidget
         self.avatar.setImage(QPixmap(self.avatar_img).scaled(125, 125, Qt.KeepAspectRatio,
                                                              Qt.SmoothTransformation))

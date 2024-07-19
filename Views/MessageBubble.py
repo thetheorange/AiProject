@@ -201,7 +201,7 @@ class MessageBubbleWindow(QListWidget):
         self.setGeometry(300, 300, 400, 300)  # 设置窗口位置和大小
         text = "Hellohhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
         is_sender = True  # 假设总是发送者
-        avatar_path = "Assets/image/logo.png"  # 发送者头像路径
+        avatar_path = "../Assets/image/logo.png"  # 发送者头像路径
         bubble = MessageBubble(avatar_path, avatar_path, is_sender=is_sender, variety="audio")
 
         item = QListWidgetItem(self)

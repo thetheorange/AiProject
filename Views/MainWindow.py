@@ -31,7 +31,7 @@ class MainWindow(SplitFluentWindow):
         # =============================================基础设置start=============================================
 
         self.setWindowTitle("所见即所得")
-        self.setWindowIcon(QIcon("Assets/image/logo_orange.png"))
+        self.setWindowIcon(QIcon("../Assets/image/logo_orange.png"))
 
         self.setMinimumSize(600, 500)
         self.resize(800, 600)
@@ -153,7 +153,6 @@ class MainWindow(SplitFluentWindow):
                 except Exception as e:
                     print(str(e))
             case "start_chat": # 已经打开的窗口置顶
-                
                 pass
             case "start_login":
                 # 打开登录界面
@@ -178,7 +177,9 @@ class MainWindow(SplitFluentWindow):
             case _:
                 pass
 
-def my_main():
+
+
+if __name__ == "__main__":
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
@@ -189,16 +190,3 @@ def my_main():
     except Exception as e:
         print(str(e))
     sys.exit(app.exec_())
-
-if __name__ == "__main__":
-    my_main()
-    # QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
-    # QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
-    # QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
-    # app = QApplication(sys.argv)
-    # try:
-    #     w = MainWindow()
-    #     # w.show()
-    # except Exception as e:
-    #     print(str(e))
-    # sys.exit(app.exec_())
