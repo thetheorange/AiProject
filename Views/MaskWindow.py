@@ -62,7 +62,7 @@ class MaskSubSettingWindow(MessageBoxBase):
             'signal': 'add'
         }
         print(data)
-        sql=ChatSql()
+        sql = ChatSql()
         # sql.add_mask(data['name'],data['des'])
         # 发射全局信号
         global_signal.mask_submitted.emit(data)
@@ -109,9 +109,9 @@ class MaskWidget(QWidget):
         """
         点击面具按钮直接开始会话
         """
-        sql=ChatSql()
+        sql = ChatSql()
         static.mask_name = self.mask_name
-        static.mark_describe=sql.get_mask_describe(static.mask_name)
+        static.mark_describe = sql.get_mask_describe(static.mask_name)
         global_signal.ChatOperation_Mask.emit("start_chat")
 
     def __handle_chat_signal2(self, signal: str) -> None:

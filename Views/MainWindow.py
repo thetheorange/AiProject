@@ -3,6 +3,7 @@ Des 主界面
 @Author thetheOrange
 Time 2024/6/14
 """
+
 import sys
 import time
 from PyQt5.QtCore import Qt
@@ -176,7 +177,6 @@ class MainWindow(SplitFluentWindow):
 
             case _:
                 pass
-
 
 
 if __name__ == "__main__":

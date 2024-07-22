@@ -3,8 +3,8 @@
 """
 import textwrap
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
+from PyQt5.QtCore import Qt, QEvent
+from PyQt5.QtGui import QFont, QGuiApplication
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QWidget
 from PyQt5.QtWidgets import QHBoxLayout, QFrame
@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import QVBoxLayout, QListWidget, QListWidgetItem
 from qfluentwidgets import AvatarWidget, ImageLabel, PushButton, FluentIcon
 
 from Core.Tools.Play_Audio import AudioPlayer
-
+from GlobalSignal import global_signal
 
 class AvatarContainer(QFrame):
     """
@@ -83,6 +83,7 @@ class MessageBubble(QWidget):
         text_layout.setContentsMargins(0, 0, 0, 0)  # 设置文本容器的边距
         # 文本容器QWidget
         if variety == "text":
+            self.installEventFilter(self)  # 安装事件过滤器
             text = self.text_line_break(text)
             print(text)
             self.text_label = QLabel(text, self.info_container)
@@ -187,6 +188,20 @@ class MessageBubble(QWidget):
 
         except Exception as e:
             print(f"播放音频时发生错误: {e}")
+
+    def eventFilter(self, obj, event):
+        """
+        点击复制到剪贴板
+        """
+        try:
+            if (obj == self or obj == self.text_label) and event.type() == QEvent.MouseButtonPress:  # 判断是否是特定的 QLabel 并且是鼠标点击事件
+                clipboard = QGuiApplication.clipboard()  # 获取系统剪贴板
+                clipboard.setText(self.text)  # 设置要复制的内容
+                global_signal.correct_msg.emit(["复制成功", "复制到剪贴板"])
+                return True
+            return super().eventFilter(obj, event)  # 传递给父类的事件过滤器
+        except Exception as e:
+            print(str(e))
 
 
 class MessageBubbleWindow(QListWidget):

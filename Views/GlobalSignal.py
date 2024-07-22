@@ -14,6 +14,8 @@ class GlobalSignal(QObject):
     mask_chatOperation = pyqtSignal(str)
     # 传递面具名和描述
     mask_submitted = pyqtSignal(dict)
+    # 提示正确信息的信号
+    correct_msg = pyqtSignal(list)
     # 提示错误信息的信号
     error_msg = pyqtSignal(list)
     # 录音成功信息传递
