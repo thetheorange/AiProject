@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import QWidget
 from PyQt5.uic import loadUi
 from qfluentwidgets import ComboBox, SpinBox, DoubleSpinBox, PushButton, LineEdit, InfoBar, InfoBarPosition
 
-from Views.GlobalSignal import global_signal
+from GlobalSignal import global_signal
 from Sqlite.Static import static
 
 
@@ -24,7 +24,7 @@ class SettingWindow(QWidget):
 
     def __init__(self):
         super().__init__()
-        loadUi("Templates/setting.ui", self)
+        loadUi("../Templates/setting.ui", self)
         # =============================================用户设置start=============================================
         self.login_button.clicked.connect(self.login)
         # =============================================用户设置start=============================================

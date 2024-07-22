@@ -8,8 +8,8 @@ import json
 import sys
 
 import requests
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtCore import Qt, QEvent
+from PyQt5.QtGui import QPixmap, QGuiApplication
 from PyQt5.QtWidgets import QWidget, QAction, QLabel, QHBoxLayout, QListWidgetItem, QFrame, QApplication
 from PyQt5.uic import loadUi
 from qfluentwidgets import ToolTipFilter, PushButton, Icon, FluentIcon, ToolTipPosition, CommandBar, MessageBoxBase, \
@@ -22,7 +22,7 @@ from Sqlite.ChatSql import ChatSql
 from Sqlite.ChatSql import SenderType, SendType
 from Sqlite.Static import static
 from Views.FileWindow import FileWindow
-from Views.GlobalSignal import global_signal
+from GlobalSignal import global_signal
 from Views.MessageBubble import MessageBubble
 
 
@@ -54,7 +54,7 @@ class ChatSearchWindow(QWidget):
 
     def __init__(self):
         super().__init__()
-        loadUi("Templates/chat_search.ui", self)
+        loadUi("../Templates/chat_search.ui", self)
 
         # =============================================基础设置start=============================================
 
@@ -247,7 +247,7 @@ class ChatSessionWindow(QWidget):
 
     def __init__(self,name:str="",id:int=-1):
         super().__init__()
-        loadUi("Templates/chat_session.ui", self)
+        loadUi("../Templates/chat_session.ui", self)
 
         # =============================================聊天选项bar设置start=============================================
         static.sql_dialogue_id=id
@@ -305,6 +305,8 @@ class ChatSessionWindow(QWidget):
 
         # =============================================发送按钮设置end=============================================
         self.init_message()
+        global_signal.correct_msg.connect(self.__handle_correct_msg_signal)
+
 
     def update_mask_and_data(self):
         """
@@ -324,7 +326,7 @@ class ChatSessionWindow(QWidget):
             except Exception as e:
                 print(str(e))
 
-    def show_bubble(self, text: str = "", avatar_path: str = "Assets/image/logo.png", is_sender: bool = True,
+    def show_bubble(self, text: str = "", avatar_path: str = "../Assets/image/logo.png", is_sender: bool = True,
                     variety: str = "text"):
         """
         气泡的发送
@@ -334,7 +336,6 @@ class ChatSessionWindow(QWidget):
         :param variety:text/image
         """
         bubble = MessageBubble(text, avatar_path, is_sender=is_sender, variety=variety)
-
         # 创建一个 QListWidgetItem 并设置其大小提示
         item = QListWidgetItem(self.ListWidget)
         item.setSizeHint(bubble.sizeHint())
@@ -438,6 +439,22 @@ class ChatSessionWindow(QWidget):
                 self.show_bubble(all_text, is_sender=False)
                 sql.add_message(SenderType.GPT, SendType.TEXT, all_text, True)
 
+    def __handle_correct_msg_signal(self, signal: list) -> None:
+        """
+        处理消息信号
+        """
+        print(signal)
+        InfoBar.success(
+            title=signal[0],
+            content=signal[-1],
+            orient=Qt.Vertical,
+            isClosable=True,
+            position=InfoBarPosition.BOTTOM_RIGHT,
+            duration=1000,
+            parent=self
+        )
+
+
     def clear_history(self) -> None:
         """
         清除所有的聊天记录
@@ -505,7 +522,7 @@ class ChatSessionWindow(QWidget):
         audio_to_text = AudiotoText()
         text = audio_to_text.audio_text(path)
         # print('接口封装测试', text)
-        ai_avatar_path = 'Assets/image/logo.png'
+        ai_avatar_path = '../Assets/image/logo.png'
         is_sender = False
         bubble = MessageBubble(text, ai_avatar_path, is_sender=is_sender, variety="text")
         # 创建一个 QListWidgetItem 并设置其大小提示
