@@ -164,3 +164,5 @@ cython_debug/
 /Views/chat.db
 /Sqlite/userinfo.json
 
+chat.db
+Tests/pyinstaller_fix.py

@@ -26,21 +26,21 @@ class RegisterWindow(QWidget):
 
     def __init__(self):
         super().__init__()
-        loadUi("../Templates/register.ui", self)
+        loadUi("./Templates/register.ui", self)
 
         # =============================================基础设置start=============================================
 
-        Window_icon: str = r"../Assets/icons/add.png"
+        Window_icon: str = r"./Assets/icons/add.png"
         self.setWindowTitle("注册")
         self.setWindowIcon(QIcon(Window_icon))
         # 加载qss样式
-        self.setStyleSheet(ReadQss.read("../Assets/Qss/register.qss"))
+        self.setStyleSheet(ReadQss.read("./Assets/Qss/register.qss"))
 
         # =============================================基础设置end=============================================
 
         # =============================================验证码图片设置start=============================================
 
-        self.captcha_img_path: str = r"../Temp"
+        self.captcha_img_path: str = r"./Temp"
         captcha: Captcha = Captcha(char_4=self.get_random_char(),
                                    captcha_path=self.captcha_img_path)
 

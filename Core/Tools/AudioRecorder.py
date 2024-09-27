@@ -34,7 +34,7 @@ class AudioRecorder(object):
         self.pyaudio_instance = pyaudio.PyAudio()
         self.stream = None
         self.recording: bool = False
-        self.prefix_path: str = '..\Temp'  # 文件父文件夹目录。example:r'D:\GitHub\AiProject\Tests'
+        self.prefix_path: str = '.\Temp'  # 文件父文件夹目录。example:r'D:\GitHub\AiProject\Tests'
         self.path: str = ""  # 文件目录
 
     def start_recording(self):

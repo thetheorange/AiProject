@@ -17,12 +17,12 @@ class Static:
     sql_dialogue_id: int = -1
     mask_name:str = ""
     mark_describe: str = ""
-    avatar_path: str = "../Assets/image/logo.png"
+    avatar_path: str = "./Assets/image/logo.png"
     dialogue_name:str=""
 
     def __init__(self):
         self.data: json
-        with open("../Sqlite/userinfo.json", 'r') as f:
+        with open("./Sqlite/userinfo.json", 'r') as f:
             self.data = json.load(f)
             data = self.data
             self.uuid = data.get('uuid', "0")
@@ -39,7 +39,7 @@ class Static:
     def rewrite(self, title_key: str, info):
         """重新写入某一个值"""
         self.data[title_key] = info
-        with open("../Sqlite/userinfo.json", 'w') as f:
+        with open("./Sqlite/userinfo.json", 'w') as f:
             json.dump(self.data, f)
 
 

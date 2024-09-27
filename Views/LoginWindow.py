@@ -26,12 +26,12 @@ class LoginWindow(BaseWindow):
 
     def __init__(self):
         super().__init__()
-        loadUi("../Templates/login.ui", self)
+        loadUi("./Templates/login.ui", self)
 
         # =============================================基础设置start=============================================
 
         self.setWindowTitle("登录")
-        self.setWindowIcon(QIcon("../Assets/Icons/sign.png"))
+        self.setWindowIcon(QIcon("./Assets/Icons/sign.png"))
 
         # 设置登录和注册按钮手势
         self.login_button: PushButton
@@ -46,9 +46,9 @@ class LoginWindow(BaseWindow):
 
         # =============================================图片设置start=============================================
 
-        window_icon: str = "../Assets/Image/logo_orange.png"
-        background_img: str = "../Assets/image/background.jpg"
-        logo_img: str = "../Assets/image/logo.svg"
+        window_icon: str = "./Assets/Image/logo_orange.png"
+        background_img: str = "./Assets/image/background.jpg"
+        logo_img: str = "./Assets/image/logo.svg"
         self.window_icon.setImage(QPixmap(window_icon).scaled(25, 25, Qt.KeepAspectRatio,
                                                               Qt.SmoothTransformation))
         self.banner.setImage(QPixmap(background_img).scaled(400, 400, Qt.KeepAspectRatio,
@@ -160,15 +160,15 @@ class LoginWindow(BaseWindow):
                                   "username": user_name,
                                   "password": user_pwd
                               }))
-            # print(r.request.body)
-            # print(r.content.decode())
+            print(r.request.body)
+            print(r.content.decode())
             if r.status_code == 200:
                 # 检查是否登录成功
                 code = r.json()["code"]
                 if code != 0:
                     InfoBar.error(
                         title="登录状态",
-                        content="登录错误",
+                        content="登录错误:"+r.json()["msg"],
                         orient=Qt.Vertical,
                         isClosable=True,
                         position=InfoBarPosition.BOTTOM_RIGHT,
