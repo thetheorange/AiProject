@@ -1,9 +1,4 @@
 import sys
-import Assets
-import Temp
-import Scripts
-import Temp
-import Views
 
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt
