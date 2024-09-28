@@ -75,9 +75,8 @@
 - [x] 设计主要的登录、注册页面和开启对话的主页面
 - [x] 部署后端大模型接口，支持部署的大语言模型：讯飞星火
 - [x] 部署SQLite本地数据库
-- [ ] 前后端联调
-- [ ] 后台管理界面
-
+- [x] 前后端联调
+- [x] 后台管理界面
 
 ## 本地数据库 :computer:
 
@@ -178,6 +177,44 @@
 ##  使用剪影 :sparkler: 
  <img alt="using_cut_photo" src="https://github.com/joana123123/AiProject/blob/main/Assets/image/using_cut_photo.jpg?raw=true">
 <img alt="using_cut_photo" src="https://github.com/joana123123/AiProject/blob/main/Assets/image/using_cut_photo2.jpg?raw=true">
+
+---
+## 开发日志:calendar:
+---
+### 2024/09/27
+1. 开始修bug，完成打包。不用pyinstaller了，直接用cx_freeze。注意使用时不要加“_”。
+    正式打包时注意删除无用文件。
+2. 后端数据库还是可以使用的，没坏。dbeaver也是一打开就能看。
+3. 入口从MainWindow.py换成main.py了。
+4. 注意写一点就试一下打包。打包会出新问题，呵呵。
+5. 增加了requirement.txt文档
+6. ==说明：使用Virtualenv环境，基础解释器为Python 3.10.11，基础解释器没有安装任何包，非常纯净。==
+#### 开发问题
+- [x] 打包失败
+- [ ] 没有真正地用到面具
+- [ ] 没有真正地设置历史记录阈值
+- [ ] 没有“登出账号”
+- [ ] 图标不对
+- [ ] 面向对象的前端数据库需要更新
+- [ ] 释放磁盘空间
+#### 未来发展设想
+- [ ] ~~桌宠模式喵~~
+- [ ] 邮箱注册登录
+- [ ] 连接别的api（自由选择api）
+- [ ] 学习状况分析，更加自定义化
+- [ ] markdown格式输出
+- [ ] 更灵活的复制粘贴
+- [ ] 本地部署（chatglm？）
+- [ ] 可以考虑换百度什么的api（先把前端修好再说）
+---
+### 2024/09/28
+1. 修正了打包后移动窗口会闪退的问题。
+2. 修正了无法使用前端数据库的问题。
+3. 开发阶段可以使用Tests文件夹里的exe_setup.bat和exe_test.bat一键打包。注意使用前用记事本/编辑器打开修改根目录路径。
+
+#### 开发问题
+- [ ] 一些文件可能会被意外删除，导致报错。应该加上一些文件夹是否存在的特判。
+- [ ] 打包还是打包了一些多余的文件，修完bug可以删除和调试。
 
 ## Contributor :bow:
 [@thetheorange](https://github.com/thetheorange)
