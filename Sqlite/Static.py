@@ -4,6 +4,10 @@ Des 变量
 Time 2024/7/14
 """
 import json
+import os
+from errno import EXDEV
+
+from Logging import app_logger
 
 
 class Static:
@@ -22,25 +26,41 @@ class Static:
 
     def __init__(self):
         self.data: json
-        with open("./Sqlite/userinfo.json", 'r') as f:
-            self.data = json.load(f)
-            data = self.data
-            self.uuid = data.get('uuid', "0")
-            self.username = data.get('username', "未登录")
-            # self.academy = data.get('academy', "未填写")
-            self.tokens = data.get('tokens', 0)
-            self.picTimes = data.get('picTimes', 0)
-            # self.logining = data.get('logining', False)
-            self.sql_account_id = data.get('sql_account_id', -1)
-            self.dialogue_lisi: list = []
-            # self.sql_dialogue_id = data.get('sql_dialogue_id', -1)
-            # self.mark_describe = data.get('mark_describe', "")
+        try:
+            with open("./Sqlite/userinfo.json", 'r') as f:
+                self.data = json.load(f)
+                data = self.data
+                self.uuid = data.get('uuid', "0")
+                self.username = data.get('username', "未登录")
+                # self.academy = data.get('academy', "未填写")
+                self.tokens = data.get('tokens', 0)
+                self.picTimes = data.get('picTimes', 0)
+                # self.logining = data.get('logining', False)
+                self.sql_account_id = data.get('sql_account_id', -1)
+                self.dialogue_lisi: list = []
+                # self.sql_dialogue_id = data.get('sql_dialogue_id', -1)
+                # self.mark_describe = data.get('mark_describe', "")
+        except FileNotFoundError as e:
+            app_logger.info(e.args)
+            if not os.path.exists('Sqlite'):
+                os.mkdir('Sqlite')
+            open("./Sqlite/userinfo.json",'w')
+        except Exception as e:
+            app_logger.error(e.args)
 
     def rewrite(self, title_key: str, info):
         """重新写入某一个值"""
         self.data[title_key] = info
-        with open("./Sqlite/userinfo.json", 'w') as f:
-            json.dump(self.data, f)
+        if not os.path.exists('Sqlite'):
+            os.mkdir('Sqlite')
+        try:
+            with open("./Sqlite/userinfo.json", 'w') as f:
+                json.dump(self.data, f)
+        except FileNotFoundError as e:
+            app_logger.info(e.args)
+            open("./Sqlite/userinfo.json", 'w')
+        except Exception as e:
+            app_logger.error(e.args)
 
 
 static = Static()
