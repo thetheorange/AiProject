@@ -5,7 +5,7 @@ Time 2024/6/15
 """
 from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtGui import QMouseEvent, QColor
-from PyQt5.QtWidgets import QWidget, QGraphicsDropShadowEffect
+from PyQt5.QtWidgets import QWidget, QGraphicsDropShadowEffect, QMouseEventTransition
 
 
 class BaseWindow(QWidget):
@@ -23,11 +23,11 @@ class BaseWindow(QWidget):
         self.setMouseTracking(True)
 
         # 鼠标偏移量
-        self.__change_pos = None
+        self.__change_pos:int = 0
         # 鼠标起始值
-        self.__start_pos = None
+        self.__start_pos:int = 0
         # 鼠标移动标志
-        self.__move_flag = False
+        self.__move_flag:bool = False
 
         # 判断鼠标在哪个边界处的标志
         self.__right_flag = False
@@ -36,9 +36,9 @@ class BaseWindow(QWidget):
         # 设置边界宽度
         self.__pad = 20
         # 设置边界范围
-        self.__right_edge = None
-        self.__bottom_edge = None
-        self.__corner_edge = None
+        self.__right_edge:list = []
+        self.__bottom_edge:list = []
+        self.__corner_edge:list = []
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         # 获取窗口的边界范围
