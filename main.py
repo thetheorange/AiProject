@@ -5,6 +5,7 @@ from PyQt5.QtCore import Qt
 
 from Views.MainWindow import MainWindow
 
+# 程序入口
 if __name__=="__main__":
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)

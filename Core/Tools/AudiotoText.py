@@ -3,7 +3,7 @@ from PyQt5.QtCore import Qt
 from qfluentwidgets import InfoBar, InfoBarPosition
 from Sqlite.Static import static
 
-
+# 语音转文字
 class AudiotoText(object):
     def __init__(self):
         super().__init__()

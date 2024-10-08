@@ -166,3 +166,4 @@ cython_debug/
 
 chat.db
 Tests/pyinstaller_fix.py
+dist

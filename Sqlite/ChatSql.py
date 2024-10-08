@@ -35,14 +35,13 @@ Change:
 """
 from datetime import datetime
 from enum import Enum as BaseEnum
-
 from sqlalchemy import Column
 from sqlalchemy import create_engine, DateTime, Integer, String, Boolean, Enum
 from sqlalchemy.orm import declarative_base, sessionmaker
-
 from Logging import app_logger
 from Sqlite.Static import static
-
+import sqlite3
+import sqlalchemy.dialects
 Base = declarative_base()
 
 
@@ -128,12 +127,15 @@ class ChatSql:
         """
         初始化数据库连接和会话
         """
+        engine = create_engine('sqlite:///chat.db')
+        Base.metadata.create_all(engine)
+        self.DB_session = sessionmaker(bind=engine)
         try:
             engine = create_engine('sqlite:///chat.db')
             Base.metadata.create_all(engine)
             self.DB_session = sessionmaker(bind=engine)
         except Exception as e:
-            app_logger.info(str(e))
+            app_logger.error(str(e))
 
     # =============================================基础设置end=============================================
 
