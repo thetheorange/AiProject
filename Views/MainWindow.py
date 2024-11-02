@@ -11,7 +11,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QWidget, QSystemTrayIcon, QAction, QMenu
 from qfluentwidgets import FluentIcon, SplitFluentWindow, \
-    NavigationAvatarWidget, NavigationItemPosition
+    NavigationAvatarWidget, NavigationItemPosition,setTheme,Theme,setThemeColor,themeColor
 
 from Sqlite.ChatSql import ChatSql
 from Sqlite.Setting import setting
@@ -32,7 +32,8 @@ class MainWindow(SplitFluentWindow):
     def __init__(self):
         super().__init__()
         # =============================================基础设置start=============================================
-
+        setTheme(Theme.AUTO) # 设置主题
+        # setThemeColor("#ff0000") # 设置主题颜色
         self.setWindowTitle("所见即所得")
         self.setWindowIcon(QIcon("../Assets/image/logo_orange.png"))
 
@@ -226,7 +227,6 @@ class MainWindow(SplitFluentWindow):
         """
         单击托盘图标，恢复窗口
         :param reason:
-        :return:
         """
         if reason == QSystemTrayIcon.Trigger:
             self.setWindowState(Qt.WindowActive)
@@ -241,7 +241,7 @@ class MainWindow(SplitFluentWindow):
     def my_close(self, event=None):
         """
         根据是否缩小到托盘而退出
-        :event: 事件
+        :param event: 事件
         """
         if setting.system_tray:
             self.hide()

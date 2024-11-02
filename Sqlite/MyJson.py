@@ -28,8 +28,9 @@ class MyJson:
     def rewrite(self, title_key: str, info):
         """
         重新写入某一个值
-        :title_key: 键值
-        :info: 内容
+
+        :param title_key: 键值
+        :param info: 内容
         """
         self.data[title_key] = info
         try:
