@@ -7,12 +7,14 @@ Time 2024/6/14
 import sys
 import time
 
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QApplication, QWidget
+from PyQt5.QtWidgets import QApplication, QWidget, QSystemTrayIcon, QAction, QMenu
 from qfluentwidgets import FluentIcon, SplitFluentWindow, \
     NavigationAvatarWidget, NavigationItemPosition
 
 from Sqlite.ChatSql import ChatSql
+from Sqlite.Setting import setting
 from Sqlite.Static import static
 from Views.ChatWindow import ChatSearchWindow, ChatSessionWindow
 from Views.GlobalSignal import global_signal
@@ -51,6 +53,7 @@ class MainWindow(SplitFluentWindow):
             else:
                 static.sql_account_id = id
                 global_signal.ChatOperation.emit("close_login_success")
+        self.create_tray_icon()
 
         # self.login_history()
         # =============================================基础设置end=============================================
@@ -124,8 +127,8 @@ class MainWindow(SplitFluentWindow):
             # 切换当前窗口到会话界面
             self.stackedWidget.setCurrentWidget(self.mask_info_window)
 
-    def create_window(self, name: str,id:int=-1,top:bool=True):
-        self.chat_session_window = ChatSessionWindow(name=name,id=id)
+    def create_window(self, name: str, id: int = -1, top: bool = True):
+        self.chat_session_window = ChatSessionWindow(name=name, id=id)
         self.chat_session_window.setObjectName(name)
         self.addSubInterface(self.chat_session_window, FluentIcon.CHAT, name,
                              parent=self.chat_search_window)
@@ -153,7 +156,7 @@ class MainWindow(SplitFluentWindow):
                     # self.setWindowTitle(session_name)
                 except Exception as e:
                     print(str(e))
-            case "start_chat": # 已经打开的窗口置顶
+            case "start_chat":  # 已经打开的窗口置顶
                 pass
             case "start_login":
                 # 打开登录界面
@@ -177,6 +180,75 @@ class MainWindow(SplitFluentWindow):
 
             case _:
                 pass
+
+    def keyPressEvent(self, event):
+        try:
+            if event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_W:
+                self.hide()  # 关闭窗口
+            elif event.key() == Qt.Key_Escape:
+                self.my_close()  # 退出应用
+            else:
+                super().keyPressEvent(event)
+        except Exception as e:
+            print(e.args)
+
+    def create_tray_icon(self):
+        """
+        创建托盘图标
+        """
+
+        # 创建一个QSystemTrayIcon对象
+        tray_icon = QSystemTrayIcon(self)
+        # 设置托盘图标
+        tray_icon.setIcon(QIcon("../Assets/image/logo_orange.png"))
+
+        # 创建一个上下文菜单（右击托盘图标显示的菜单栏选项）
+        menu = QMenu()
+        quit_action = QAction("退出应用", menu)
+        quit_action.triggered.connect(sys.exit)
+        menu.addAction(quit_action)
+
+
+
+        # 设置鼠标悬停提示文本
+        tray_icon.setToolTip('thetheorange-Ai')
+
+        # 设置托盘图标的上下文菜单
+        tray_icon.setContextMenu(menu)
+
+        # 连接激活信号到槽函数
+        tray_icon.activated.connect(self.icon_activated)
+
+        # 显示托盘图标
+        tray_icon.show()
+
+    def icon_activated(self, reason):
+        """
+        单击托盘图标，恢复窗口
+        :param reason:
+        :return:
+        """
+        if reason == QSystemTrayIcon.Trigger:
+            self.setWindowState(Qt.WindowActive)
+            self.show()
+
+    def closeEvent(self, event):
+        """
+        重载关闭事件，隐藏窗口而不是退出程序
+        """
+        self.my_close(event=event)
+
+    def my_close(self, event=None):
+        """
+        根据是否缩小到托盘而退出
+        :event: 事件
+        """
+        if setting.system_tray:
+            self.hide()
+            if event is not None:
+                event.ignore()
+        else:
+            self.close()
 
 
 if __name__ == "__main__":
