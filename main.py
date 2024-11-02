@@ -13,7 +13,6 @@ if __name__=="__main__":
     app = QApplication(sys.argv)
     try:
         w = MainWindow()
-        # w.show()
     except Exception as e:
         print(str(e))
     sys.exit(app.exec_())
