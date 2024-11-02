@@ -1,11 +1,5 @@
-"""
-Des 变量
-@Author Misaka-xxw
-Time 2024/7/14
-"""
 import json
 import os
-from errno import EXDEV
 
 from Logging import app_logger
 
@@ -19,48 +13,50 @@ class Static:
     logining: bool = False
     sql_account_id: int = -1
     sql_dialogue_id: int = -1
-    mask_name:str = ""
+    mask_name: str = ""
     mark_describe: str = ""
     avatar_path: str = "./Assets/image/logo.png"
-    dialogue_name:str=""
+    dialogue_name: str = ""
+    json_path: str = "./Sqlite/userinfo.json"
 
     def __init__(self):
-        self.data: json
+        self.data: dict = {}
+        self.ensure_dir_exists()
         try:
-            with open("./Sqlite/userinfo.json", 'r') as f:
+            with open(self.json_path, 'r') as f:
                 self.data = json.load(f)
-                data = self.data
-                self.uuid = data.get('uuid', "0")
-                self.username = data.get('username', "未登录")
-                # self.academy = data.get('academy', "未填写")
-                self.tokens = data.get('tokens', 0)
-                self.picTimes = data.get('picTimes', 0)
-                # self.logining = data.get('logining', False)
-                self.sql_account_id = data.get('sql_account_id', -1)
-                self.dialogue_lisi: list = []
-                # self.sql_dialogue_id = data.get('sql_dialogue_id', -1)
-                # self.mark_describe = data.get('mark_describe', "")
-        except FileNotFoundError as e:
-            app_logger.info(e.args)
-            if not os.path.exists('Sqlite'):
-                os.mkdir('Sqlite')
-            open("./Sqlite/userinfo.json",'w')
-        except Exception as e:
-            app_logger.error(e.args)
+        except (FileNotFoundError, json.JSONDecodeError):
+            self.init_json_file()
+
+        self.uuid = self.data.get('uuid', "0")
+        self.username = self.data.get('username', "未登录")
+        self.tokens = self.data.get('tokens', 0)
+        self.picTimes = self.data.get('picTimes', 0)
+        self.sql_account_id = self.data.get('sql_account_id', -1)
+        self.dialogue_lisi: list = []
+
+    def ensure_dir_exists(self):
+        """确保目录存在"""
+        if not os.path.exists(os.path.dirname(self.json_path)):
+            try:
+                os.makedirs(os.path.dirname(self.json_path))
+            except OSError as e:
+                app_logger.error(f"创建目录失败: {e}")
+
+    def init_json_file(self):
+        """初始化JSON文件"""
+        with open(self.json_path, 'w') as f:
+            json.dump({}, f)
 
     def rewrite(self, title_key: str, info):
         """重新写入某一个值"""
         self.data[title_key] = info
-        if not os.path.exists('Sqlite'):
-            os.mkdir('Sqlite')
         try:
-            with open("./Sqlite/userinfo.json", 'w') as f:
+            with open(self.json_path, 'w') as f:
                 json.dump(self.data, f)
-        except FileNotFoundError as e:
-            app_logger.info(e.args)
-            open("./Sqlite/userinfo.json", 'w')
-        except Exception as e:
-            app_logger.error(e.args)
+        except (json.JSONDecodeError, OSError) as e:
+            app_logger.error(f"写入JSON文件失败: {e}")
+            self.init_json_file()
 
 
 static = Static()
