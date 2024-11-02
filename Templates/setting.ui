@@ -48,14 +48,17 @@
         </spacer>
        </item>
        <item>
-        <widget class="QFrame" name="visual_setting">
+        <widget class="QFrame" name="user_setting_frame">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
          <property name="styleSheet">
-          <string notr="true">#visual_setting {
+          <string notr="true">#user_setting_frame {
                                             background-color: #eff4f9;
                                             border-radius: 15px;
                                             }
 
-                                            #visual_setting:hover {
+                                            #user_setting_frame:hover {
                                             border: 1px solid #009faa;
                                             }</string>
          </property>
@@ -244,14 +247,14 @@
         <widget class="HorizontalSeparator" name="HorizontalSeparator"/>
        </item>
        <item>
-        <widget class="QFrame" name="visual_setting">
+        <widget class="QFrame" name="visual_setting_frame">
          <property name="styleSheet">
-          <string notr="true">#visual_setting {
+          <string notr="true">#visual_setting_frame {
                                             background-color: #eff4f9;
                                             border-radius: 15px;
                                             }
 
-                                            #visual_setting:hover {
+                                            #visual_setting_frame:hover {
                                             border: 1px solid #009faa;
                                             }</string>
          </property>
@@ -415,14 +418,14 @@
         <widget class="HorizontalSeparator" name="HorizontalSeparator"/>
        </item>
        <item>
-        <widget class="QFrame" name="model_setting">
+        <widget class="QFrame" name="model_setting_frame">
          <property name="styleSheet">
-          <string notr="true">#model_setting {
+          <string notr="true">#model_setting_frame {
                                             background-color: #eff4f9;
                                             border-radius: 15px;
                                             }
 
-                                            #model_setting:hover {
+                                            #model_setting_frame:hover {
                                             border: 1px solid #009faa;
                                             }</string>
          </property>

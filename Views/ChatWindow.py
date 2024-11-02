@@ -8,7 +8,7 @@ import json
 import sys
 
 import requests
-from PyQt5.QtCore import Qt, QEvent
+from PyQt5.QtCore import Qt, QEvent, pyqtSignal, QObject
 from PyQt5.QtGui import QPixmap, QGuiApplication
 from PyQt5.QtWidgets import QWidget, QAction, QLabel, QHBoxLayout, QListWidgetItem, QFrame, QApplication
 from PyQt5.uic import loadUi
@@ -24,6 +24,7 @@ from Sqlite.Static import static
 from Views.FileWindow import FileWindow
 from Views.GlobalSignal import global_signal
 from Views.MessageBubble import MessageBubble
+from dist.lib.sqlalchemy.dialects.postgresql.psycopg import logger
 
 
 class ChatLineWidget(QWidget):
@@ -240,10 +241,12 @@ class AvatarContainer(QFrame):
         # self.setStyleSheet("QFrame { border: 1px solid #ccc; background-color: #f0f0f0; }")
 
 
+
 class ChatSessionWindow(QWidget):
     """
     聊天会话界面
     """
+
 
     def __init__(self,name:str="",id:int=-1):
         super().__init__()
@@ -292,6 +295,10 @@ class ChatSessionWindow(QWidget):
         self.chat_input: PlainTextEdit
         self.chat_input.setFixedHeight(80)
 
+        self.my_text:str=""#用户发送信息
+        global_signal.gpt_response_ready.connect(self.handle_gpt_response)
+
+
         # =============================================聊天输入框设置end=============================================
 
         # =============================================发送按钮设置start=============================================
@@ -299,6 +306,8 @@ class ChatSessionWindow(QWidget):
         self.send_btn: PushButton
         self.send_btn.setIcon(Icon(FluentIcon.SEND))
         self.send_btn.clicked.connect(self.send_button_clicked)
+
+
         self.dialog: list = []
         self.update_mask_and_data()
         # self.chat_input.returnPressed.connect(self.send_button_clicked)
@@ -369,6 +378,18 @@ class ChatSessionWindow(QWidget):
         # sleep(1)
         self.dialog += [{"role": "user", "content": text}]
         print(self.dialog)
+        self.my_text=text
+        try:
+            global_signal.gpt_response_ready.emit()
+        except Exception as e:
+            print(e.args)
+            logger.error(e.args)
+
+
+    def handle_gpt_response(self):
+        """
+        等待gpt的回答
+        """
         url = r'http://47.121.115.252:8193/textModel/stream'
         headers = {
             "Content-Type": "application/json"
@@ -377,7 +398,7 @@ class ChatSessionWindow(QWidget):
             "uuid": static.uuid,
             "username": static.username,
             "dialog": [{"role": "system", "content": ""},
-                       {"role": "user", "content": text}]
+                       {"role": "user", "content": self.my_text}]
         })
         # ai_bubble = self.text_bubble("", is_sender=False)
         with requests.post(url, headers=headers, data=data, stream=True) as r:
@@ -437,6 +458,7 @@ class ChatSessionWindow(QWidget):
                         print(str(e))
             if all_text != "":
                 self.show_bubble(all_text, is_sender=False)
+                sql = ChatSql()
                 sql.add_message(SenderType.GPT, SendType.TEXT, all_text, True)
 
     def __handle_correct_msg_signal(self, signal: list) -> None:

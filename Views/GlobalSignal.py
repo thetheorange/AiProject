@@ -20,7 +20,8 @@ class GlobalSignal(QObject):
     error_msg = pyqtSignal(list)
     # 录音成功信息传递
     audio_submitted = pyqtSignal(str)
-
+    # 传递的发送文本信号
+    gpt_response_ready = pyqtSignal()
 
 # 全局信号
 global_signal = GlobalSignal()
