@@ -3,7 +3,8 @@ Des 后台管理相关接口
 @Author thetheOrange
 Time 2024/7/16
 """
-
+import asyncio
+import queue
 from typing import List
 
 from flask import request, jsonify, Response
@@ -41,24 +42,44 @@ def console_test() -> Response:
         top_k: int = request.json.get("top_k")
         temperature: int = request.json.get("temperature")
 
-        text_chat_session: TextModel = TextModel(APPID=APPID,
-                                                 APIKey=APIKEY,
-                                                 APISecret=API_SECRET,
-                                                 GptUrl=GPT_URL,
-                                                 Domain=DOMAIN,
-                                                 config={
-                                                     "temperature": temperature,
-                                                     "max_tokens": limit,
-                                                     "top_k": top_k
-                                                 })
-        text_chat_session.chat(dialog)
-        consume_token, response_text = text_chat_session.chat(dialog)
-        return jsonify({
-            "content": response_text,
-            "consume_token": consume_token,
-            "code": 0,
-            "msg": "文本模型回复成功"
-        })
+        text_model: TextModel = TextModel(APPID=APPID,
+                                          APIKey=APIKEY,
+                                          APISecret=API_SECRET,
+                                          GptUrl=GPT_URL,
+                                          Domain=DOMAIN,
+                                          config={
+                                              "temperature": temperature,
+                                              "max_tokens": limit,
+                                              "top_k": top_k
+                                          })
+        q = queue.Queue()
+
+        # 异步获取消息 将其压入队列中
+        async def fetch_data(q):
+            try:
+                async for chunk in text_model.chat(dialog):
+                    q.put(chunk)
+            except Exception as e:
+                q.put(f"{{'code': -1, 'msg': '{e}'}}")
+                app_logger.error(f"[TEXT STREAM ERROR] {e}")
+            finally:
+                q.put(None)
+
+        # 主线程中获取异步消息
+        def handle(q):
+            while True:
+                chunk = q.get(True)
+                if chunk is None:
+                    break
+                yield chunk
+
+        # 在另一个线程中执行异步任务
+        async def run_in_thread(q):
+            await asyncio.to_thread(asyncio.run, fetch_data(q))
+
+        asyncio.create_task(run_in_thread(q))
+
+        return Response(handle(q))
     except Exception as e:
         app_logger.error(f"[TEXT MODEL] {e}")
         return jsonify({
@@ -91,23 +112,22 @@ def add_normal_user() -> Response:
             if is_same_name:
                 return jsonify({"code": StatusCode.UserNameRepeat,
                                 "msg": "用户名已存在"})
-            else:
-                # 加密用户密码
-                pass_word = get_md5(password)
-                # 生成唯一的uuid
-                user_uuid: str = create_uuid(username)
+            # 加密用户密码
+            pass_word = get_md5(password)
+            # 生成唯一的uuid
+            user_uuid: str = create_uuid(username)
 
-                # 存储注册的用户信息
-                new_user: User = User(Id=user_uuid,
-                                      UserName=username,
-                                      PassWord=pass_word,
-                                      Tokens=tokens,
-                                      Email=email,
-                                      PicTimes=pictimes,
-                                      Academy=academy)
-                session.add(new_user)
-                session.commit()
-                return jsonify({"code": 0, "msg": "添加用户成功"})
+            # 存储注册的用户信息
+            new_user: User = User(Id=user_uuid,
+                                  UserName=username,
+                                  PassWord=pass_word,
+                                  Tokens=tokens,
+                                  Email=email,
+                                  PicTimes=pictimes,
+                                  Academy=academy)
+            session.add(new_user)
+            session.commit()
+            return jsonify({"code": 0, "msg": "添加用户成功"})
     except Exception as e:
         app_logger.error(f"[ADD NORMAL USER] {e}")
         return jsonify({
@@ -137,31 +157,31 @@ def modify_normal_user() -> Response:
                     "code": StatusCode.UserNotFound,
                     "msg": "找不到目标用户"
                 })
-            else:
-                # 查看新的用户名是否重名
-                is_same_user: User = session.query(User).filter(
-                    User.UserName == new_user_info.get("new_username"),
-                    User.Id != target_user_info.Id).first()
-                if is_same_user:
-                    return jsonify({
-                        "code": StatusCode.UserNameRepeat,
-                        "msg": "用户名已存在"
-                    })
-                else:
-                    target_user_info.Id = create_uuid(new_user_info["new_username"])
-                    target_user_info.UserName = new_user_info["new_username"]
-                    target_user_info.PassWord = get_md5(new_user_info["new_password"])
-                    target_user_info.Tokens = new_user_info["new_tokens"]
-                    target_user_info.Email = new_user_info["new_email"]
-                    target_user_info.PicTimes = new_user_info["new_pictimes"]
-                    target_user_info.Academy = new_user_info["new_academy"]
+            # 查看新的用户名是否重名
+            is_same_user: User = session.query(User).filter(
+                User.UserName == new_user_info.get("new_username"),
+                User.Id != target_user_info.Id).first()
 
-                    session.commit()
+            if is_same_user:
+                return jsonify({
+                    "code": StatusCode.UserNameRepeat,
+                    "msg": "用户名已存在"
+                })
 
-                    return jsonify({
-                        "code": 0,
-                        "msg": "修改用户信息成功"
-                    })
+            target_user_info.Id = create_uuid(new_user_info["new_username"])
+            target_user_info.UserName = new_user_info["new_username"]
+            target_user_info.PassWord = get_md5(new_user_info["new_password"])
+            target_user_info.Tokens = new_user_info["new_tokens"]
+            target_user_info.Email = new_user_info["new_email"]
+            target_user_info.PicTimes = new_user_info["new_pictimes"]
+            target_user_info.Academy = new_user_info["new_academy"]
+
+            session.commit()
+
+            return jsonify({
+                "code": 0,
+                "msg": "修改用户信息成功"
+            })
     except Exception as e:
         app_logger.error(f"[MODIFY NORMAL USER] {e}")
         return jsonify({
@@ -186,19 +206,20 @@ def delete_normal_user() -> Response:
         with DBSession() as session:
             # 查看目标用户是否存在
             is_user_exit: User = session.query(User).filter(User.UserName == target_username).first()
-            if is_user_exit:
-                session.query(User).filter(User.UserName == target_username).delete()
-                session.commit()
-
-                return jsonify({
-                    "code": 0,
-                    "msg": f"{target_username} 删除成功"
-                })
-            else:
+            if not is_user_exit:
                 return jsonify({
                     "code": StatusCode.UserNotFound,
                     "msg": "目标用户不存在"
                 })
+
+            session.query(User).filter(User.UserName == target_username).delete()
+            session.commit()
+
+            return jsonify({
+                "code": 0,
+                "msg": f"{target_username} 删除成功"
+            })
+
     except Exception as e:
         app_logger.error(f"[DELETE NORMAL USER] {e}")
         return jsonify({
@@ -231,22 +252,22 @@ def add_admin() -> Response:
             if is_same_name:
                 return jsonify({"code": StatusCode.UserNameRepeat,
                                 "msg": "管理员用户名已存在"})
-            else:
-                # 加密用户密码
-                pass_word = get_md5(password)
-                # 生成唯一的uuid
-                admin_uuid: str = create_uuid(admin)
 
-                # 存储注册的用户信息
-                new_admin: Admin = Admin(
-                    Id=admin_uuid,
-                    Auth=0,
-                    Admin=admin,
-                    PassWord=pass_word
-                )
-                session.add(new_admin)
-                session.commit()
-                return jsonify({"code": 0, "msg": "添加管理员成功"})
+            # 加密用户密码
+            pass_word = get_md5(password)
+            # 生成唯一的uuid
+            admin_uuid: str = create_uuid(admin)
+
+            # 存储注册的用户信息
+            new_admin: Admin = Admin(
+                Id=admin_uuid,
+                Auth=0,
+                Admin=admin,
+                PassWord=pass_word
+            )
+            session.add(new_admin)
+            session.commit()
+            return jsonify({"code": 0, "msg": "添加管理员成功"})
     except Exception as e:
         app_logger.error(f"[ADD ADMIN] {e}")
         return jsonify({"code": StatusCode.AddAdminError, "msg": "添加管理员失败"})
@@ -286,19 +307,19 @@ def modify_admin() -> Response:
                     "code": StatusCode.UserNameRepeat,
                     "msg": "用户名已存在"
                 })
-            else:
-                if new_name:
-                    target_admin_info.Admin = new_name
-                    target_admin_info.Id = create_uuid(new_name)
-                if new_password:
-                    target_admin_info.PassWord = get_md5(new_password)
 
-                session.commit()
+            if new_name:
+                target_admin_info.Admin = new_name
+                target_admin_info.Id = create_uuid(new_name)
+            if new_password:
+                target_admin_info.PassWord = get_md5(new_password)
 
-                return jsonify({
-                    "code": 0,
-                    "msg": "修改用户信息成功"
-                })
+            session.commit()
+
+            return jsonify({
+                "code": 0,
+                "msg": "修改用户信息成功"
+            })
     except Exception as e:
         app_logger.error(f"[MODIFY ADMIN] {e}")
         return jsonify({"code": StatusCode.ModifyAdminError, "msg": "修改管理员信息错误"})
@@ -323,19 +344,20 @@ def delete_admin() -> Response:
                 return jsonify({"code": StatusCode.PermissionNotAllow, "msg": "权限不足"})
             # 查看目标用户是否存在
             is_user_exit: Admin = session.query(Admin).filter(Admin.Admin == target_admin, Admin.Auth != 1).first()
-            if is_user_exit:
-                session.query(Admin).filter(Admin.Admin == target_admin).delete()
-                session.commit()
-
-                return jsonify({
-                    "code": 0,
-                    "msg": f"{target_admin} 删除成功"
-                })
-            else:
+            if not is_user_exit:
                 return jsonify({
                     "code": StatusCode.UserNotFound,
                     "msg": "目标用户不存在或权限不足"
                 })
+
+            session.query(Admin).filter(Admin.Admin == target_admin).delete()
+            session.commit()
+
+            return jsonify({
+                "code": 0,
+                "msg": f"{target_admin} 删除成功"
+            })
+
     except Exception as e:
         app_logger.error(f"[DELETE ADMIN] {e}")
         return jsonify({
@@ -366,19 +388,19 @@ def add_token() -> Response:
             has_same_token: Token = session.query(Token).filter(Token.Name == token_name).first()
             if has_same_token:
                 return jsonify({"code": StatusCode.TokenRepeat, "msg": "令牌重名"})
-            else:
-                new_token: Token = Token(
-                    Id=create_uuid(token_name),
-                    Tokens=token_limit.get("tokens") if token_limit.get("tokens") else 0,
-                    PicTimes=token_limit.get("pictimes") if token_limit.get("pictimes") else 0,
-                    TokenRange=token_range,
-                    Name=token_name,
-                    Available=1
-                )
-                session.add(new_token)
-                session.commit()
 
-                return jsonify({"code": 0, "msg": "创建令牌成功"})
+            new_token: Token = Token(
+                Id=create_uuid(token_name),
+                Tokens=token_limit.get("tokens") if token_limit.get("tokens") else 0,
+                PicTimes=token_limit.get("pictimes") if token_limit.get("pictimes") else 0,
+                TokenRange=token_range,
+                Name=token_name,
+                Available=1
+            )
+            session.add(new_token)
+            session.commit()
+
+            return jsonify({"code": 0, "msg": "创建令牌成功"})
     except Exception as e:
         app_logger.error(f"[ADD TOKEN] {e}")
         return jsonify({"code": StatusCode.AddTokenError, "msg": "添加令牌失败"})
@@ -407,15 +429,15 @@ def modify_token() -> Response:
                     "code": StatusCode.TokenNotFound,
                     "msg": "找不到目标令牌"
                 })
-            else:
-                target_token_info.Tokens = new_token_limit["tokens"]
-                target_token_info.PicTimes = new_token_limit["pictimes"]
-                target_token_info.TokenRange = new_token_range
-                target_token_info.Available = new_token_is_available
 
-                session.commit()
+            target_token_info.Tokens = new_token_limit["tokens"]
+            target_token_info.PicTimes = new_token_limit["pictimes"]
+            target_token_info.TokenRange = new_token_range
+            target_token_info.Available = new_token_is_available
 
-                return jsonify({"code": 0, "msg": "令牌修改成功"})
+            session.commit()
+
+            return jsonify({"code": 0, "msg": "令牌修改成功"})
     except Exception as e:
         app_logger.error(f"[MODIFY TOKEN] {e}")
         return jsonify({"code": StatusCode.ModifyTokenError, "msg": "修改令牌错误"})
@@ -441,19 +463,20 @@ def delete_token() -> Response:
                 return jsonify({"code": StatusCode.PermissionNotAllow, "msg": "权限不足"})
             # 查看目标用户是否存在
             is_user_exit: Token = session.query(Token).filter(Token.Name == target_token).first()
-            if is_user_exit:
-                session.query(Token).filter(Token.Name == target_token).delete()
-                session.commit()
-
-                return jsonify({
-                    "code": 0,
-                    "msg": f"{target_token} 删除成功"
-                })
-            else:
+            if not is_user_exit:
                 return jsonify({
                     "code": StatusCode.TokenNotFound,
                     "msg": "目标令牌不存在或权限不足"
                 })
+
+            session.query(Token).filter(Token.Name == target_token).delete()
+            session.commit()
+
+            return jsonify({
+                "code": 0,
+                "msg": f"{target_token} 删除成功"
+            })
+
     except Exception as e:
         app_logger.error(f"[DELETE TOKEN] {e}")
         return jsonify({
@@ -483,12 +506,11 @@ def control_token() -> Response:
                     "code": StatusCode.TokenNotFound,
                     "msg": "找不到目标令牌"
                 })
-            else:
-                target_token_info.Available = is_available
 
-                session.commit()
+            target_token_info.Available = is_available
+            session.commit()
 
-                return jsonify({"code": 0, "msg": f"令牌{'启用' if target_token_info.Available else '禁用'}成功"})
+            return jsonify({"code": 0, "msg": f"令牌{'启用' if target_token_info.Available else '禁用'}成功"})
     except Exception as e:
         app_logger.error(f"[CONTROL TOKEN] {e}")
         return jsonify({"code": StatusCode.ControlTokenError, "msg": "修改令牌状态信息失败"})
@@ -557,11 +579,11 @@ def query_user_table() -> Response:
                         } for token in query_ret
                     ]
                 })
-            else:
-                return jsonify({
-                    "code": StatusCode.TableNotFound,
-                    "msg": "未查询到指定表"
-                })
+
+            return jsonify({
+                "code": StatusCode.TableNotFound,
+                "msg": "未查询到指定表"
+            })
     except Exception as e:
         app_logger.error(f"[QUERY TABLE] {e}")
         return jsonify({
@@ -605,11 +627,11 @@ def query_user_table_count() -> Response:
                     "msg": f"查询{total_count}条信息成功",
                     "total_count": total_count
                 })
-            else:
-                return jsonify({
-                    "code": StatusCode.TableNotFound,
-                    "msg": "未查询到指定表"
-                })
+
+            return jsonify({
+                "code": StatusCode.TableNotFound,
+                "msg": "未查询到指定表"
+            })
     except Exception as e:
         app_logger.error(f"[QUERY TABLE COUNT] {e}")
         return jsonify({
@@ -674,11 +696,11 @@ def query_table_data() -> Response:
                         "Available": query_ret.Available
                     }
                 })
-            else:
-                return jsonify({
-                    "code": StatusCode.TableNotFound,
-                    "msg": "未查询到指定表"
-                })
+
+            return jsonify({
+                "code": StatusCode.TableNotFound,
+                "msg": "未查询到指定表"
+            })
 
     except Exception as e:
         app_logger.error(f"[QUERY TABLE SPECIFY DATA] {e}")
@@ -713,27 +735,27 @@ def get_token() -> Response:
             if not token and target_user:
                 return jsonify({"code": StatusCode.TokenNotFound + StatusCode.UserNotFound,
                                 "msg": "找不到对应的令牌或找不到对应的用户"})
-            else:
-                # 检查用户是否已经兑换过该令牌
-                has_get_token: UserToken = session.query(UserToken).filter(UserToken.TokenId == token_id,
-                                                                           UserToken.UserId == user_id).first()
-                if has_get_token:
-                    return jsonify({"code": StatusCode.TokenAlreadyGet, "msg": "用户已兑换过该令牌"})
-                else:
-                    # 创建兑换记录
-                    history_get_token: UserToken = UserToken(
-                        UserId=user_id,
-                        TokenId=token_id
-                    )
-                    session.add(history_get_token)
-                    session.commit()
 
-                    # 根据令牌信息分配额度
-                    target_user.Tokens += token.Tokens
-                    target_user.PicTimes += token.PicTimes
-                    session.commit()
+            # 检查用户是否已经兑换过该令牌
+            has_get_token: UserToken = session.query(UserToken).filter(UserToken.TokenId == token_id,
+                                                                       UserToken.UserId == user_id).first()
+            if has_get_token:
+                return jsonify({"code": StatusCode.TokenAlreadyGet, "msg": "用户已兑换过该令牌"})
 
-                    return jsonify({"code": 0, "msg": "兑换令牌成功"})
+            # 创建兑换记录
+            history_get_token: UserToken = UserToken(
+                UserId=user_id,
+                TokenId=token_id
+            )
+            session.add(history_get_token)
+            session.commit()
+
+            # 根据令牌信息分配额度
+            target_user.Tokens += token.Tokens
+            target_user.PicTimes += token.PicTimes
+            session.commit()
+
+            return jsonify({"code": 0, "msg": "兑换令牌成功"})
     except Exception as e:
         app_logger.error(f"[USER GET TOKEN] {e}")
         return jsonify({"code": StatusCode.UserGetTokenError, "msg": "用户兑换令牌错误"})
