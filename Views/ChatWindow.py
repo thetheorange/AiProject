@@ -8,8 +8,8 @@ import json
 import sys
 
 import requests
-from PyQt5.QtCore import Qt, QEvent, pyqtSignal, QObject
-from PyQt5.QtGui import QPixmap, QGuiApplication
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QWidget, QAction, QLabel, QHBoxLayout, QListWidgetItem, QFrame, QApplication
 from PyQt5.uic import loadUi
 from qfluentwidgets import ToolTipFilter, PushButton, Icon, FluentIcon, ToolTipPosition, CommandBar, MessageBoxBase, \
@@ -44,9 +44,11 @@ class ChatLineWidget(QWidget):
         self.setLayout(layout)
         self.button.clicked.connect(self.open_chat)
         self.dialogue_name = text
+
     def open_chat(self):
-        static.dialogue_name=self.dialogue_name
+        static.dialogue_name = self.dialogue_name
         global_signal.ChatOperation.emit("start_chat")
+
 
 class ChatSearchWindow(QWidget):
     """
@@ -92,7 +94,7 @@ class ChatSearchWindow(QWidget):
         self.ListWidget: ListWidget
         sql = ChatSql()
         datadict = sql.get_dialogues()
-        self.dialogue_ids=[]
+        self.dialogue_ids = []
         for data in datadict:
             self.add_chat_list({'name': data['name'], 'icon': eval(f"FluentIcon.{data['icon']}")})
         static.dialogue_lisi = datadict
@@ -241,19 +243,17 @@ class AvatarContainer(QFrame):
         # self.setStyleSheet("QFrame { border: 1px solid #ccc; background-color: #f0f0f0; }")
 
 
-
 class ChatSessionWindow(QWidget):
     """
     聊天会话界面
     """
 
-
-    def __init__(self,name:str="",id:int=-1):
+    def __init__(self, name: str = "", id: int = -1):
         super().__init__()
         loadUi("./Templates/chat_session.ui", self)
 
         # =============================================聊天选项bar设置start=============================================
-        static.sql_dialogue_id=id
+        static.sql_dialogue_id = id
         self.chat_option_bar: CommandBar
         # 清除聊天记录按钮
         self.clear_history_btn: QAction = QAction(triggered=self.clear_history)
@@ -295,9 +295,8 @@ class ChatSessionWindow(QWidget):
         self.chat_input: PlainTextEdit
         self.chat_input.setFixedHeight(80)
 
-        self.my_text:str=""#用户发送信息
+        self.my_text: str = ""  # 用户发送信息
         global_signal.gpt_response_ready.connect(self.handle_gpt_response)
-
 
         # =============================================聊天输入框设置end=============================================
 
@@ -307,7 +306,6 @@ class ChatSessionWindow(QWidget):
         self.send_btn.setIcon(Icon(FluentIcon.SEND))
         self.send_btn.clicked.connect(self.send_button_clicked)
 
-
         self.dialog: list = []
         self.update_mask_and_data()
         # self.chat_input.returnPressed.connect(self.send_button_clicked)
@@ -315,7 +313,6 @@ class ChatSessionWindow(QWidget):
         # =============================================发送按钮设置end=============================================
         self.init_message()
         global_signal.correct_msg.connect(self.__handle_correct_msg_signal)
-
 
     def update_mask_and_data(self):
         """
@@ -378,13 +375,12 @@ class ChatSessionWindow(QWidget):
         # sleep(1)
         self.dialog += [{"role": "user", "content": text}]
         print(self.dialog)
-        self.my_text=text
+        self.my_text = text
         try:
             global_signal.gpt_response_ready.emit()
         except Exception as e:
             print(e.args)
             logger.error(e.args)
-
 
     def handle_gpt_response(self):
         """
@@ -475,7 +471,6 @@ class ChatSessionWindow(QWidget):
             duration=1000,
             parent=self
         )
-
 
     def clear_history(self) -> None:
         """

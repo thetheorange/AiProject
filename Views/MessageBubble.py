@@ -83,11 +83,11 @@ class MessageBubble(QWidget):
         text_layout.setContentsMargins(0, 0, 0, 0)  # 设置文本容器的边距
         # 文本容器QWidget
         if variety == "text":
-            self.installEventFilter(self)  # 安装事件过滤器
             text = self.text_line_break(text)
             print(text)
             self.text_label = QLabel(text, self.info_container)
             self.text_label.setWordWrap(True)
+            self.text_label.installEventFilter(self)  # 安装事件过滤器
             text_layout.addWidget(self.text_label)
             # 把字体设置成微雅软黑
             font = QFont('Microsoft YaHei', 12)  # 12是字体大小，可以根据需要调整
