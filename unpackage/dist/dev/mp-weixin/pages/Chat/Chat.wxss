@@ -1,0 +1,26 @@
+
+.content {
+		margin-top: 700rpx;
+		margin-bottom: 10rpx;
+}
+.chat {
+	    display: flex;
+	    flex-direction: column;
+		padding-left: 20rpx;  /* 左侧间距 */
+		 padding-right: 20rpx;  /* 右侧间距 */
+		 border-radius:20rpx;
+	    padding:  35rpx;
+	    box-sizing: border-box;
+	    background-color: powderblue;
+}
+.avatar-left {
+		height: 80rpx;
+		width: 80rpx;
+		margin-left: 10rpx;
+}
+.avatar-right {
+		height: 80rpx;
+		width: 80rpx;
+		margin-left: 650rpx;
+}
+	
