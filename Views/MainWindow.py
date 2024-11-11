@@ -11,7 +11,8 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QWidget, QSystemTrayIcon, QAction, QMenu
 from qfluentwidgets import FluentIcon, SplitFluentWindow, \
-    NavigationAvatarWidget, NavigationItemPosition,setTheme,Theme,setThemeColor,themeColor
+    NavigationAvatarWidget, NavigationItemPosition, setTheme, Theme, setThemeColor, themeColor, SystemThemeListener
+from qframelesswindow.utils import getSystemAccentColor
 
 from Sqlite.ChatSql import ChatSql
 from Sqlite.Setting import setting
@@ -32,10 +33,16 @@ class MainWindow(SplitFluentWindow):
     def __init__(self):
         super().__init__()
         # =============================================基础设置start=============================================
-        setTheme(Theme.AUTO) # 设置主题
+        # setTheme(Theme.AUTO) # 设置主题
         # setThemeColor("#ff0000") # 设置主题颜色
+        # 主题色设置
         self.setWindowTitle("所见即所得")
         self.setWindowIcon(QIcon("../Assets/image/logo_orange.png"))
+
+        self.themeListener = SystemThemeListener(self)
+        self.themeListener.start()
+        if sys.platform in ["win32", "darwin"]:
+            setThemeColor(getSystemAccentColor(), save=False)
 
         self.setMinimumSize(600, 500)
         self.resize(800, 600)
@@ -206,7 +213,7 @@ class MainWindow(SplitFluentWindow):
         # 创建一个上下文菜单（右击托盘图标显示的菜单栏选项）
         menu = QMenu()
         quit_action = QAction("退出应用", menu)
-        quit_action.triggered.connect(sys.exit)
+        quit_action.triggered.connect(self.my_exit)
         menu.addAction(quit_action)
 
 
@@ -248,8 +255,20 @@ class MainWindow(SplitFluentWindow):
             if event is not None:
                 event.ignore()
         else:
-            self.close()
+            self.my_close(event)
 
+    def my_exit(self,e):
+        """退出程序"""
+        self.themeListener.terminate()
+        self.themeListener.deleteLater()
+        super().closeEvent(e)
+
+    def _onThemeChangedFinished(self):
+        super()._onThemeChangedFinished()
+
+        # 云母特效启用时需要增加重试机制
+        # if self.isMicaEffectEnabled():
+        #     QTimer.singleShot(100, lambda: self.windowEffect.setMicaEffect(self.winId(), isDarkTheme()))
 
 if __name__ == "__main__":
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)

@@ -18,13 +18,13 @@ from qfluentwidgets import ToolTipFilter, PushButton, Icon, FluentIcon, ToolTipP
 from Core.Tools.AudioRecorder import AudioRecorder
 from Core.Tools.AudiotoText import AudiotoText
 from Core.Tools.ImageToText import ImageToText
+from Logging import app_logger
 from Sqlite.ChatSql import ChatSql
 from Sqlite.ChatSql import SenderType, SendType
 from Sqlite.Static import static
 from Views.FileWindow import FileWindow
 from Views.GlobalSignal import global_signal
 from Views.MessageBubble import MessageBubble
-from dist.lib.sqlalchemy.dialects.postgresql.psycopg import logger
 
 
 class ChatLineWidget(QWidget):
@@ -303,6 +303,7 @@ class ChatSessionWindow(QWidget):
         # =============================================发送按钮设置start=============================================
 
         self.send_btn: PushButton
+
         self.send_btn.setIcon(Icon(FluentIcon.SEND))
         self.send_btn.clicked.connect(self.send_button_clicked)
 
@@ -380,7 +381,7 @@ class ChatSessionWindow(QWidget):
             global_signal.gpt_response_ready.emit()
         except Exception as e:
             print(e.args)
-            logger.error(e.args)
+            app_logger.error(e.args)
 
     def handle_gpt_response(self):
         """
