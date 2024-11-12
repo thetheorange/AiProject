@@ -240,6 +240,23 @@
 1. 修正了json文件不正确时的闪退问题。
 2. 增加了系统托盘功能。
 
+### 2024/11/12
+
+开发进度：
+
+1. 把文本接口改成新的了
+
+开发问题：
+
+- [ ] 在ChatWindow的ChatSessionWindow类里，sendbutton按下后无法及时生成气泡，收到信息结束后才显示。怀疑要用pyqt的信号或者有update之类的函数。
+- [ ] 可以流式接受文字，但是因为上一个问题，无法流式在前端中显示。
+- [ ] 在MessageBubble里，当文字一点一点变长，但是气泡框没有跟着变长。直接运行MessageBubble可以测试。
+- [ ] 有时会触发奇怪的bug导致闪退，未查出原因
+- [ ] python性能原因，现在的cxfreeze打包方案运行过慢，但是pyinstaller百分百打包失败。不改也行。
+- [ ] generate_captcha这儿有个小问题，如果用户文件夹里没有Temp文件夹的话，会出现闪退！要加一个文件路径判断。
+- [ ] 当发出了post请求的同时，移动窗口会闪退
+- [ ] 说明：仿照了qq，打包后会在系统托盘（任务栏）生成一个orange软件标，右键退出才能退出
+
 ## Contributor :bow:
 
 [@thetheorange](https://github.com/thetheorange)

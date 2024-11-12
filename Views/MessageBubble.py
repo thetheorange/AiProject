@@ -6,7 +6,7 @@ import textwrap
 from PyQt5.QtCore import Qt, QEvent
 from PyQt5.QtGui import QFont, QGuiApplication
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QWidget
+from PyQt5.QtWidgets import QApplication, QWidget,QSizePolicy
 from PyQt5.QtWidgets import QHBoxLayout, QFrame
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QVBoxLayout, QListWidget, QListWidgetItem
@@ -14,6 +14,7 @@ from qfluentwidgets import AvatarWidget, ImageLabel, PushButton, FluentIcon
 
 from Core.Tools.Play_Audio import AudioPlayer
 from Views.GlobalSignal import global_signal
+
 
 class AvatarContainer(QFrame):
     """
@@ -23,6 +24,7 @@ class AvatarContainer(QFrame):
     def __init__(self, avatar_path: str, parent=None):
         super(AvatarContainer, self).__init__(parent, frameShape=QFrame.NoFrame)  # 无边框
         self.initUI(avatar_path)
+        self.text_layout: QVBoxLayout
 
     def initUI(self, avatar_path: str):
         self.avatar_label = AvatarWidget(avatar_path)
@@ -54,6 +56,7 @@ class MessageBubble(QWidget):
         super(MessageBubble, self).__init__(parent)
         self.text = text
         self.initUI(text, avatar_path, is_sender, variety)
+        self.setSizePolicy(QSizePolicy.Fixed,QSizePolicy.Fixed)
 
     def initUI(self, text, avatar_path: str, is_sender: bool, variety):
         self.bubble_container = QWidget(self)  # 气泡容器
@@ -62,6 +65,7 @@ class MessageBubble(QWidget):
         self.info_container = QWidget(self.bubble_container)
         # 设置高度
         self.info_container.setMinimumHeight(50)
+        self.info_container.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         # self.info_container.setMaximumHeight(self.text_label.height())
         # self.setMaximumHeight(self.info_container.height() + 200)
         self.info_container.setStyleSheet("""  
@@ -79,41 +83,30 @@ class MessageBubble(QWidget):
                         }  
                     """)
 
-        text_layout = QVBoxLayout(self.info_container)
-        text_layout.setContentsMargins(0, 0, 0, 0)  # 设置文本容器的边距
+        self.text_layout = QVBoxLayout(self.info_container)
+        self.text_layout.setContentsMargins(0, 0, 0, 0)  # 设置文本容器的边距
         # 文本容器QWidget
         if variety == "text":
             text = self.text_line_break(text)
-            print(text)
-            self.text_label = QLabel(text, self.info_container)
-            self.text_label.setWordWrap(True)
-            self.text_label.installEventFilter(self)  # 安装事件过滤器
-            text_layout.addWidget(self.text_label)
-            # 把字体设置成微雅软黑
-            font = QFont('Microsoft YaHei', 12)  # 12是字体大小，可以根据需要调整
-            self.text_label.setFont(font)
-            # 为文本容器设置背景色
-            #      背景色
-            #    #ffe4e1粉色，#e5f9e7绿色，#e0f2ff蓝色,#dbc6e0
+            self.createTextLabel(text)
         elif variety == "image":
             image = ImageLabel(text)
             image.scaledToHeight(200)
             image.setBorderRadius(8, 8, 8, 8)
-            text_layout.addWidget(image)
+            self.text_layout.addWidget(image)
         elif variety == "audio":
             # audio_button播放按钮
             audio_button = PushButton(FluentIcon.VOLUME, "播放")
             audio_button.clicked.connect(lambda: self.play_audio(text))
-            text_layout.addWidget(audio_button)  # 使用stretch参数来分配多余的空间给时长标签
+            self.text_layout.addWidget(audio_button)  # 使用stretch参数来分配多余的空间给时长标签
             # 转文字按钮
             play_button = PushButton(FluentIcon.LANGUAGE, "转文字")
             play_button.clicked.connect(lambda: self.audio_to_text(text))
-            text_layout.addWidget(play_button)
+            self.text_layout.addWidget(play_button)
             # 一个耳机的图标:FluentIcon.HEADPHONE
 
         # 头像QLabel
         self.avatar_container = AvatarContainer(avatar_path)
-
         # 设置气泡容器的样式
         if is_sender:
             bubble_layout.addWidget(self.info_container, stretch=1)
@@ -147,12 +140,31 @@ class MessageBubble(QWidget):
         else:
             main_layout.addWidget(self.bubble_container, alignment=Qt.AlignLeft)
 
+    def createTextLabel(self, text):
+        # print(text)
+        self.text_label = QLabel(text, self.info_container)
+        self.text_label.setWordWrap(True)
+        self.text_label.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
+        self.text_label.installEventFilter(self)  # 安装事件过滤器
+        if self.text_layout is not None:
+            self.text_layout.addWidget(self.text_label)
+        # 把字体设置成微雅软黑
+        font = QFont('Microsoft YaHei', 12)  # 12是字体大小，可以根据需要调整
+        self.text_label.setFont(font)
+        # 为文本容器设置背景色
+        #      背景色
+        #    #ffe4e1粉色，#e5f9e7绿色，#e0f2ff蓝色,#dbc6e0
+
     def update_text(self, text, is_add: bool = False):
+        """更新文本"""
         if is_add:
             self.text += text
         else:
             self.text = text
-        self.text_label.setText(self.text_line_break(self.text))
+        # self.createTextLabel(text)
+        # self.bubble_container.setSizeHint(self.text_label.sizeHint())
+        self.text_label.setText(self.text)
+        self.adjustSize()
 
     @staticmethod
     def text_line_break(s: str, limit: int = 30) -> str:
@@ -194,7 +206,8 @@ class MessageBubble(QWidget):
         点击复制到剪贴板
         """
         try:
-            if (obj == self or obj == self.text_label) and event.type() == QEvent.MouseButtonPress:  # 判断是否是特定的 QLabel 并且是鼠标点击事件
+            if (
+                    obj == self or obj == self.text_label) and event.type() == QEvent.MouseButtonPress:  # 判断是否是特定的 QLabel 并且是鼠标点击事件
                 clipboard = QGuiApplication.clipboard()  # 获取系统剪贴板
                 clipboard.setText(self.text)  # 设置要复制的内容
                 global_signal.correct_msg.emit(["复制成功", "复制到剪贴板"])
@@ -217,7 +230,7 @@ class MessageBubbleWindow(QListWidget):
         text = "Hellohhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh"
         is_sender = True  # 假设总是发送者
         avatar_path = "./Assets/image/logo.png"  # 发送者头像路径
-        bubble = MessageBubble(avatar_path, avatar_path, is_sender=is_sender, variety="audio")
+        bubble = MessageBubble(text, avatar_path, is_sender=is_sender, variety="text")
 
         item = QListWidgetItem(self)
         item.setSizeHint(bubble.sizeHint())
@@ -227,10 +240,26 @@ class MessageBubbleWindow(QListWidget):
 
         self.show()
 
+    def  test_bubble(self):
+        bubble = MessageBubble("eee", "./Assets/image/logo.png", variety="text")
+
+        item = QListWidgetItem(self)
+        item.setSizeHint(bubble.sizeHint())
+
+        # 将 MessageBubble 设置为 QListWidgetItem 的 widget
+        self.setItemWidget(item, bubble)
+
+        for i in range(120):
+            bubble.update_text('啊啊啊啊啊啊', is_add=True) # 为什么不能伸展
+            item.setSizeHint(bubble.sizeHint())
+            self.updateGeometry()
+            self.update()
+
 
 if __name__ == '__main__':
     import sys
 
     app = QApplication(sys.argv)
     ex = MessageBubbleWindow()
+    ex.test_bubble()
     sys.exit(app.exec_())
