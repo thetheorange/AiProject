@@ -92,12 +92,15 @@ class ChatSearchWindow(QWidget):
         """
         # 接入本地数据库
         self.ListWidget: ListWidget
+        self.ListWidget.setWordWrap(True)
+        # self.ListWidget.setSizePolicy(QSizePolicy.Fixed,QSizePolicy.Fixed)
         sql = ChatSql()
         datadict = sql.get_dialogues()
         self.dialogue_ids = []
         for data in datadict:
             self.add_chat_list({'name': data['name'], 'icon': eval(f"FluentIcon.{data['icon']}")})
         static.dialogue_lisi = datadict
+
         # =============================================添加聊天按钮行end=============================================
 
     def search(self):
@@ -303,7 +306,6 @@ class ChatSessionWindow(QWidget):
         # =============================================发送按钮设置start=============================================
 
         self.send_btn: PushButton
-
         self.send_btn.setIcon(Icon(FluentIcon.SEND))
         self.send_btn.clicked.connect(self.send_button_clicked)
 
@@ -314,6 +316,12 @@ class ChatSessionWindow(QWidget):
         # =============================================发送按钮设置end=============================================
         self.init_message()
         global_signal.correct_msg.connect(self.__handle_correct_msg_signal)
+
+    def test_bubble(self):
+        bubble,size = self.show_bubble("")
+        for i in range(120):
+            bubble.update_text('啊啊啊啊啊啊', is_add=True)
+            size.setSizeHint(bubble.sizeHint())
 
     def update_mask_and_data(self):
         """
@@ -332,9 +340,10 @@ class ChatSessionWindow(QWidget):
                 self.show_bubble(msg['info'], is_sender=msg['sender'], variety=msg['type'])
             except Exception as e:
                 print(str(e))
+        self.test_bubble()
 
     def show_bubble(self, text: str = "", avatar_path: str = "./Assets/image/logo.png", is_sender: bool = True,
-                    variety: str = "text"):
+                    variety: str = "text") -> (MessageBubble,QListWidgetItem):
         """
         气泡的发送
         :param text:发送文本
@@ -352,7 +361,7 @@ class ChatSessionWindow(QWidget):
 
         # 滚动到底部以显示最新消息（可选）
         self.ListWidget.scrollToBottom()
-        # return bubble
+        return bubble,item
 
     def send_button_clicked(self):
         """
@@ -387,7 +396,8 @@ class ChatSessionWindow(QWidget):
         """
         等待gpt的回答
         """
-        url = r'http://47.121.115.252:8193/textModel/stream'
+        bubble,size = self.show_bubble("", is_sender=False)
+        url = r'http://47.121.115.252:8193/textModel/chat'
         headers = {
             "Content-Type": "application/json"
         }
@@ -437,7 +447,8 @@ class ChatSessionWindow(QWidget):
                             for text_item in json_data["payload"]["choices"]["text"]:
                                 all_text += text_item["content"]
                                 print(text_item["content"])
-                                # ai_bubble.update_text(text_item["content"],is_add=True)
+                                bubble.update_text(text_item["content"], is_add=True)
+                                size.setSizeHint(bubble.sizeHint())
 
                             # 结束
                             if json_data["header"]["status"] == 2:
@@ -454,7 +465,6 @@ class ChatSessionWindow(QWidget):
                     except Exception as e:
                         print(str(e))
             if all_text != "":
-                self.show_bubble(all_text, is_sender=False)
                 sql = ChatSql()
                 sql.add_message(SenderType.GPT, SendType.TEXT, all_text, True)
 
