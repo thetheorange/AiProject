@@ -7669,6 +7669,13 @@ const pages = [
       navigationBarTitleText: "custom",
       navigationStyle: "custom"
     }
+  },
+  {
+    path: "pages/settings/settings",
+    style: {
+      navigationBarTitleText: "",
+      navigationStyle: "custom"
+    }
   }
 ];
 const globalStyle = {
@@ -7697,20 +7704,26 @@ const tabBar = {
     {
       pagePath: "pages/Chat/Chat",
       iconPath: "static/chat.png",
-      selectedIconPath: "static/logo_orange.png",
+      selectedIconPath: "static/chat2.png",
       text: "聊天"
     },
     {
       pagePath: "pages/mainwindow/mainwindow",
       iconPath: "static/home.png",
-      selectedIconPath: "static/mainwin.png",
-      text: "主页"
+      selectedIconPath: "static/home_2.png",
+      text: "我的"
     },
     {
       pagePath: "pages/Mask/Mask",
-      iconPath: "static/mask.png",
-      selectedIconPath: "static/girl.png",
+      iconPath: "static/mask1.png",
+      selectedIconPath: "static/mask.png",
       text: "面具"
+    },
+    {
+      pagePath: "pages/settings/settings",
+      iconPath: "static/settings.png",
+      selectedIconPath: "static/setting.png",
+      text: "设置"
     }
   ]
 };
