@@ -2,6 +2,9 @@
   "navigationBarTitleText": "",
   "navigationStyle": "custom",
   "usingComponents": {
-    "uni-nav-bar": "../../uni_modules/uni-nav-bar/components/uni-nav-bar/uni-nav-bar"
+    "uni-nav-bar": "../../uni_modules/uni-nav-bar/components/uni-nav-bar/uni-nav-bar",
+    "uni-combox": "../../uni_modules/uni-combox/components/uni-combox/uni-combox",
+    "uni-section": "../../uni_modules/uni-section/components/uni-section/uni-section",
+    "uni-easyinput": "../../uni_modules/uni-easyinput/components/uni-easyinput/uni-easyinput"
   }
 }

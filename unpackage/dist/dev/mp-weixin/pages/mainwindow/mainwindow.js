@@ -28,14 +28,15 @@ if (!Array) {
   const _easycom_uni_nav_bar2 = common_vendor.resolveComponent("uni-nav-bar");
   const _easycom_uni_swiper_dot2 = common_vendor.resolveComponent("uni-swiper-dot");
   const _easycom_uni_card2 = common_vendor.resolveComponent("uni-card");
-  const _component_uni_section = common_vendor.resolveComponent("uni-section");
-  (_easycom_uni_nav_bar2 + _easycom_uni_swiper_dot2 + _easycom_uni_card2 + _component_uni_section)();
+  const _easycom_uni_section2 = common_vendor.resolveComponent("uni-section");
+  (_easycom_uni_nav_bar2 + _easycom_uni_swiper_dot2 + _easycom_uni_card2 + _easycom_uni_section2)();
 }
 const _easycom_uni_nav_bar = () => "../../uni_modules/uni-nav-bar/components/uni-nav-bar/uni-nav-bar.js";
 const _easycom_uni_swiper_dot = () => "../../uni_modules/uni-swiper-dot/components/uni-swiper-dot/uni-swiper-dot.js";
 const _easycom_uni_card = () => "../../uni_modules/uni-card/components/uni-card/uni-card.js";
+const _easycom_uni_section = () => "../../uni_modules/uni-section/components/uni-section/uni-section.js";
 if (!Math) {
-  (_easycom_uni_nav_bar + _easycom_uni_swiper_dot + _easycom_uni_card)();
+  (_easycom_uni_nav_bar + _easycom_uni_swiper_dot + _easycom_uni_card + _easycom_uni_section)();
 }
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return {
