@@ -1,13 +1,40 @@
 {
   "pages": [
+    "pages/mainwindow/mainwindow",
     "pages/Chat/Chat",
     "pages/Mask/Mask"
   ],
   "window": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "uni-app",
+    "navigationBarTitleText": "ai-project",
     "navigationBarBackgroundColor": "#F8F8F8",
     "backgroundColor": "#F8F8F8"
+  },
+  "tabBar": {
+    "color": "#7A7E83",
+    "selectedColor": "#3cc51f",
+    "borderStyle": "black",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/Chat/Chat",
+        "iconPath": "static/chat.png",
+        "selectedIconPath": "static/logo_orange.png",
+        "text": "聊天"
+      },
+      {
+        "pagePath": "pages/mainwindow/mainwindow",
+        "iconPath": "static/home.png",
+        "selectedIconPath": "static/mainwin.png",
+        "text": "主页"
+      },
+      {
+        "pagePath": "pages/Mask/Mask",
+        "iconPath": "static/mask.png",
+        "selectedIconPath": "static/girl.png",
+        "text": "面具"
+      }
+    ]
   },
   "usingComponents": {}
 }

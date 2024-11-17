@@ -18,14 +18,14 @@
         }
     },
     "compileType": "miniprogram",
-    "libVersion": "3.2.5",
+    "libVersion": "3.6.5",
     "appid": "touristappid",
     "projectname": "uniappdemo1",
     "condition": {
         "miniprogram": {
             "list": [
                 {
-                    "name": "pages/Mask/Mask",
+                    "name": "test",
                     "pathName": "pages/Mask/Mask",
                     "query": ""
                 }

@@ -1,6 +1,14 @@
 {
 	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
 		{
+			"path" : "pages/mainwindow/mainwindow",
+			"style" : 
+			{
+				"navigationBarTitleText" : "",
+				"navigationStyle":"custom" 
+			}
+		},
+		{
 			"path" : "pages/Chat/Chat",
 			"style" : 
 			{
@@ -12,14 +20,14 @@
 			"path" : "pages/Mask/Mask",
 			"style" : 
 			{
-				"navigationBarTitleText" : "custom"
+				"navigationBarTitleText" : "custom",
+				"navigationStyle":"custom" 
 			}
 		}
-		
 	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "uni-app",
+		"navigationBarTitleText": "ai-project",
 		"navigationBarBackgroundColor": "#F8F8F8",
 		"backgroundColor": "#F8F8F8"
 	},
@@ -33,5 +41,33 @@
 				"query": "" //启动参数，在页面的onLoad函数里面得到
 			}
 		]
+	},
+	"tabBar": {
+		"color": "#7A7E83",
+		"selectedColor": "#3cc51f",
+		"borderStyle": "black",
+		"backgroundColor": "#ffffff",
+		//主页要跳转的页面路径
+		"list": [{
+			"pagePath": "pages/Chat/Chat",
+			//选中的图标
+			"iconPath": "static/chat.png",
+			//未选中的图标
+			"selectedIconPath": "static/logo_orange.png",
+			"text": "聊天"
+		},
+		{
+			"pagePath": "pages/mainwindow/mainwindow",
+			"iconPath": "static/home.png",
+			"selectedIconPath": "static/mainwin.png",
+			"text": "主页"
+		},
+		
+		{
+			"pagePath": "pages/Mask/Mask",
+			"iconPath": "static/mask.png",
+			"selectedIconPath": "static/girl.png",
+			"text": "面具"
+		}]
 	}
 }

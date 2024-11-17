@@ -7650,6 +7650,13 @@ const createSubpackageApp = initCreateSubpackageApp();
 }
 const pages = [
   {
+    path: "pages/mainwindow/mainwindow",
+    style: {
+      navigationBarTitleText: "",
+      navigationStyle: "custom"
+    }
+  },
+  {
     path: "pages/Chat/Chat",
     style: {
       navigationBarTitleText: "",
@@ -7659,13 +7666,14 @@ const pages = [
   {
     path: "pages/Mask/Mask",
     style: {
-      navigationBarTitleText: "custom"
+      navigationBarTitleText: "custom",
+      navigationStyle: "custom"
     }
   }
 ];
 const globalStyle = {
   navigationBarTextStyle: "black",
-  navigationBarTitleText: "uni-app",
+  navigationBarTitleText: "ai-project",
   navigationBarBackgroundColor: "#F8F8F8",
   backgroundColor: "#F8F8F8"
 };
@@ -7680,11 +7688,38 @@ const condition = {
     }
   ]
 };
+const tabBar = {
+  color: "#7A7E83",
+  selectedColor: "#3cc51f",
+  borderStyle: "black",
+  backgroundColor: "#ffffff",
+  list: [
+    {
+      pagePath: "pages/Chat/Chat",
+      iconPath: "static/chat.png",
+      selectedIconPath: "static/logo_orange.png",
+      text: "聊天"
+    },
+    {
+      pagePath: "pages/mainwindow/mainwindow",
+      iconPath: "static/home.png",
+      selectedIconPath: "static/mainwin.png",
+      text: "主页"
+    },
+    {
+      pagePath: "pages/Mask/Mask",
+      iconPath: "static/mask.png",
+      selectedIconPath: "static/girl.png",
+      text: "面具"
+    }
+  ]
+};
 const e = {
   pages,
   globalStyle,
   uniIdRouter,
-  condition
+  condition,
+  tabBar
 };
 var define_process_env_UNI_SECURE_NETWORK_CONFIG_default = [];
 function t(e2) {

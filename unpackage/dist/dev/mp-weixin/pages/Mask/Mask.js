@@ -140,7 +140,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     i: common_vendor.f($data.arr, (item, index, i0) => {
       return {
         a: common_vendor.o(($event) => _ctx.onClick(item), index),
-        b: "030de4ed-4-" + i0 + "," + ("030de4ed-3-" + i0),
+        b: "77da02ee-4-" + i0 + "," + ("77da02ee-3-" + i0),
         c: common_vendor.p({
           clickable: "true",
           title: item.maskname,
@@ -148,7 +148,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
           note: item.data
         }),
         d: index,
-        e: "030de4ed-3-" + i0
+        e: "77da02ee-3-" + i0
       };
     }),
     j: common_vendor.p({
