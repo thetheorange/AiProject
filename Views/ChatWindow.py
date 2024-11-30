@@ -439,7 +439,7 @@ class ChatSessionWindow(QWidget):
                 self.show_bubble(msg['info'], is_sender=msg['sender'], variety=msg['type'])
             except Exception as e:
                 print(str(e))
-        self.test_bubble()  # 记得注释掉
+        # self.test_bubble()  # 记得注释掉
 
     def show_bubble(self, text: str = "", avatar_path: str = "./Assets/image/logo.png", is_sender: bool = True,
                     variety: str = "text") -> (MessageBubble, QListWidgetItem):
