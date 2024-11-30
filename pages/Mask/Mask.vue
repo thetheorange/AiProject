@@ -8,14 +8,16 @@
  <uni-easyinput class="uni-mt-5" suffixIcon="star" v-model="value" placeholder="请添加想要的面具" @iconClick="iconClick">
  </uni-easyinput>
   <!-- 面具列表 -->
+   <!-- :clickable="true" -->
   <uni-list :border="true" v-for="(item, index) in arr" :key="index">
-    <uni-list-chat 
-	 clickable=true
+    <uni-list-chat
       :title="item.maskname" 
       :avatar="item.avatar" 
       :note="item.data" 
-      @click="onClick(item)"  
+     link="reLaunch" to="/pages/Chat/Chat"
+	  
     />
+	<!-- <uni-list-item title="reLaunch 方式跳转页面" link="reLaunch" to="/pages/Chat/Chat" @click="onClick($event,1)" ></uni-list-item> -->
   </uni-list>
   
 </template>
@@ -98,7 +100,8 @@ export default {
 		  mask_id: this.list.length + 1, // 假设mask_id是自增的
 		  avatar: "https://qiniu-web-assets.dcloud.net.cn/unidoc/zh/unicloudlogo.png",
 		  maskname: this.value,
-		  data: "新添加的面具"
+		  data: "新添加的面具",
+		  
 		};
 		// 将新面具添加到list数组中
 		this.list.push(newMask);
@@ -117,6 +120,8 @@ export default {
     // 默认显示所有数据
     this.arr = [...this.list];
   },
+
+	  
 };
 </script>
 
