@@ -245,23 +245,24 @@ class AvatarContainer(QFrame):
         # 如果需要，可以设置头像容器的边框和背景
         # self.setStyleSheet("QFrame { border: 1px solid #ccc; background-color: #f0f0f0; }")
 
+
 class GPTResponseThread(QThread):
     response_ready = pyqtSignal(str)
     finish = pyqtSignal()
+
     def __init__(self, my_text, parent=None):
         super(GPTResponseThread, self).__init__(parent)
         self.my_text = my_text
-        
 
     def run(self):
         # 在这里调用 handle_gpt_response 方法
-            self.handle_gpt_response()
+        self.handle_gpt_response()
 
     def handle_gpt_response(self):
         """
         等待gpt的回答
         """
-        while(1):
+        while (1):
             print(11111111111111111111111111111111111)
             # bubble,size = self.show_bubble("", is_sender=False)
             url = r'http://47.121.115.252:8193/textModel/chat'
@@ -272,7 +273,7 @@ class GPTResponseThread(QThread):
                 "uuid": static.uuid,
                 "username": static.username,
                 "dialog": [{"role": "system", "content": ""},
-                        {"role": "user", "content": self.my_text}]
+                           {"role": "user", "content": self.my_text}]
             })
             # ai_bubble = self.text_bubble("", is_sender=False)
             with requests.post(url, headers=headers, data=data, stream=True) as r:
@@ -342,7 +343,6 @@ class GPTResponseThread(QThread):
                     self.finish.emit()
                     return
             QThread.msleep(100)
-            
 
 
 class ChatSessionWindow(QWidget):
@@ -399,7 +399,6 @@ class ChatSessionWindow(QWidget):
         self.chat_input.setFixedHeight(80)
 
         self.my_text: str = ""  # 用户发送信息
-        
 
         # =============================================聊天输入框设置end=============================================
 
@@ -418,8 +417,8 @@ class ChatSessionWindow(QWidget):
         global_signal.correct_msg.connect(self.__handle_correct_msg_signal)
 
     def test_bubble(self):
-        bubble,size = self.show_bubble("")
-        for i in range(120):
+        bubble, size = self.show_bubble("")
+        for i in range(240):
             bubble.update_text('啊啊啊啊啊啊', is_add=True)
             size.setSizeHint(bubble.sizeHint())
 
@@ -440,10 +439,10 @@ class ChatSessionWindow(QWidget):
                 self.show_bubble(msg['info'], is_sender=msg['sender'], variety=msg['type'])
             except Exception as e:
                 print(str(e))
-        self.test_bubble()
+        # self.test_bubble()  # 记得注释掉
 
     def show_bubble(self, text: str = "", avatar_path: str = "./Assets/image/logo.png", is_sender: bool = True,
-                    variety: str = "text") -> (MessageBubble,QListWidgetItem):
+                    variety: str = "text") -> (MessageBubble, QListWidgetItem):
         """
         气泡的发送
         :param text:发送文本
@@ -461,7 +460,7 @@ class ChatSessionWindow(QWidget):
 
         # 滚动到底部以显示最新消息（可选）
         self.ListWidget.scrollToBottom()
-        return bubble,item
+        return bubble, item
 
     def send_button_clicked(self):
         """
@@ -501,7 +500,7 @@ class ChatSessionWindow(QWidget):
         """
         self.bubble.update_text(text, is_add=True)
         self._size.setSizeHint(self.bubble.sizeHint())
-        
+
     def gptwork_start(self):
         if self.gptwork:
             self.gptwork_finish()
@@ -509,16 +508,16 @@ class ChatSessionWindow(QWidget):
             self.gptwork = GPTResponseThread(self.my_text)
             self.gptwork.response_ready.connect(self.handle_gpt_response)
             self.gptwork.finish.connect(self.gptwork_finish)
-            self.bubble,self._size = self.show_bubble("", is_sender=False)
+            self.bubble, self._size = self.show_bubble("", is_sender=False)
             self.gptwork.start()
-    
+
     def gptwork_finish(self):
         self.gptwork.response_ready.disconnect(self.handle_gpt_response)
         self.gptwork.finish.disconnect(self.gptwork_finish)
         self.gptwork.quit()
         self.gptwork.wait()
-        self.gptwork = None 
-        
+        self.gptwork = None
+
     def __handle_correct_msg_signal(self, signal: list) -> None:
         """
         处理消息信号
