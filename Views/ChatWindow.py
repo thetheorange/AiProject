@@ -8,7 +8,7 @@ import json
 import sys
 
 import requests
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QWidget, QAction, QLabel, QHBoxLayout, QListWidgetItem, QFrame, QApplication
 from PyQt5.uic import loadUi
@@ -245,6 +245,105 @@ class AvatarContainer(QFrame):
         # 如果需要，可以设置头像容器的边框和背景
         # self.setStyleSheet("QFrame { border: 1px solid #ccc; background-color: #f0f0f0; }")
 
+class GPTResponseThread(QThread):
+    response_ready = pyqtSignal(str)
+    finish = pyqtSignal()
+    def __init__(self, my_text, parent=None):
+        super(GPTResponseThread, self).__init__(parent)
+        self.my_text = my_text
+        
+
+    def run(self):
+        # 在这里调用 handle_gpt_response 方法
+            self.handle_gpt_response()
+
+    def handle_gpt_response(self):
+        """
+        等待gpt的回答
+        """
+        while(1):
+            print(11111111111111111111111111111111111)
+            # bubble,size = self.show_bubble("", is_sender=False)
+            url = r'http://47.121.115.252:8193/textModel/chat'
+            headers = {
+                "Content-Type": "application/json"
+            }
+            data = json.dumps({
+                "uuid": static.uuid,
+                "username": static.username,
+                "dialog": [{"role": "system", "content": ""},
+                        {"role": "user", "content": self.my_text}]
+            })
+            # ai_bubble = self.text_bubble("", is_sender=False)
+            with requests.post(url, headers=headers, data=data, stream=True) as r:
+                print(3333333333333333333333333333333333)
+                buffer = ""
+                all_text = ""
+
+                for chunk in r.iter_content(chunk_size=2048):
+                    if chunk:
+                        buffer += chunk.decode('utf-8')
+                        try:
+                            # 尝试在缓冲区中找到完整的 JSON 对象
+                            start_index = buffer.find('{')
+                            end_index = buffer.rfind('}') + 1
+                            if start_index != -1 and end_index != -1:
+                                json_str = buffer[start_index:end_index]
+                                json_data = json.loads(json_str)
+                                if 'code' in json_data:
+                                    '''
+                                    InfoBar.error(
+                                    title="错误",
+                                    content=json_data["msg"],
+                                    orient=Qt.Vertical,
+                                    isClosable=True,
+                                    position=InfoBarPosition.BOTTOM_RIGHT,
+                                    duration=1000,
+                                    parent=self
+                                    )
+                                    '''
+                                    break
+                                if json_data["header"]["code"] != 0:
+                                    '''
+                                    InfoBar.error(
+                                    title="错误",
+                                    content=json_data["header"]["message"],
+                                    orient=Qt.Vertical,
+                                    isClosable=True,
+                                    position=InfoBarPosition.BOTTOM_RIGHT,
+                                    duration=1000,
+                                    parent=self
+                                    )
+                                    '''
+                                    break
+                                for text_item in json_data["payload"]["choices"]["text"]:
+                                    all_text += text_item["content"]
+                                    print(text_item["content"])
+                                    self.response_ready.emit(text_item["content"])
+                                    # bubble.update_text(text_item["content"], is_add=True)
+                                    # size.setSizeHint(bubble.sizeHint())
+                                # 结束
+                                if json_data["header"]["status"] == 2:
+                                    token_info = json_data["payload"]["usage"]["text"]
+                                    print(f"'question_tokens': {token_info['question_tokens']}")
+                                    print(f"prompt_tokens': {token_info['prompt_tokens']}")
+                                    print(f"completion_tokens: {token_info['completion_tokens']}")
+                                    print(f"total_tokens: {token_info['total_tokens']}")
+                                    static.tokens -= token_info['total_tokens']
+                                # 更新缓冲区，去掉已处理的部分
+                                buffer = buffer[end_index:]
+                        except json.JSONDecodeError:
+                            pass
+                        except Exception as e:
+                            print(str(e))
+                if all_text != "":
+                    sql = ChatSql()
+                    sql.add_message(SenderType.GPT, SendType.TEXT, all_text, True)
+                    self.finish.emit()
+                    return
+            QThread.msleep(100)
+            
+
 
 class ChatSessionWindow(QWidget):
     """
@@ -255,6 +354,7 @@ class ChatSessionWindow(QWidget):
         super().__init__()
         loadUi("./Templates/chat_session.ui", self)
 
+        self.gptwork = None
         # =============================================聊天选项bar设置start=============================================
         static.sql_dialogue_id = id
         self.chat_option_bar: CommandBar
@@ -299,7 +399,7 @@ class ChatSessionWindow(QWidget):
         self.chat_input.setFixedHeight(80)
 
         self.my_text: str = ""  # 用户发送信息
-        global_signal.gpt_response_ready.connect(self.handle_gpt_response)
+        
 
         # =============================================聊天输入框设置end=============================================
 
@@ -387,87 +487,38 @@ class ChatSessionWindow(QWidget):
         print(self.dialog)
         self.my_text = text
         try:
-            global_signal.gpt_response_ready.emit()
+            print(2222222222222222222222222222222222)
+            # global_signal.gpt_response_ready.emit()
+            self.chat_input.setPlainText('')
+            self.gptwork_start()
         except Exception as e:
             print(e.args)
             app_logger.error(e.args)
 
-    def handle_gpt_response(self):
+    def handle_gpt_response(self, text):
         """
         等待gpt的回答
         """
-        bubble,size = self.show_bubble("", is_sender=False)
-        url = r'http://47.121.115.252:8193/textModel/chat'
-        headers = {
-            "Content-Type": "application/json"
-        }
-        data = json.dumps({
-            "uuid": static.uuid,
-            "username": static.username,
-            "dialog": [{"role": "system", "content": ""},
-                       {"role": "user", "content": self.my_text}]
-        })
-        # ai_bubble = self.text_bubble("", is_sender=False)
-        with requests.post(url, headers=headers, data=data, stream=True) as r:
-            buffer = ""
-            all_text = ""
-
-            for chunk in r.iter_content(chunk_size=2048):
-                if chunk:
-                    buffer += chunk.decode('utf-8')
-                    try:
-                        # 尝试在缓冲区中找到完整的 JSON 对象
-                        start_index = buffer.find('{')
-                        end_index = buffer.rfind('}') + 1
-                        if start_index != -1 and end_index != -1:
-                            json_str = buffer[start_index:end_index]
-                            json_data = json.loads(json_str)
-                            if 'code' in json_data:
-                                InfoBar.error(
-                                    title="错误",
-                                    content=json_data["msg"],
-                                    orient=Qt.Vertical,
-                                    isClosable=True,
-                                    position=InfoBarPosition.BOTTOM_RIGHT,
-                                    duration=1000,
-                                    parent=self
-                                )
-                                break
-                            if json_data["header"]["code"] != 0:
-                                InfoBar.error(
-                                    title="错误",
-                                    content=json_data["header"]["message"],
-                                    orient=Qt.Vertical,
-                                    isClosable=True,
-                                    position=InfoBarPosition.BOTTOM_RIGHT,
-                                    duration=1000,
-                                    parent=self
-                                )
-                                break
-                            for text_item in json_data["payload"]["choices"]["text"]:
-                                all_text += text_item["content"]
-                                print(text_item["content"])
-                                bubble.update_text(text_item["content"], is_add=True)
-                                size.setSizeHint(bubble.sizeHint())
-
-                            # 结束
-                            if json_data["header"]["status"] == 2:
-                                token_info = json_data["payload"]["usage"]["text"]
-                                print(f"'question_tokens': {token_info['question_tokens']}")
-                                print(f"prompt_tokens': {token_info['prompt_tokens']}")
-                                print(f"completion_tokens: {token_info['completion_tokens']}")
-                                print(f"total_tokens: {token_info['total_tokens']}")
-                                static.tokens -= token_info['total_tokens']
-                            # 更新缓冲区，去掉已处理的部分
-                            buffer = buffer[end_index:]
-                    except json.JSONDecodeError:
-                        pass
-                    except Exception as e:
-                        print(str(e))
-            if all_text != "":
-                sql = ChatSql()
-                sql.add_message(SenderType.GPT, SendType.TEXT, all_text, True)
-
+        self.bubble.update_text(text, is_add=True)
+        self._size.setSizeHint(self.bubble.sizeHint())
+        
+    def gptwork_start(self):
+        if self.gptwork:
+            self.gptwork_finish()
+        if not self.gptwork:
+            self.gptwork = GPTResponseThread(self.my_text)
+            self.gptwork.response_ready.connect(self.handle_gpt_response)
+            self.gptwork.finish.connect(self.gptwork_finish)
+            self.bubble,self._size = self.show_bubble("", is_sender=False)
+            self.gptwork.start()
+    
+    def gptwork_finish(self):
+        self.gptwork.response_ready.disconnect(self.handle_gpt_response)
+        self.gptwork.finish.disconnect(self.gptwork_finish)
+        self.gptwork.quit()
+        self.gptwork.wait()
+        self.gptwork = None 
+        
     def __handle_correct_msg_signal(self, signal: list) -> None:
         """
         处理消息信号
