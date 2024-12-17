@@ -2,10 +2,10 @@
 <img  alt="logo" src="https://github.com/joana123123/AiProject/blob/main/Assets/image/logo.jpg?raw=true" />
 </div>
 
-<h1 align="center">AiProject</h1>
+<h1 align="center">“流星”ai面试助手</h1>
 
-<h3 align="center">一键部署你的智慧系统应用</h3>
- <div align="center">   
+<h3 align="center">一键部署你的AI面试助手</h3>
+ <div align="center">
     <img alt="Static Badge" src="https://img.shields.io/badge/language-python_3.11-blue" style="margin-right: 5px;">    
     <img alt="Static Badge" src="https://img.shields.io/badge/flask-3.0.3-orange" style="margin-right: 5px;">    
     <img alt="Static Badge" src="https://img.shields.io/badge/SQLAlchemy-2.0.30-green">    
@@ -20,8 +20,8 @@
 
 [![](https://github.com/joana123123/AiProject/blob/main/Assets/image/xunfei_logo.png?raw=true)](https://xinghuo.xfyun.cn/)
 
-
 ## 项目架构  :bookmark_tabs:
+
 ```text
 
 ├── Assets
@@ -220,7 +220,7 @@
 
 #### 开发问题
 
-- [ ] 一些文件可能会被意外删除，导致报错。应该加上一些文件夹是否存在的特判。
+- [x] 一些文件可能会被意外删除，导致报错。应该加上一些文件夹是否存在的特判。
 - [ ] 打包还是打包了一些多余的文件，修完bug可以删除和调试。
 
 ---
@@ -248,17 +248,28 @@
 
 开发问题：
 
-- [ ] 在ChatWindow的ChatSessionWindow类里，sendbutton按下后无法及时生成气泡，收到信息结束后才显示。怀疑要用pyqt的信号或者有update之类的函数。
-- [ ] 可以流式接受文字，但是因为上一个问题，无法流式在前端中显示。
-- [ ] 在MessageBubble里，当文字一点一点变长，但是气泡框没有跟着变长。直接运行MessageBubble可以测试。
+- [x] 在ChatWindow的ChatSessionWindow类里，sendbutton按下后无法及时生成气泡，收到信息结束后才显示。怀疑要用pyqt的信号或者有update之类的函数。
+- [x] 可以流式接受文字，但是因为上一个问题，无法流式在前端中显示。
+- [x] 在MessageBubble里，当文字一点一点变长，但是气泡框没有跟着变长。直接运行MessageBubble可以测试。
 - [ ] 有时会触发奇怪的bug导致闪退，未查出原因
 - [ ] python性能原因，现在的cxfreeze打包方案运行过慢，但是pyinstaller百分百打包失败。不改也行。
-- [ ] generate_captcha这儿有个小问题，如果用户文件夹里没有Temp文件夹的话，会出现闪退！要加一个文件路径判断。
+- [x] generate_captcha这儿有个小问题，如果用户文件夹里没有Temp文件夹的话，会出现闪退！要加一个文件路径判断。
 - [ ] 当发出了post请求的同时，移动窗口会闪退
 - [ ] 说明：仿照了qq，打包后会在系统托盘（任务栏）生成一个orange软件标，右键退出才能退出
+
+### 2024/11/29
+
+修正了上述的一些bug。
+
+### 2024/11/30
+
+开发问题
+
+- [ ] 气泡大小有略微的bug，第一行上半部分有点截断，最后一行下半部分有点截断
 
 ## Contributor :bow:
 
 [@thetheorange](https://github.com/thetheorange)
 [@Misaka-xxw](https://github.com/Misaka-xxw)
 [@joana123123](https://github.com/joana123123)
+[@lingsui123](https://github.com/lingsui123)
