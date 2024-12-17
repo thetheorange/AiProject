@@ -65,18 +65,21 @@ class MessageBubble(QWidget):
         self.info_container = QWidget(self.bubble_container)
         # 设置高度
         self.info_container.setMinimumHeight(50)
-        self.info_container.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        # self.info_container.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed) #  试图修正
+        self.info_container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         # self.info_container.setMaximumHeight(self.text_label.height())
         # self.setMaximumHeight(self.info_container.height() + 200)
         self.info_container.setStyleSheet("""  
                         QWidget {  
                             background-color:#e6e6fa;             /* 背景色 */  
                             border-radius: 10px;                   /* 圆角 */  
-                           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 阴影 */
+                            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 阴影 */
                         }  
                         QLabel {                                  /* 假设文本容器中包含QLabel */  
                             font-size: 14px;                       /* 字体大小 */  
                             color: #333;                           /* 字体颜色 */
+                            margin: 10px;                           /* 边距 */
+                            padding: 10px;                         /* 内边距 */
                         }  
                         QWidget:hover {                            /* 鼠标悬停效果 */  
                             background-color: #dbc6e0;             /* 悬停时背景色变化 */  
@@ -144,7 +147,8 @@ class MessageBubble(QWidget):
         # print(text)
         self.text_label = QLabel(text, self.info_container)
         self.text_label.setWordWrap(True)
-        self.text_label.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
+        self.info_container.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed) #  试图修正
+        # self.text_label.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
         self.text_label.installEventFilter(self)  # 安装事件过滤器
         if self.text_layout is not None:
             self.text_layout.addWidget(self.text_label)
