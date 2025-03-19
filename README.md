@@ -2,9 +2,10 @@
 <img  alt="logo" src="https://github.com/joana123123/AiProject/blob/main/Assets/image/logo.jpg?raw=true" />
 </div>
 
-<h1 align="center">“流星”ai面试助手</h1>
+<h1 align="center">AiProject</h1>
 
-<h3 align="center">一键部署你的AI面试助手</h3>
+<h3 align="center">一键部署你的智慧系统应用</h3>
+ <div align="center">
  <div align="center">
     <img alt="Static Badge" src="https://img.shields.io/badge/language-python_3.11-blue" style="margin-right: 5px;">    
     <img alt="Static Badge" src="https://img.shields.io/badge/flask-3.0.3-orange" style="margin-right: 5px;">    
